@@ -137,9 +137,9 @@ fn find_installed_platform_tools() -> Vec<String> {
         error!("Can't get home directory path: {}", err);
         exit(1);
     }));
-    let solana = home_dir.join(".cache").join("solana");
+    let solomka = home_dir.join(".cache").join("solomka");
     let package = "platform-tools";
-    std::fs::read_dir(solana)
+    std::fs::read_dir(solomka)
         .unwrap()
         .filter_map(|e| match e {
             Err(_) => None,
@@ -155,7 +155,7 @@ fn find_installed_platform_tools() -> Vec<String> {
 }
 
 fn get_latest_platform_tools_version() -> Result<String, String> {
-    let url = "https://github.com/solana-labs/platform-tools/releases/latest";
+    let url = "https://github.com/solana-labs/platform-tools/releases/tag/v1.37";
     let resp = reqwest::blocking::get(url).map_err(|err| format!("Failed to GET {url}: {err}"))?;
     let path = std::path::Path::new(resp.url().path());
     let version = path.file_name().unwrap().to_string_lossy().to_string();
@@ -210,7 +210,7 @@ fn make_platform_tools_path_for_version(package: &str, version: &str) -> PathBuf
     }));
     home_dir
         .join(".cache")
-        .join("solana")
+        .join("solomka")
         .join(version)
         .join(package)
 }
@@ -250,7 +250,7 @@ fn install_if_missing(
         fs::remove_dir(target_path).map_err(|err| err.to_string())?;
     }
 
-    // Check whether the package is already in ~/.cache/solana.
+    // Check whether the package is already in ~/.cache/solomka.
     // Download it and place in the proper location if not found.
     if !target_path.is_dir()
         && !target_path
@@ -458,8 +458,8 @@ fn check_undefined_symbols(config: &Config, program: &Path) {
     }
 }
 
-// check whether custom solana toolchain is linked, and link it if it is not.
-fn link_solana_toolchain(config: &Config) {
+// check whether custom solomka toolchain is linked, and link it if it is not.
+fn link_solomka_toolchain(config: &Config) {
     let toolchain_path = config
         .sbf_sdk
         .join("dependencies")
@@ -477,12 +477,12 @@ fn link_solana_toolchain(config: &Config) {
     }
     let mut do_link = true;
     for line in rustup_output.lines() {
-        if line.starts_with("solana") {
+        if line.starts_with("solomka") {
             let mut it = line.split_whitespace();
             let _ = it.next();
             let path = it.next();
             if path.unwrap() != toolchain_path.to_str().unwrap() {
-                let rustup_args = vec!["toolchain", "uninstall", "solana"];
+                let rustup_args = vec!["toolchain", "uninstall", "solomka"];
                 let output = spawn(
                     &rustup,
                     rustup_args,
@@ -501,7 +501,7 @@ fn link_solana_toolchain(config: &Config) {
         let rustup_args = vec![
             "toolchain",
             "link",
-            "solana",
+            "solomka",
             toolchain_path.to_str().unwrap(),
         ];
         let output = spawn(
@@ -515,7 +515,7 @@ fn link_solana_toolchain(config: &Config) {
     }
 }
 
-fn build_solana_package(
+fn build_solomka_package(
     config: &Config,
     target_directory: &Path,
     package: &cargo_metadata::Package,
@@ -552,7 +552,7 @@ fn build_solana_package(
         }
     };
 
-    let legacy_program_feature_present = package.name == "solana-sdk";
+    let legacy_program_feature_present = package.name == "solomka-sdk";
     let root_package_dir = &package.manifest_path.parent().unwrap_or_else(|| {
         error!("Unable to get directory of {}", package.manifest_path);
         exit(1);
@@ -574,7 +574,7 @@ fn build_solana_package(
         exit(1);
     });
 
-    info!("Solana SDK: {}", config.sbf_sdk.display());
+    info!("solomka SDK: {}", config.sbf_sdk.display());
     if config.no_default_features {
         info!("No default features");
     }
@@ -620,7 +620,7 @@ fn build_solana_package(
         error!("Failed to install platform-tools: {}", err);
         exit(1);
     });
-    link_solana_toolchain(config);
+    link_solomka_toolchain(config);
 
     let llvm_bin = config
         .sbf_sdk
@@ -635,11 +635,11 @@ fn build_solana_package(
 
     // RUSTC variable overrides cargo +<toolchain> mechanism of
     // selecting the rust compiler and makes cargo run a rust compiler
-    // other than the one linked in Solana toolchain. We have to prevent
+    // other than the one linked in Solomka toolchain. We have to prevent
     // this by removing RUSTC from the child process environment.
     if env::var("RUSTC").is_ok() {
         warn!(
-            "Removed RUSTC from cargo environment, because it overrides +solana cargo command line option."
+            "Removed RUSTC from cargo environment, because it overrides +solomka cargo command line option."
         );
         env::remove_var("RUSTC")
     }
@@ -828,7 +828,7 @@ fn build_solana_package(
         check_undefined_symbols(config, &program_so);
 
         info!("To deploy this program:");
-        info!("  $ solana program deploy {}", program_so.display());
+        info!("  $ solomka program deploy {}", program_so.display());
         info!("The program address will default to this keypair (override with --program-id):");
         info!("  {}", program_keypair.display());
     } else if config.dump {
@@ -836,7 +836,7 @@ fn build_solana_package(
     }
 }
 
-fn build_solana(config: Config, manifest_path: Option<PathBuf>) {
+fn build_solomka(config: Config, manifest_path: Option<PathBuf>) {
     let mut metadata_command = cargo_metadata::MetadataCommand::new();
     if let Some(manifest_path) = manifest_path {
         metadata_command.manifest_path(manifest_path);
@@ -852,7 +852,7 @@ fn build_solana(config: Config, manifest_path: Option<PathBuf>) {
 
     if let Some(root_package) = metadata.root_package() {
         if !config.workspace {
-            build_solana_package(&config, metadata.target_directory.as_ref(), root_package);
+            build_solomka_package(&config, metadata.target_directory.as_ref(), root_package);
             return;
         }
     }
@@ -873,7 +873,7 @@ fn build_solana(config: Config, manifest_path: Option<PathBuf>) {
         .collect::<Vec<_>>();
 
     for package in all_sbf_packages {
-        build_solana_package(&config, metadata.target_directory.as_ref(), package);
+        build_solomka_package(&config, metadata.target_directory.as_ref(), package);
     }
 }
 
@@ -917,7 +917,7 @@ fn main() {
                 .value_name("PATH")
                 .takes_value(true)
                 .default_value(&default_sbf_sdk)
-                .help("Path to the Solana SBF SDK"),
+                .help("Path to the Solomka SBF SDK"),
         )
         .arg(
             Arg::new("cargo_args")
@@ -1006,7 +1006,7 @@ fn main() {
                 .long("workspace")
                 .takes_value(false)
                 .alias("all")
-                .help("Build all Solana packages in the workspace"),
+                .help("Build all Solomka packages in the workspace"),
         )
         .arg(
             Arg::new("jobs")
@@ -1040,7 +1040,7 @@ fn main() {
             .map(|vals| vals.collect::<Vec<_>>()),
         sbf_sdk: fs::canonicalize(&sbf_sdk).unwrap_or_else(|err| {
             error!(
-                "Solana SDK path does not exist: {}: {}",
+                "Solomka SDK path does not exist: {}: {}",
                 sbf_sdk.display(),
                 err
             );
@@ -1074,5 +1074,5 @@ fn main() {
         debug!("{:?}", config);
         debug!("manifest_path: {:?}", manifest_path);
     }
-    build_solana(config, manifest_path);
+    build_solomka(config, manifest_path);
 }

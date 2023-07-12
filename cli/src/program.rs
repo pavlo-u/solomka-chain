@@ -35,7 +35,7 @@ use {
         config::{RpcAccountInfoConfig, RpcProgramAccountsConfig, RpcSendTransactionConfig},
         filter::{Memcmp, RpcFilterType},
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::Account,
         account_utils::StateMut,
         bpf_loader, bpf_loader_deprecated,
@@ -2263,7 +2263,7 @@ mod tests {
         },
         serde_json::Value,
         sonoma_cli_output::OutputFormat,
-        solana_sdk::signature::write_keypair_file,
+        solomka_sdk::signature::write_keypair_file,
     };
 
     fn make_tmp_path(name: &str) -> String {

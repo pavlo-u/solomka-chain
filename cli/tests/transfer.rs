@@ -11,7 +11,7 @@ use {
     solana_faucet::faucet::run_local_faucet,
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_nonce_utils::blockhash_query::{self, BlockhashQuery},
-    solana_sdk::{
+    solomka_sdk::{
         commitment_config::CommitmentConfig,
         fee::FeeStructure,
         native_token::sol_to_lamports,

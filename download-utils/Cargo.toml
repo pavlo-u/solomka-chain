@@ -15,7 +15,7 @@ indicatif = { workspace = true }
 log = { workspace = true }
 reqwest = { workspace = true, features = ["blocking", "brotli", "deflate", "gzip", "rustls-tls", "json"] }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

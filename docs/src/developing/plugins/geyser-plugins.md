@@ -30,7 +30,7 @@ plugin implementation for the PostgreSQL database.
 
 [`solana-geyser-plugin-interface`]: https://docs.rs/solana-geyser-plugin-interface
 [`solana-accountsdb-plugin-postgres`]: https://docs.rs/solana-accountsdb-plugin-postgres
-[`solana-sdk`]: https://docs.rs/solana-sdk
+[`solomka-sdk`]: https://docs.rs/solomka-sdk
 [`solana-transaction-status`]: https://docs.rs/solana-transaction-status
 
 ## The Plugin Interface
@@ -160,7 +160,7 @@ pub struct ReplicaTransactionInfo<'a> {
 }
 ```
 For details of `SanitizedTransaction` and `TransactionStatusMeta `,
-please refer to [`solana-sdk`] and [`solana-transaction-status`]
+please refer to [`solomka-sdk`] and [`solana-transaction-status`]
 
 The `slot` points to the slot the transaction is executed at.
 For more details, please refer to the Rust documentation in

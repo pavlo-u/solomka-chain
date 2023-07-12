@@ -26,7 +26,7 @@ use {
         snapshot_config::SnapshotConfig,
         snapshot_utils,
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         epoch_schedule::EpochSchedule,
         feature_set,

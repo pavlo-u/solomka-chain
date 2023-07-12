@@ -25,7 +25,7 @@ use {
         snapshot_config::SnapshotConfig,
         snapshot_utils::create_accounts_run_and_snapshot_dirs,
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::{Account, AccountSharedData},
         client::SyncClient,
         clock::{DEFAULT_DEV_SLOTS_PER_EPOCH, DEFAULT_TICKS_PER_SLOT},

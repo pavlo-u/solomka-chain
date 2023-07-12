@@ -19,7 +19,7 @@ use {
     },
     solana_rpc::rpc::JsonRpcConfig,
     solana_rpc_client::rpc_client::RpcClient,
-    solana_sdk::{
+    solomka_sdk::{
         account::{Account, AccountSharedData},
         commitment_config::CommitmentConfig,
         fee_calculator::FeeRateGovernor,
@@ -35,7 +35,7 @@ fn program_account(program_data: &[u8]) -> AccountSharedData {
     AccountSharedData::from(Account {
         lamports: Rent::default().minimum_balance(program_data.len()).min(1),
         data: program_data.to_vec(),
-        owner: solana_sdk::bpf_loader::id(),
+        owner: solomka_sdk::bpf_loader::id(),
         executable: true,
         rent_epoch: 0,
     })

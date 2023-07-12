@@ -4,7 +4,7 @@ use {
         serve_repair::ShredRepairType, tree_diff::TreeDiff,
     },
     solana_ledger::{blockstore::Blockstore, blockstore_meta::SlotMeta},
-    solana_sdk::{clock::Slot, hash::Hash},
+    solomka_sdk::{clock::Slot, hash::Hash},
     std::collections::{HashMap, HashSet},
 };
 
@@ -206,7 +206,7 @@ pub mod test {
         super::*,
         crate::repair_service::sleep_shred_deferment_period,
         solana_ledger::{blockstore::Blockstore, get_tmp_ledger_path},
-        solana_sdk::hash::Hash,
+        solomka_sdk::hash::Hash,
         trees::{tr, Tree, TreeWalk},
     };
 

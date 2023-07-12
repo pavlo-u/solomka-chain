@@ -16,7 +16,7 @@ solana-client = { workspace = true }
 solana-measure = { workspace = true }
 solana-metrics = { workspace = true }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-tpu-client = { workspace = true }
 
 [dev-dependencies]

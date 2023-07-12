@@ -18,7 +18,7 @@ use {
     solana_rpc::rpc::verify_pubkey,
     solana_rpc_client_api::{config::RpcAccountIndex, custom_error::RpcCustomError},
     solana_runtime::accounts_index::AccountIndex,
-    solana_sdk::{
+    solomka_sdk::{
         exit::Exit,
         pubkey::Pubkey,
         signature::{read_keypair_file, Keypair, Signer},
@@ -879,7 +879,7 @@ mod tests {
             inline_spl_token,
             secondary_index::MAX_NUM_LARGEST_INDEX_KEYS_RETURNED,
         },
-        solana_sdk::{
+        solomka_sdk::{
             account::{Account, AccountSharedData},
             pubkey::Pubkey,
             system_program,
@@ -913,7 +913,7 @@ mod tests {
             let cluster_info = Arc::new(ClusterInfo::new(
                 ContactInfo::new(
                     keypair.pubkey(),
-                    solana_sdk::timing::timestamp(), // wallclock
+                    solomka_sdk::timing::timestamp(), // wallclock
                     0u16,                            // shred_version
                 ),
                 keypair,

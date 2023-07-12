@@ -24,7 +24,7 @@ use {
         transaction_batch::TransactionBatch,
         transaction_error_metrics::TransactionErrorMetrics,
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, FORWARD_TRANSACTIONS_TO_LEADER_AT_SLOT_OFFSET, MAX_PROCESSING_AGE},
         feature_set, saturating_add_assign,
         timing::timestamp,
@@ -743,7 +743,7 @@ mod tests {
         solana_program_runtime::timings::ProgramTiming,
         solana_rpc::transaction_status_service::TransactionStatusService,
         solana_runtime::{cost_model::CostModel, prioritization_fee_cache::PrioritizationFeeCache},
-        solana_sdk::{
+        solomka_sdk::{
             account::AccountSharedData,
             instruction::InstructionError,
             message::{v0, v0::MessageAddressTableLookup, MessageHeader, VersionedMessage},
@@ -869,7 +869,7 @@ mod tests {
             bank.clone(),
             Some((4, 4)),
             bank.ticks_per_slot(),
-            &solana_sdk::pubkey::new_rand(),
+            &solomka_sdk::pubkey::new_rand(),
             Arc::new(blockstore),
             &Arc::new(LeaderScheduleCache::new_from_bank(&bank)),
             &PohConfig::default(),
@@ -878,9 +878,9 @@ mod tests {
         let poh_recorder = Arc::new(RwLock::new(poh_recorder));
 
         // Set up unparallelizable conflicting transactions
-        let pubkey0 = solana_sdk::pubkey::new_rand();
-        let pubkey1 = solana_sdk::pubkey::new_rand();
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey0 = solomka_sdk::pubkey::new_rand();
+        let pubkey1 = solomka_sdk::pubkey::new_rand();
+        let pubkey2 = solomka_sdk::pubkey::new_rand();
         let transactions = vec![
             system_transaction::transfer(mint_keypair, &pubkey0, 1, genesis_config.hash()),
             system_transaction::transfer(mint_keypair, &pubkey1, 1, genesis_config.hash()),
@@ -918,7 +918,7 @@ mod tests {
             ..
         } = create_slow_genesis_config(10_000);
         let bank = Arc::new(Bank::new_no_wallclock_throttle_for_tests(&genesis_config));
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
 
         let transactions = sanitize_transactions(vec![system_transaction::transfer(
             &mint_keypair,
@@ -1044,7 +1044,7 @@ mod tests {
             ..
         } = create_slow_genesis_config(10_000);
         let bank = Arc::new(Bank::new_no_wallclock_throttle_for_tests(&genesis_config));
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
 
         let transactions = {
             let mut tx =
@@ -1138,7 +1138,7 @@ mod tests {
             bank.deactivate_feature(&feature_set::apply_cost_tracker_during_replay::id());
         }
         let bank = Arc::new(bank);
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
 
         let ledger_path = get_tmp_ledger_path_auto_delete!();
         {
@@ -1263,8 +1263,8 @@ mod tests {
             ..
         } = create_slow_genesis_config(10_000);
         let bank = Arc::new(Bank::new_no_wallclock_throttle_for_tests(&genesis_config));
-        let pubkey = solana_sdk::pubkey::new_rand();
-        let pubkey1 = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
+        let pubkey1 = solomka_sdk::pubkey::new_rand();
 
         let transactions = sanitize_transactions(vec![
             system_transaction::transfer(&mint_keypair, &pubkey, 1, genesis_config.hash()),
@@ -1459,7 +1459,7 @@ mod tests {
         } = create_slow_genesis_config(10_000);
         let bank = Arc::new(Bank::new_no_wallclock_throttle_for_tests(&genesis_config));
 
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
 
         let transactions = sanitize_transactions(vec![system_transaction::transfer(
             &mint_keypair,
@@ -1478,7 +1478,7 @@ mod tests {
                 bank.clone(),
                 Some((4, 4)),
                 bank.ticks_per_slot(),
-                &solana_sdk::pubkey::new_rand(),
+                &solomka_sdk::pubkey::new_rand(),
                 Arc::new(blockstore),
                 &Arc::new(LeaderScheduleCache::new_from_bank(&bank)),
                 &PohConfig::default(),
@@ -1536,12 +1536,12 @@ mod tests {
             mut genesis_config,
             mint_keypair,
             ..
-        } = create_slow_genesis_config(solana_sdk::native_token::sol_to_lamports(1000.0));
+        } = create_slow_genesis_config(solomka_sdk::native_token::sol_to_lamports(1000.0));
         genesis_config.rent.lamports_per_byte_year = 50;
         genesis_config.rent.exemption_threshold = 2.0;
         let bank = Arc::new(Bank::new_no_wallclock_throttle_for_tests(&genesis_config));
-        let pubkey = solana_sdk::pubkey::new_rand();
-        let pubkey1 = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
+        let pubkey1 = solomka_sdk::pubkey::new_rand();
         let keypair1 = Keypair::new();
 
         let rent_exempt_amount = bank.get_minimum_balance_for_rent_exemption(0);

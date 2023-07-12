@@ -49,7 +49,7 @@ use {
         commitment::BlockCommitmentCache, prioritization_fee_cache::PrioritizationFeeCache,
         vote_sender_types::ReplayVoteSender,
     },
-    solana_sdk::{clock::Slot, pubkey::Pubkey, signature::Keypair},
+    solomka_sdk::{clock::Slot, pubkey::Pubkey, signature::Keypair},
     std::{
         collections::HashSet,
         net::UdpSocket,
@@ -379,7 +379,7 @@ pub mod tests {
         solana_poh::poh_recorder::create_test_recorder,
         solana_rpc::optimistically_confirmed_bank_tracker::OptimisticallyConfirmedBank,
         solana_runtime::bank::Bank,
-        solana_sdk::signature::{Keypair, Signer},
+        solomka_sdk::signature::{Keypair, Signer},
         solana_streamer::socket::SocketAddrSpace,
         std::sync::atomic::{AtomicU64, Ordering},
     };

@@ -5,7 +5,7 @@ use {
     console::style,
     indicatif::{ProgressBar, ProgressStyle},
     sonoma_cli_config::SettingType,
-    solana_sdk::{
+    solomka_sdk::{
         clock::UnixTimestamp,
         hash::Hash,
         instruction::CompiledInstruction,
@@ -456,9 +456,9 @@ fn write_instruction<'a, W: io::Write>(
                 writeln!(w, "{prefix}  {stake_instruction:?}")?;
                 raw = false;
             }
-        } else if program_pubkey == &solana_sdk::system_program::id() {
+        } else if program_pubkey == &solomka_sdk::system_program::id() {
             if let Ok(system_instruction) = limited_deserialize::<
-                solana_sdk::system_instruction::SystemInstruction,
+                solomka_sdk::system_instruction::SystemInstruction,
             >(&instruction.data)
             {
                 writeln!(w, "{prefix}  {system_instruction:?}")?;
@@ -725,7 +725,7 @@ pub fn unix_timestamp_to_string(unix_timestamp: UnixTimestamp) -> String {
 mod test {
     use {
         super::*,
-        solana_sdk::{
+        solomka_sdk::{
             message::{
                 v0::{self, LoadedAddresses},
                 Message as LegacyMessage, MessageHeader, VersionedMessage,

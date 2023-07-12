@@ -7,7 +7,7 @@ use {
     },
     solana_bucket_map::bucket_map::{BucketMap, BucketMapConfig},
     solana_measure::measure::Measure,
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, DEFAULT_MS_PER_SLOT},
         timing::AtomicInterval,
     },

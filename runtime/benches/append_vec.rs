@@ -13,7 +13,7 @@ use {
             AppendVec,
         },
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::{AccountSharedData, ReadableAccount},
         clock::Slot,
         hash::Hash,

@@ -9,7 +9,7 @@ use {
         sysvar_cache::SysvarCache,
         timings::{ExecuteDetailsTimings, ExecuteTimings},
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::WritableAccount,
         feature_set::FeatureSet,
         hash::Hash,
@@ -191,7 +191,7 @@ mod tests {
         super::*,
         crate::rent_collector::RentCollector,
         solana_program_runtime::{declare_process_instruction, loaded_programs::LoadedProgram},
-        solana_sdk::{
+        solomka_sdk::{
             account::{AccountSharedData, ReadableAccount},
             instruction::{AccountMeta, Instruction, InstructionError},
             message::{AccountKeys, LegacyMessage, Message},
@@ -489,11 +489,11 @@ mod tests {
         let rent_collector = RentCollector::default();
         let accounts = vec![
             (
-                solana_sdk::pubkey::new_rand(),
+                solomka_sdk::pubkey::new_rand(),
                 AccountSharedData::new(100, 1, &mock_program_id),
             ),
             (
-                solana_sdk::pubkey::new_rand(),
+                solomka_sdk::pubkey::new_rand(),
                 AccountSharedData::new(0, 1, &mock_program_id),
             ),
             (

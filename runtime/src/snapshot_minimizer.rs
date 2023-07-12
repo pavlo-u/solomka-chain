@@ -17,7 +17,7 @@ use {
         prelude::ParallelSlice,
     },
     solana_measure::measure,
-    solana_sdk::{
+    solomka_sdk::{
         account::ReadableAccount,
         account_utils::StateMut,
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
@@ -417,7 +417,7 @@ mod tests {
             snapshot_minimizer::SnapshotMinimizer,
         },
         dashmap::DashSet,
-        solana_sdk::{
+        solomka_sdk::{
             account::{AccountSharedData, ReadableAccount, WritableAccount},
             bpf_loader_upgradeable::{self, UpgradeableLoaderState},
             genesis_config::{create_genesis_config, GenesisConfig},
@@ -496,7 +496,7 @@ mod tests {
     fn test_minimization_get_vote_accounts() {
         solana_logger::setup();
 
-        let bootstrap_validator_pubkey = solana_sdk::pubkey::new_rand();
+        let bootstrap_validator_pubkey = solomka_sdk::pubkey::new_rand();
         let bootstrap_validator_stake_lamports = 30;
         let genesis_config_info = create_genesis_config_with_leader(
             10,
@@ -526,7 +526,7 @@ mod tests {
     fn test_minimization_get_stake_accounts() {
         solana_logger::setup();
 
-        let bootstrap_validator_pubkey = solana_sdk::pubkey::new_rand();
+        let bootstrap_validator_pubkey = solomka_sdk::pubkey::new_rand();
         let bootstrap_validator_stake_lamports = 30;
         let genesis_config_info = create_genesis_config_with_leader(
             10,
@@ -569,8 +569,8 @@ mod tests {
         let (genesis_config, _) = create_genesis_config(1_000_000);
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
 
-        let pubkey = solana_sdk::pubkey::new_rand();
-        let owner_pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
+        let owner_pubkey = solomka_sdk::pubkey::new_rand();
         bank.store_account(&pubkey, &AccountSharedData::new(1, 0, &owner_pubkey));
 
         let owner_accounts = DashSet::new();
@@ -594,9 +594,9 @@ mod tests {
         let (genesis_config, _) = create_genesis_config(1_000_000);
         let bank = Arc::new(Bank::new_for_tests(&genesis_config));
 
-        let non_program_id = solana_sdk::pubkey::new_rand();
-        let program_id = solana_sdk::pubkey::new_rand();
-        let programdata_address = solana_sdk::pubkey::new_rand();
+        let non_program_id = solomka_sdk::pubkey::new_rand();
+        let program_id = solomka_sdk::pubkey::new_rand();
+        let programdata_address = solomka_sdk::pubkey::new_rand();
 
         let program = UpgradeableLoaderState::Program {
             programdata_address,
@@ -649,7 +649,7 @@ mod tests {
         let minimized_account_set = DashSet::new();
         for _ in 0..num_slots {
             let pubkeys: Vec<_> = (0..num_accounts_per_slot)
-                .map(|_| solana_sdk::pubkey::new_rand())
+                .map(|_| solomka_sdk::pubkey::new_rand())
                 .collect();
 
             let some_lamport = 223;

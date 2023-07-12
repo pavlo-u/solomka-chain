@@ -24,7 +24,7 @@ solana-measure = { workspace = true }
 solana-net-utils = { workspace = true }
 solana-rpc-client = { workspace = true, features = ["default"] }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-streamer = { workspace = true }
 solana-transaction-status = { workspace = true }
 solana-version = { workspace = true }

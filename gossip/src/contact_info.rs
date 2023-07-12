@@ -2,7 +2,7 @@ use {
     crate::crds_value::MAX_WALLCLOCK,
     matches::{assert_matches, debug_assert_matches},
     serde::{Deserialize, Deserializer, Serialize},
-    solana_sdk::{
+    solomka_sdk::{
         pubkey::Pubkey,
         quic::QUIC_PORT_OFFSET,
         rpc_port::{DEFAULT_RPC_PORT, DEFAULT_RPC_PUBSUB_PORT},
@@ -374,7 +374,7 @@ impl ContactInfo {
         assert_matches!(sanitize_socket(socket), Ok(()));
         let mut node = Self::new(
             *pubkey,
-            solana_sdk::timing::timestamp(), // wallclock,
+            solomka_sdk::timing::timestamp(), // wallclock,
             0u16,                            // shred_version
         );
         let (addr, port) = (socket.ip(), socket.port());
@@ -552,7 +552,7 @@ mod tests {
     use {
         super::*,
         rand::{seq::SliceRandom, Rng},
-        solana_sdk::signature::{Keypair, Signer},
+        solomka_sdk::signature::{Keypair, Signer},
         std::{
             collections::{HashMap, HashSet},
             iter::repeat_with,
@@ -850,7 +850,7 @@ mod tests {
     fn test_new_localhost() {
         let node = ContactInfo::new_localhost(
             &Keypair::new().pubkey(),
-            solana_sdk::timing::timestamp(), // wallclock
+            solomka_sdk::timing::timestamp(), // wallclock
         );
         cross_verify_with_legacy(&node);
     }

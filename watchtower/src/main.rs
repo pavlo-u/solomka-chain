@@ -14,7 +14,7 @@ use {
     solana_notifier::{NotificationType, Notifier},
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::{client_error, response::RpcVoteAccountStatus},
-    solana_sdk::{
+    solomka_sdk::{
         hash::Hash,
         native_token::{sol_to_lamports, Sol},
         pubkey::Pubkey,

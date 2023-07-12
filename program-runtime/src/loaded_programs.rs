@@ -10,7 +10,7 @@ use {
     percentage::PercentageInteger,
     solana_measure::measure::Measure,
     solana_rbpf::{elf::Executable, verifier::RequisiteVerifier, vm::BuiltInProgram},
-    solana_sdk::{
+    solomka_sdk::{
         bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, clock::Slot, loader_v4,
         pubkey::Pubkey, saturating_add_assign,
     },
@@ -737,7 +737,7 @@ mod tests {
         },
         percentage::Percentage,
         solana_rbpf::vm::BuiltInProgram,
-        solana_sdk::{clock::Slot, pubkey::Pubkey},
+        solomka_sdk::{clock::Slot, pubkey::Pubkey},
         std::{
             ops::ControlFlow,
             sync::{

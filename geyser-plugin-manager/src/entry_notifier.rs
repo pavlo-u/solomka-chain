@@ -9,7 +9,7 @@ use {
     solana_ledger::entry_notifier_interface::EntryNotifier,
     solana_measure::measure::Measure,
     solana_metrics::*,
-    solana_sdk::clock::Slot,
+    solomka_sdk::clock::Slot,
     std::sync::{Arc, RwLock},
 };
 

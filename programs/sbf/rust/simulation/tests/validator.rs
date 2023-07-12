@@ -6,7 +6,7 @@ use {
         pubkey::Pubkey,
         sysvar,
     },
-    solana_sdk::{signature::Signer, transaction::Transaction},
+    solomka_sdk::{signature::Signer, transaction::Transaction},
     solana_validator::test_validator::*,
 };
 

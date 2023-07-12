@@ -2,7 +2,7 @@ use {
     super::*,
     solana_entry::entry::Entry,
     solana_ledger::shred::{ProcessShredsStats, ReedSolomonCache, Shredder},
-    solana_sdk::{hash::Hash, signature::Keypair},
+    solomka_sdk::{hash::Hash, signature::Keypair},
 };
 
 #[derive(Clone)]
@@ -162,7 +162,7 @@ mod tests {
     use {
         super::*,
         solana_gossip::contact_info::ContactInfo,
-        solana_sdk::signature::Signer,
+        solomka_sdk::signature::Signer,
         solana_streamer::socket::SocketAddrSpace,
         std::net::{IpAddr, Ipv4Addr, SocketAddr},
     };

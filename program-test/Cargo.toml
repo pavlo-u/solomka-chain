@@ -24,7 +24,7 @@ solana-bpf-loader-program = { workspace = true }
 solana-logger = { workspace = true }
 solana-program-runtime = { workspace = true }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-vote-program = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }

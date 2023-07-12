@@ -6,7 +6,7 @@ use {
     },
     solana_rpc_client_api::response::RpcKeyedAccount,
     solana_runtime::bank::Bank,
-    solana_sdk::{
+    solomka_sdk::{
         account::{AccountSharedData, ReadableAccount},
         pubkey::Pubkey,
     },

@@ -199,7 +199,7 @@ mod tests {
             snapshot_package::{SnapshotPackage, SnapshotType},
             snapshot_utils::{self, ArchiveFormat, SnapshotVersion},
         },
-        solana_sdk::{clock::Slot, genesis_config::GenesisConfig, hash::Hash},
+        solomka_sdk::{clock::Slot, genesis_config::GenesisConfig, hash::Hash},
         std::{
             fs::{self, remove_dir_all},
             path::{Path, PathBuf},

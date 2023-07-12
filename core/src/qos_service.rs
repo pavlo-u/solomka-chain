@@ -11,7 +11,7 @@ use {
         bank::Bank,
         cost_model::{CostModel, TransactionCost},
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         feature_set::FeatureSet,
         saturating_add_assign,
@@ -629,7 +629,7 @@ mod tests {
         super::*,
         itertools::Itertools,
         solana_runtime::genesis_utils::{create_genesis_config, GenesisConfigInfo},
-        solana_sdk::{
+        solomka_sdk::{
             hash::Hash,
             signature::{Keypair, Signer},
             system_transaction,

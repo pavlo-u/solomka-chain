@@ -9,7 +9,7 @@ use {
     memmap2::MmapMut,
     rayon::prelude::*,
     solana_measure::measure::Measure,
-    solana_sdk::{
+    solomka_sdk::{
         hash::{Hash, Hasher},
         pubkey::Pubkey,
         slot_history::Slot,

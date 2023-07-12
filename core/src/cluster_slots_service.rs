@@ -5,7 +5,7 @@ use {
     solana_ledger::blockstore::Blockstore,
     solana_measure::measure::Measure,
     solana_runtime::bank_forks::BankForks,
-    solana_sdk::clock::Slot,
+    solomka_sdk::clock::Slot,
     std::{
         sync::{
             atomic::{AtomicBool, Ordering},
@@ -182,7 +182,7 @@ mod test {
     use {
         super::*,
         solana_gossip::{cluster_info::Node, crds_value::LowestSlot},
-        solana_sdk::signature::{Keypair, Signer},
+        solomka_sdk::signature::{Keypair, Signer},
         solana_streamer::socket::SocketAddrSpace,
     };
 

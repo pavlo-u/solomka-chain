@@ -25,7 +25,7 @@ solana-account-decoder = { workspace = true }
 solana-clap-utils = { workspace = true }
 sonoma-cli-config = { workspace = true }
 solana-rpc-client-api = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-transaction-status = { workspace = true }
 solana-vote-program = { workspace = true }
 spl-memo = { workspace = true, features = ["no-entrypoint"] }

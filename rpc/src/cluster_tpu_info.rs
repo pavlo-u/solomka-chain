@@ -1,7 +1,7 @@
 use {
     solana_gossip::{cluster_info::ClusterInfo, contact_info::Protocol},
     solana_poh::poh_recorder::PohRecorder,
-    solana_sdk::{clock::NUM_CONSECUTIVE_LEADER_SLOTS, pubkey::Pubkey},
+    solomka_sdk::{clock::NUM_CONSECUTIVE_LEADER_SLOTS, pubkey::Pubkey},
     solana_send_transaction_service::tpu_info::TpuInfo,
     std::{
         collections::HashMap,
@@ -69,7 +69,7 @@ mod test {
                 create_genesis_config_with_vote_accounts, GenesisConfigInfo, ValidatorVoteKeypairs,
             },
         },
-        solana_sdk::{
+        solomka_sdk::{
             poh_config::PohConfig,
             signature::{Keypair, Signer},
             timing::timestamp,

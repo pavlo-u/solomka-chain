@@ -3,7 +3,7 @@
 use {
     solana_program_test::{processor, tokio, ProgramTest},
     solana_sbf_rust_simulation::process_instruction,
-    solana_sdk::{
+    solomka_sdk::{
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         signature::Signer,

@@ -72,7 +72,7 @@ Major releases:
 
 ### Rust Crates
 
-- [`solana-sdk`](https://docs.rs/solana-sdk/) - Rust SDK for creating transactions and parsing account state
+- [`solomka-sdk`](https://docs.rs/solomka-sdk/) - Rust SDK for creating transactions and parsing account state
 - [`solana-program`](https://docs.rs/solana-program/) - Rust SDK for writing programs
 - [`solana-client`](https://docs.rs/solana-client/) - Rust client for connecting to RPC API
 - [`solana-cli-config`](https://docs.rs/solana-cli-config/) - Rust client for managing Solana CLI config files

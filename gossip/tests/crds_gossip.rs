@@ -17,7 +17,7 @@ use {
         ping_pong::PingCache,
     },
     solana_rayon_threadlimit::get_thread_count,
-    solana_sdk::{
+    solomka_sdk::{
         hash::hash,
         pubkey::Pubkey,
         signature::{Keypair, Signer},

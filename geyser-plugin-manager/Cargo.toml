@@ -26,7 +26,7 @@ solana-measure = { workspace = true }
 solana-metrics = { workspace = true }
 solana-rpc = { workspace = true }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-transaction-status = { workspace = true }
 thiserror = { workspace = true }
 

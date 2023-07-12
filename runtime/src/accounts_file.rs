@@ -7,7 +7,7 @@ use {
         storable_accounts::StorableAccounts,
         tiered_storage::error::TieredStorageError,
     },
-    solana_sdk::{account::ReadableAccount, clock::Slot, hash::Hash, pubkey::Pubkey},
+    solomka_sdk::{account::ReadableAccount, clock::Slot, hash::Hash, pubkey::Pubkey},
     std::{
         borrow::Borrow,
         mem,

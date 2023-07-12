@@ -12,7 +12,7 @@ use {
     },
     solana_perf::packet::Packet,
     solana_runtime::bank_forks::BankForks,
-    solana_sdk::{
+    solomka_sdk::{
         hash::Hash,
         pubkey::Pubkey,
         signature::{Keypair, Signer},

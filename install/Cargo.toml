@@ -32,7 +32,7 @@ solana-clap-utils = { workspace = true }
 solana-config-program = { workspace = true }
 solana-logger = { workspace = true }
 solana-rpc-client = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-version = { workspace = true }
 tar = { workspace = true }
 tempfile = { workspace = true }

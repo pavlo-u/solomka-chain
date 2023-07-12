@@ -14,7 +14,7 @@ use {
     },
     solana_ledger::shred::ShredId,
     solana_runtime::bank::Bank,
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Epoch, Slot},
         feature_set,
         native_token::LAMPORTS_PER_SOL,
@@ -481,7 +481,7 @@ pub fn make_test_cluster<R: Rng>(
     use solana_gossip::contact_info::ContactInfo;
     let (unstaked_numerator, unstaked_denominator) = unstaked_ratio.unwrap_or((1, 7));
     let mut nodes: Vec<_> = repeat_with(|| {
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
         ContactInfo::new_localhost(&pubkey, /*wallclock:*/ timestamp())
     })
     .take(num_nodes)

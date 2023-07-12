@@ -33,7 +33,7 @@ solana-rpc-client = { workspace = true }
 solana-rpc-client-api = { workspace = true }
 solana-rpc-client-nonce-utils = { workspace = true }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-streamer = { workspace = true }
 solana-thin-client = { workspace = true }
 solana-tpu-client = { workspace = true }

@@ -1,6 +1,6 @@
 use {
     solana_rpc_client_api::client_error::Error as ClientError,
-    solana_sdk::{
+    solomka_sdk::{
         account::Account, commitment_config::CommitmentConfig, epoch_info::EpochInfo, hash::Hash,
         message::Message, pubkey::Pubkey, signature::Signature, transaction::Transaction,
         transport::TransportError,

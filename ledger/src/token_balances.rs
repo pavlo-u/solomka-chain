@@ -5,7 +5,7 @@ use {
     solana_measure::measure::Measure,
     solana_metrics::datapoint_debug,
     solana_runtime::{bank::Bank, transaction_batch::TransactionBatch},
-    solana_sdk::{account::ReadableAccount, pubkey::Pubkey},
+    solomka_sdk::{account::ReadableAccount, pubkey::Pubkey},
     solana_transaction_status::{
         token_balances::TransactionTokenBalances, TransactionTokenBalance,
     },
@@ -120,7 +120,7 @@ fn collect_token_balance_from_account(
 mod test {
     use {
         super::*,
-        solana_sdk::{account::Account, genesis_config::create_genesis_config},
+        solomka_sdk::{account::Account, genesis_config::create_genesis_config},
         spl_token_2022::{
             extension::{
                 immutable_owner::ImmutableOwner, memo_transfer::MemoTransfer,

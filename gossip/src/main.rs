@@ -13,7 +13,7 @@ use {
     solana_gossip::{
         gossip_service::discover, legacy_contact_info::LegacyContactInfo as ContactInfo,
     },
-    solana_sdk::pubkey::Pubkey,
+    solomka_sdk::pubkey::Pubkey,
     solana_streamer::socket::SocketAddrSpace,
     std::{
         error,

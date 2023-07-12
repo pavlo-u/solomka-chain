@@ -16,7 +16,7 @@ use {
         ancestors::Ancestors,
         rent_collector::RentCollector,
     },
-    solana_sdk::{
+    solomka_sdk::{
         genesis_config::ClusterType, pubkey::Pubkey, sysvar::epoch_schedule::EpochSchedule,
     },
     std::{env, fs, path::PathBuf},
@@ -128,7 +128,7 @@ fn main() {
             let results_store = accounts.accounts_db.update_accounts_hash(
                 CalcAccountsHashDataSource::Storages,
                 false,
-                solana_sdk::clock::Slot::default(),
+                solomka_sdk::clock::Slot::default(),
                 &ancestors,
                 None,
                 &EpochSchedule::default(),

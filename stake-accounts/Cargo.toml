@@ -16,7 +16,7 @@ sonoma-cli-config = { workspace = true }
 solana-remote-wallet = { workspace = true, features = ["default"] }
 solana-rpc-client = { workspace = true, features = ["default"] }
 solana-rpc-client-api = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-stake-program = { workspace = true }
 solana-version = { workspace = true }
 

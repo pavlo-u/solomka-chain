@@ -15,7 +15,7 @@ chrono = { workspace = true, features = ["default", "serde"] }
 serde = { workspace = true }
 serde_derive = { workspace = true }
 solana-program-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 
 [dev-dependencies]
 solana-logger = { workspace = true }

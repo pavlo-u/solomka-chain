@@ -22,7 +22,7 @@ use {
     },
     solana_ledger::blockstore::Blockstore,
     solana_runtime::vote_transaction::VoteTransaction,
-    solana_sdk::{
+    solomka_sdk::{
         client::SyncClient,
         clock::{self, Slot, NUM_CONSECUTIVE_LEADER_SLOTS},
         commitment_config::CommitmentConfig,

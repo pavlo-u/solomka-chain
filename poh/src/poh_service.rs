@@ -6,7 +6,7 @@ use {
     log::*,
     solana_entry::poh::Poh,
     solana_measure::{measure, measure::Measure},
-    solana_sdk::poh_config::PohConfig,
+    solomka_sdk::poh_config::PohConfig,
     std::{
         sync::{
             atomic::{AtomicBool, Ordering},
@@ -392,7 +392,7 @@ mod tests {
         solana_measure::measure::Measure,
         solana_perf::test_tx::test_tx,
         solana_runtime::bank::Bank,
-        solana_sdk::{
+        solomka_sdk::{
             clock, hash::hash, pubkey::Pubkey, timing, transaction::VersionedTransaction,
         },
         std::{thread::sleep, time::Duration},

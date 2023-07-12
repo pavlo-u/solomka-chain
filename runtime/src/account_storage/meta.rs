@@ -1,6 +1,6 @@
 use {
     crate::{append_vec::AppendVecStoredAccountMeta, storable_accounts::StorableAccounts},
-    solana_sdk::{
+    solomka_sdk::{
         account::{AccountSharedData, ReadableAccount},
         hash::Hash,
         pubkey::Pubkey,

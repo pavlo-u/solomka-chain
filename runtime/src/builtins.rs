@@ -1,6 +1,6 @@
 use {
     solana_program_runtime::invoke_context::ProcessInstructionWithContext,
-    solana_sdk::{
+    solomka_sdk::{
         bpf_loader, bpf_loader_deprecated, bpf_loader_upgradeable, feature_set, pubkey::Pubkey,
     },
 };
@@ -85,7 +85,7 @@ pub static BUILTINS: &[BuiltinPrototype] = &[
     },
     BuiltinPrototype {
         feature_id: None,
-        program_id: solana_sdk::compute_budget::id(),
+        program_id: solomka_sdk::compute_budget::id(),
         name: "compute_budget_program",
         entrypoint: solana_compute_budget_program::process_instruction,
     },

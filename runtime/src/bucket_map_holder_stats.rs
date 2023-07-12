@@ -3,7 +3,7 @@ use {
         accounts_index::{DiskIndexValue, IndexValue},
         bucket_map_holder::BucketMapHolder,
     },
-    solana_sdk::timing::AtomicInterval,
+    solomka_sdk::timing::AtomicInterval,
     std::{
         fmt::Debug,
         sync::atomic::{AtomicBool, AtomicU64, AtomicU8, AtomicUsize, Ordering},

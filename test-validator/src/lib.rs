@@ -33,7 +33,7 @@ use {
         hardened_unpack::MAX_GENESIS_ARCHIVE_UNPACKED_SIZE, runtime_config::RuntimeConfig,
         snapshot_config::SnapshotConfig, snapshot_utils::create_accounts_run_and_snapshot_dirs,
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::{Account, AccountSharedData},
         bpf_loader_upgradeable::UpgradeableLoaderState,
         clock::{Slot, DEFAULT_MS_PER_SLOT},
@@ -492,7 +492,7 @@ impl TestValidatorGenesis {
 
         self.upgradeable_programs.push(UpgradeableProgramInfo {
             program_id,
-            loader: solana_sdk::bpf_loader_upgradeable::id(),
+            loader: solomka_sdk::bpf_loader_upgradeable::id(),
             upgrade_authority: Pubkey::default(),
             program_path,
         });
@@ -776,7 +776,7 @@ impl TestValidator {
             validator_identity_lamports,
             config.fee_rate_governor.clone(),
             config.rent,
-            solana_sdk::genesis_config::ClusterType::Development,
+            solomka_sdk::genesis_config::ClusterType::Development,
             accounts.into_iter().collect(),
         );
         genesis_config.epoch_schedule = config

@@ -3,7 +3,7 @@ use {
         self,
         state::{Vote, VoteStateUpdate},
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         hash::Hash,
         signature::{Keypair, Signer},

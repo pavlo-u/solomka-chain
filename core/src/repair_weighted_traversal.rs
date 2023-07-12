@@ -4,7 +4,7 @@ use {
         serve_repair::ShredRepairType, tree_diff::TreeDiff,
     },
     solana_ledger::{blockstore::Blockstore, blockstore_meta::SlotMeta},
-    solana_sdk::{clock::Slot, hash::Hash},
+    solomka_sdk::{clock::Slot, hash::Hash},
     std::collections::{HashMap, HashSet},
 };
 
@@ -142,7 +142,7 @@ pub mod test {
             shred::{Shred, ShredFlags},
         },
         solana_runtime::bank_utils,
-        solana_sdk::hash::Hash,
+        solomka_sdk::hash::Hash,
         trees::tr,
     };
 

@@ -38,7 +38,7 @@ use {
             move_and_async_delete_path_contents,
         },
     },
-    solana_sdk::{
+    solomka_sdk::{
         genesis_config::GenesisConfig, signature::Signer, signer::keypair::Keypair,
         timing::timestamp,
     },

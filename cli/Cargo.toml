@@ -44,7 +44,7 @@ solana-remote-wallet = { workspace = true, features = ["default"] }
 solana-rpc-client = { workspace = true, features = ["default"] }
 solana-rpc-client-api = { workspace = true }
 solana-rpc-client-nonce-utils = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-tpu-client = { workspace = true, features = ["default"] }
 solana-transaction-status = { workspace = true }
 solana-version = { workspace = true }

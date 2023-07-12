@@ -11,7 +11,7 @@ use {
         account_storage::meta::StoredAccountMeta,
         accounts_update_notifier_interface::AccountsUpdateNotifierInterface,
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::{AccountSharedData, ReadableAccount},
         clock::Slot,
         pubkey::Pubkey,

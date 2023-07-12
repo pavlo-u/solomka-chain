@@ -23,9 +23,9 @@
 //! # Examples
 //!
 //! For a complete example of how the instructions sysvar is used see the
-//! documentation for [`secp256k1_instruction`] in the `solana-sdk` crate.
+//! documentation for [`secp256k1_instruction`] in the `solomka-sdk` crate.
 //!
-//! [`secp256k1_instruction`]: https://docs.rs/solana-sdk/latest/solana_sdk/secp256k1_instruction/index.html
+//! [`secp256k1_instruction`]: https://docs.rs/solomka-sdk/latest/solomka_sdk/secp256k1_instruction/index.html
 
 #![allow(clippy::integer_arithmetic)]
 

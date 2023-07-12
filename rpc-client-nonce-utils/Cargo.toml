@@ -13,7 +13,7 @@ edition = { workspace = true }
 clap = "2.33.0"
 solana-clap-utils = { workspace = true }
 solana-rpc-client = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]

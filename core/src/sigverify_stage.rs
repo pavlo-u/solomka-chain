@@ -18,7 +18,7 @@ use {
             count_discarded_packets, count_packets_in_batches, count_valid_packets, shrink_batches,
         },
     },
-    solana_sdk::timing,
+    solomka_sdk::timing,
     solana_streamer::streamer::{self, StreamerError},
     std::{
         thread::{self, Builder, JoinHandle},
@@ -475,7 +475,7 @@ mod tests {
             packet::{to_packet_batches, Packet},
             test_tx::test_tx,
         },
-        solana_sdk::packet::PacketFlags,
+        solomka_sdk::packet::PacketFlags,
     };
 
     fn count_non_discard(packet_batches: &[PacketBatch]) -> usize {

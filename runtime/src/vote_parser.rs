@@ -1,6 +1,6 @@
 use {
     crate::vote_transaction::VoteTransaction,
-    solana_sdk::{
+    solomka_sdk::{
         hash::Hash,
         program_utils::limited_deserialize,
         pubkey::Pubkey,
@@ -77,7 +77,7 @@ fn parse_vote_instruction_data(
 mod test {
     use {
         super::*,
-        solana_sdk::{
+        solomka_sdk::{
             hash::hash,
             signature::{Keypair, Signer},
         },

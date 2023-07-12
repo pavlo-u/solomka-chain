@@ -29,7 +29,7 @@ solana-program-test = { workspace = true }
 solana-rpc = { workspace = true }
 solana-rpc-client = { workspace = true }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-streamer = { workspace = true }
 solana-tpu-client = { workspace = true }
 tokio = { workspace = true, features = ["full"] }

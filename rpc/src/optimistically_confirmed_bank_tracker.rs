@@ -13,7 +13,7 @@ use {
     crossbeam_channel::{Receiver, RecvTimeoutError, Sender},
     solana_rpc_client_api::response::{SlotTransactionStats, SlotUpdate},
     solana_runtime::{bank::Bank, bank_forks::BankForks},
-    solana_sdk::{clock::Slot, timing::timestamp},
+    solomka_sdk::{clock::Slot, timing::timestamp},
     std::{
         collections::HashSet,
         sync::{
@@ -386,7 +386,7 @@ mod tests {
         solana_runtime::{
             accounts_background_service::AbsRequestSender, commitment::BlockCommitmentCache,
         },
-        solana_sdk::pubkey::Pubkey,
+        solomka_sdk::pubkey::Pubkey,
         std::sync::atomic::AtomicU64,
     };
 

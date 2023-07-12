@@ -5,7 +5,7 @@
 //!
 use {
     crate::{block_cost_limits::*, cost_model::TransactionCost},
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot, pubkey::Pubkey, saturating_add_assign, transaction::TransactionError,
     },
     std::{cmp::Ordering, collections::HashMap},
@@ -290,7 +290,7 @@ mod tests {
             bank::Bank,
             genesis_utils::{create_genesis_config, GenesisConfigInfo},
         },
-        solana_sdk::{
+        solomka_sdk::{
             hash::Hash,
             signature::{Keypair, Signer},
             system_transaction,

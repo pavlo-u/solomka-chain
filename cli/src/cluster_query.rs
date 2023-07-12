@@ -37,7 +37,7 @@ use {
         request::DELINQUENT_VALIDATOR_SLOT_DISTANCE,
         response::SlotInfo,
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::from_account,
         account_utils::StateMut,
         clock::{self, Clock, Slot},
@@ -2203,7 +2203,7 @@ mod tests {
     use {
         super::*,
         crate::{clap_app::get_clap_app, cli::parse_command},
-        solana_sdk::signature::{write_keypair, Keypair},
+        solomka_sdk::signature::{write_keypair, Keypair},
         std::str::FromStr,
         tempfile::NamedTempFile,
     };

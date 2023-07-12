@@ -4,7 +4,7 @@
 
 #![cfg(feature = "full")]
 
-use solana_sdk::{
+use solomka_sdk::{
     hard_forks::HardForks,
     hash::{extend_and_hash, Hash},
 };

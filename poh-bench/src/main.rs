@@ -7,7 +7,7 @@ use {
     clap::{crate_description, crate_name, Arg, Command},
     solana_measure::measure::Measure,
     solana_perf::perf_libs,
-    solana_sdk::hash::hash,
+    solomka_sdk::hash::hash,
 };
 
 fn main() {

@@ -11,7 +11,7 @@ use {
     },
     solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solana_rpc_client::rpc_client::RpcClient,
-    solana_sdk::{clock::Epoch, pubkey::Pubkey},
+    solomka_sdk::{clock::Epoch, pubkey::Pubkey},
     std::sync::Arc,
 };
 

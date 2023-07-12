@@ -19,7 +19,7 @@ use {
         memory_region::{AccessType, MemoryMapping},
         vm::{BuiltInProgram, Config, ProgramResult, PROGRAM_ENVIRONMENT_KEY_SHIFT},
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::{ReadableAccount, WritableAccount},
         account_info::AccountInfo,
         alt_bn128::prelude::{
@@ -1625,7 +1625,7 @@ declare_syscall!(
         _arg5: u64,
         memory_mapping: &mut MemoryMapping,
     ) -> Result<u64, Error> {
-        use solana_sdk::alt_bn128::prelude::{ALT_BN128_ADD, ALT_BN128_MUL, ALT_BN128_PAIRING};
+        use solomka_sdk::alt_bn128::prelude::{ALT_BN128_ADD, ALT_BN128_MUL, ALT_BN128_PAIRING};
         let budget = invoke_context.get_compute_budget();
         let (cost, output): (u64, usize) = match group_op {
             ALT_BN128_ADD => (
@@ -1777,7 +1777,7 @@ declare_syscall!(
 #[allow(clippy::indexing_slicing)]
 mod tests {
     #[allow(deprecated)]
-    use solana_sdk::sysvar::fees::Fees;
+    use solomka_sdk::sysvar::fees::Fees;
     use {
         super::*,
         crate::mock_create_vm,
@@ -1788,7 +1788,7 @@ mod tests {
             memory_region::MemoryRegion,
             vm::{BuiltInFunction, Config},
         },
-        solana_sdk::{
+        solomka_sdk::{
             account::{create_account_shared_data_for_test, AccountSharedData},
             bpf_loader,
             fee_calculator::FeeCalculator,
@@ -1884,7 +1884,7 @@ mod tests {
         let config = Config::default();
 
         // Pubkey
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
         let memory_mapping = MemoryMapping::new(
             vec![MemoryRegion::new_readonly(bytes_of(&pubkey), 0x100000000)],
             &config,
@@ -1896,9 +1896,9 @@ mod tests {
 
         // Instruction
         let instruction = Instruction::new_with_bincode(
-            solana_sdk::pubkey::new_rand(),
+            solomka_sdk::pubkey::new_rand(),
             &"foobar",
-            vec![AccountMeta::new(solana_sdk::pubkey::new_rand(), false)],
+            vec![AccountMeta::new(solomka_sdk::pubkey::new_rand(), false)],
         );
         let instruction = StableInstruction::from(instruction);
         let memory_region = MemoryRegion::new_readonly(bytes_of(&instruction), 0x100000000);
@@ -1978,7 +1978,7 @@ mod tests {
         );
 
         // Pubkeys
-        let mut data = vec![solana_sdk::pubkey::new_rand(); 5];
+        let mut data = vec![solomka_sdk::pubkey::new_rand(); 5];
         let memory_mapping = MemoryMapping::new(
             vec![MemoryRegion::new_readonly(
                 unsafe {
@@ -1993,7 +1993,7 @@ mod tests {
             translate_slice::<Pubkey>(&memory_mapping, 0x100000000, data.len() as u64, true, true)
                 .unwrap();
         assert_eq!(data, translated_data);
-        *data.first_mut().unwrap() = solana_sdk::pubkey::new_rand(); // Both should point to same place
+        *data.first_mut().unwrap() = solomka_sdk::pubkey::new_rand(); // Both should point to same place
         assert_eq!(data, translated_data);
     }
 
@@ -2275,7 +2275,7 @@ mod tests {
             let mut result = ProgramResult::Ok(0);
             SyscallAllocFree::call(
                 invoke_context,
-                solana_sdk::entrypoint::HEAP_LENGTH as u64,
+                solomka_sdk::entrypoint::HEAP_LENGTH as u64,
                 0,
                 0,
                 0,
@@ -2287,7 +2287,7 @@ mod tests {
             let mut result = ProgramResult::Ok(0);
             SyscallAllocFree::call(
                 invoke_context,
-                solana_sdk::entrypoint::HEAP_LENGTH as u64,
+                solomka_sdk::entrypoint::HEAP_LENGTH as u64,
                 0,
                 0,
                 0,
@@ -2326,7 +2326,7 @@ mod tests {
             let mut result = ProgramResult::Ok(0);
             SyscallAllocFree::call(
                 invoke_context,
-                solana_sdk::entrypoint::HEAP_LENGTH as u64,
+                solomka_sdk::entrypoint::HEAP_LENGTH as u64,
                 0,
                 0,
                 0,
@@ -2352,7 +2352,7 @@ mod tests {
             let mut result = ProgramResult::Ok(0);
             SyscallAllocFree::call(
                 invoke_context,
-                solana_sdk::entrypoint::HEAP_LENGTH as u64,
+                solomka_sdk::entrypoint::HEAP_LENGTH as u64,
                 0,
                 0,
                 0,

@@ -8,7 +8,7 @@ use {
         state::{AddressLookupTable, LOOKUP_TABLE_META_SIZE},
     },
     solana_program_test::*,
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot, feature_set, instruction::InstructionError, pubkey::Pubkey, rent::Rent,
         signature::Signer, signer::keypair::Keypair, transaction::Transaction,
     },

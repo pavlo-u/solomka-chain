@@ -16,7 +16,7 @@ rayon = { workspace = true }
 solana-connection-cache = { workspace = true }
 solana-rpc-client = { workspace = true }
 solana-rpc-client-api = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 
 [dev-dependencies]
 solana-logger = { workspace = true }

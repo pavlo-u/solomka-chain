@@ -24,7 +24,7 @@ use {
     solana_runtime::{
         snapshot_config::SnapshotConfig, snapshot_utils::create_accounts_run_and_snapshot_dirs,
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::AccountSharedData,
         clock::{self, Slot, DEFAULT_MS_PER_SLOT, DEFAULT_TICKS_PER_SLOT},
         hash::Hash,
@@ -404,7 +404,7 @@ pub fn test_faulty_node(
     // Use a fixed leader schedule so that only the faulty node gets leader slots.
     let validator_to_slots = vec![(
         validator_keys[0].0.as_ref().pubkey(),
-        solana_sdk::clock::DEFAULT_DEV_SLOTS_PER_EPOCH as usize,
+        solomka_sdk::clock::DEFAULT_DEV_SLOTS_PER_EPOCH as usize,
     )];
     let leader_schedule = create_custom_leader_schedule(validator_to_slots.into_iter());
     let fixed_leader_schedule = Some(FixedSchedule {

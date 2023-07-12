@@ -13,7 +13,7 @@ use {
     solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::{client_error::Error as ClientError, request::MAX_MULTIPLE_ACCOUNTS},
-    solana_sdk::{
+    solomka_sdk::{
         account::Account,
         clock::Slot,
         epoch_schedule::EpochSchedule,

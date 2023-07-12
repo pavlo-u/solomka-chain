@@ -15,7 +15,7 @@ use {
     arrayref::{array_ref, array_refs},
     base64::{prelude::BASE64_STANDARD, Engine},
     sha3::{Digest, Sha3_512},
-    solana_sdk::{
+    solomka_sdk::{
         derivation_path::DerivationPath,
         signature::Signature,
         signer::{
@@ -238,7 +238,7 @@ impl fmt::Display for AeCiphertext {
 mod tests {
     use {
         super::*,
-        solana_sdk::{pubkey::Pubkey, signature::Keypair, signer::null_signer::NullSigner},
+        solomka_sdk::{pubkey::Pubkey, signature::Keypair, signer::null_signer::NullSigner},
     };
 
     #[test]

@@ -30,7 +30,7 @@ use {
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::config::RpcGetVoteAccountsConfig,
     solana_rpc_client_nonce_utils::blockhash_query::BlockhashQuery,
-    solana_sdk::{
+    solomka_sdk::{
         account::Account, commitment_config::CommitmentConfig, feature, message::Message,
         native_token::lamports_to_sol, pubkey::Pubkey, system_instruction::SystemError,
         transaction::Transaction,
@@ -801,7 +801,7 @@ pub fn process_create_vote_account(
     let nonce_authority = config.signers[nonce_authority];
 
     let is_feature_active = (!sign_only)
-        .then(solana_sdk::feature_set::vote_state_add_vote_latency::id)
+        .then(solomka_sdk::feature_set::vote_state_add_vote_latency::id)
         .and_then(|feature_address| rpc_client.get_account(&feature_address).ok())
         .and_then(|account| feature::from_account(&account))
         .map_or(false, |feature| feature.activated_at.is_some());
@@ -1430,7 +1430,7 @@ mod tests {
         super::*,
         crate::{clap_app::get_clap_app, cli::parse_command},
         solana_rpc_client_nonce_utils::blockhash_query,
-        solana_sdk::{
+        solomka_sdk::{
             hash::Hash,
             signature::{read_keypair_file, write_keypair, Keypair, Signer},
             signer::presigner::Presigner,
@@ -1868,7 +1868,7 @@ mod tests {
         );
 
         // test init with an authed voter
-        let authed = solana_sdk::pubkey::new_rand();
+        let authed = solomka_sdk::pubkey::new_rand();
         let (keypair_file, mut tmp_file) = make_tmp_file();
         let keypair = Keypair::new();
         write_keypair(&keypair, tmp_file.as_file_mut()).unwrap();

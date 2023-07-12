@@ -8,7 +8,7 @@ use {
     solana_quic_client::{QuicConfig, QuicConnectionManager, QuicPool},
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::config::RpcProgramAccountsConfig,
-    solana_sdk::{
+    solomka_sdk::{
         account::Account,
         client::{AsyncClient, Client, SyncClient},
         clock::Slot,

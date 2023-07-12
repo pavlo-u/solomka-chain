@@ -18,7 +18,7 @@ solana-program = { workspace = true }
 [dev-dependencies]
 solana-logger = { workspace = true }
 solana-program-test = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-validator = { workspace = true }
 
 [lib]

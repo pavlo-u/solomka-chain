@@ -3,7 +3,7 @@
 use {
     solana_program_test::*,
     solana_sbf_rust_sanity::process_instruction,
-    solana_sdk::{
+    solomka_sdk::{
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,
         signature::{Keypair, Signer},

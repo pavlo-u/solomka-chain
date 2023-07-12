@@ -10,7 +10,7 @@ use {
     solana_program_runtime::{
         declare_process_instruction, sysvar_cache::get_sysvar_with_account_check,
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::Clock,
         feature_set,
         instruction::InstructionError,
@@ -490,7 +490,7 @@ mod tests {
         solana_program_runtime::{
             invoke_context::mock_process_instruction, sysvar_cache::SysvarCache,
         },
-        solana_sdk::{
+        solomka_sdk::{
             account::{
                 create_account_shared_data_for_test, AccountSharedData, ReadableAccount,
                 WritableAccount,
@@ -1534,9 +1534,9 @@ mod tests {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let stake_lamports = rent_exempt_reserve;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new(stake_lamports, StakeState::size_of(), &id());
-        let custodian_address = solana_sdk::pubkey::new_rand();
+        let custodian_address = solomka_sdk::pubkey::new_rand();
         let lockup = Lockup {
             epoch: 1,
             unix_timestamp: 0,
@@ -1636,9 +1636,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_authorize(feature_set: Arc<FeatureSet>) {
-        let authority_address = solana_sdk::pubkey::new_rand();
-        let authority_address_2 = solana_sdk::pubkey::new_rand();
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let authority_address = solomka_sdk::pubkey::new_rand();
+        let authority_address_2 = solomka_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let stake_lamports = 42;
         let stake_account = AccountSharedData::new_data_with_space(
             stake_lamports,
@@ -1647,7 +1647,7 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let to_address = solana_sdk::pubkey::new_rand();
+        let to_address = solomka_sdk::pubkey::new_rand();
         let to_account = AccountSharedData::new(1, 0, &system_program::id());
         let mut transaction_accounts = vec![
             (stake_address, stake_account),
@@ -1817,9 +1817,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_authorize_override(feature_set: Arc<FeatureSet>) {
-        let authority_address = solana_sdk::pubkey::new_rand();
-        let mallory_address = solana_sdk::pubkey::new_rand();
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let authority_address = solomka_sdk::pubkey::new_rand();
+        let mallory_address = solomka_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let stake_lamports = 42;
         let stake_account = AccountSharedData::new_data_with_space(
             stake_lamports,
@@ -1936,8 +1936,8 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_authorize_with_seed(feature_set: Arc<FeatureSet>) {
-        let authority_base_address = solana_sdk::pubkey::new_rand();
-        let authority_address = solana_sdk::pubkey::new_rand();
+        let authority_base_address = solomka_sdk::pubkey::new_rand();
+        let authority_address = solomka_sdk::pubkey::new_rand();
         let seed = "42";
         let stake_address = Pubkey::create_with_seed(&authority_base_address, seed, &id()).unwrap();
         let stake_lamports = 42;
@@ -2053,8 +2053,8 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_authorize_delegated_stake(feature_set: Arc<FeatureSet>) {
-        let authority_address = solana_sdk::pubkey::new_rand();
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let authority_address = solomka_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
@@ -2064,12 +2064,12 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let vote_address = solana_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
         let vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
-        let vote_address_2 = solana_sdk::pubkey::new_rand();
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
+        let vote_address_2 = solomka_sdk::pubkey::new_rand();
         let mut vote_account_2 =
-            vote_state::create_account(&vote_address_2, &solana_sdk::pubkey::new_rand(), 0, 100);
+            vote_state::create_account(&vote_address_2, &solomka_sdk::pubkey::new_rand(), 0, 100);
         vote_account_2.set_state(&VoteState::default()).unwrap();
         let mut transaction_accounts = vec![
             (stake_address, stake_account),
@@ -2249,12 +2249,12 @@ mod tests {
             vote_state::process_slot_vote_unchecked(&mut vote_state, i);
         }
         let vote_state_credits = vote_state.credits();
-        let vote_address = solana_sdk::pubkey::new_rand();
-        let vote_address_2 = solana_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
+        let vote_address_2 = solomka_sdk::pubkey::new_rand();
         let mut vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
         let mut vote_account_2 =
-            vote_state::create_account(&vote_address_2, &solana_sdk::pubkey::new_rand(), 0, 100);
+            vote_state::create_account(&vote_address_2, &solomka_sdk::pubkey::new_rand(), 0, 100);
         vote_account
             .set_state(&VoteStateVersions::new_current(vote_state.clone()))
             .unwrap();
@@ -2263,7 +2263,7 @@ mod tests {
             .unwrap();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let mut stake_account = AccountSharedData::new_data_with_space(
             stake_lamports,
             &StakeState::Initialized(Meta {
@@ -2460,13 +2460,13 @@ mod tests {
         transaction_accounts[1] = (vote_address_2, vote_account_2);
         transaction_accounts[1]
             .1
-            .set_owner(solana_sdk::pubkey::new_rand());
+            .set_owner(solomka_sdk::pubkey::new_rand());
         process_instruction(
             Arc::clone(&feature_set),
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts.clone(),
             instruction_accounts.clone(),
-            Err(solana_sdk::instruction::InstructionError::IncorrectProgramId),
+            Err(solomka_sdk::instruction::InstructionError::IncorrectProgramId),
         );
 
         // verify that non-stakes fail delegate()
@@ -2478,7 +2478,7 @@ mod tests {
             &serialize(&StakeInstruction::DelegateStake).unwrap(),
             transaction_accounts,
             instruction_accounts,
-            Err(solana_sdk::instruction::InstructionError::IncorrectProgramId),
+            Err(solomka_sdk::instruction::InstructionError::IncorrectProgramId),
         );
     }
 
@@ -2490,12 +2490,12 @@ mod tests {
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let initial_lamports = 4242424242;
         let stake_lamports = rent_exempt_reserve + initial_lamports;
-        let recipient_address = solana_sdk::pubkey::new_rand();
-        let authority_address = solana_sdk::pubkey::new_rand();
-        let vote_address = solana_sdk::pubkey::new_rand();
+        let recipient_address = solomka_sdk::pubkey::new_rand();
+        let authority_address = solomka_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
         let vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
-        let stake_address = solana_sdk::pubkey::new_rand();
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
             stake_lamports,
             &StakeState::Initialized(Meta {
@@ -2685,10 +2685,10 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_split(feature_set: Arc<FeatureSet>) {
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation * 2;
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let split_to_account = AccountSharedData::new_data_with_space(
             0,
             &StakeState::Uninitialized,
@@ -2776,7 +2776,7 @@ mod tests {
             0,
             &StakeState::Uninitialized,
             StakeState::size_of(),
-            &solana_sdk::pubkey::new_rand(),
+            &solomka_sdk::pubkey::new_rand(),
         )
         .unwrap();
         transaction_accounts[1] = (split_to_address, split_to_account);
@@ -2792,10 +2792,10 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_withdraw_stake(feature_set: Arc<FeatureSet>) {
-        let recipient_address = solana_sdk::pubkey::new_rand();
-        let authority_address = solana_sdk::pubkey::new_rand();
-        let custodian_address = solana_sdk::pubkey::new_rand();
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let recipient_address = solomka_sdk::pubkey::new_rand();
+        let authority_address = solomka_sdk::pubkey::new_rand();
+        let custodian_address = solomka_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
@@ -2805,9 +2805,9 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let vote_address = solana_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
         let mut vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
         vote_account
             .set_state(&VoteStateVersions::new_current(VoteState::default()))
             .unwrap();
@@ -3080,8 +3080,8 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_withdraw_stake_before_warmup(feature_set: Arc<FeatureSet>) {
-        let recipient_address = solana_sdk::pubkey::new_rand();
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let recipient_address = solomka_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation;
         let total_lamports = stake_lamports + 33;
@@ -3092,9 +3092,9 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let vote_address = solana_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
         let mut vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
         vote_account
             .set_state(&VoteStateVersions::new_current(VoteState::default()))
             .unwrap();
@@ -3207,9 +3207,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_withdraw_lockup(feature_set: Arc<FeatureSet>) {
-        let recipient_address = solana_sdk::pubkey::new_rand();
-        let custodian_address = solana_sdk::pubkey::new_rand();
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let recipient_address = solomka_sdk::pubkey::new_rand();
+        let custodian_address = solomka_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let total_lamports = 100;
         let mut meta = Meta {
             lockup: Lockup {
@@ -3327,9 +3327,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_withdraw_rent_exempt(feature_set: Arc<FeatureSet>) {
-        let recipient_address = solana_sdk::pubkey::new_rand();
-        let custodian_address = solana_sdk::pubkey::new_rand();
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let recipient_address = solomka_sdk::pubkey::new_rand();
+        let custodian_address = solomka_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
@@ -3419,7 +3419,7 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_deactivate(feature_set: Arc<FeatureSet>) {
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
@@ -3429,9 +3429,9 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let vote_address = solana_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
         let mut vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
         vote_account
             .set_state(&VoteStateVersions::new_current(VoteState::default()))
             .unwrap();
@@ -3543,9 +3543,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_set_lockup(feature_set: Arc<FeatureSet>) {
-        let custodian_address = solana_sdk::pubkey::new_rand();
-        let authorized_address = solana_sdk::pubkey::new_rand();
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let custodian_address = solomka_sdk::pubkey::new_rand();
+        let authorized_address = solomka_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = minimum_delegation;
         let stake_account = AccountSharedData::new_data_with_space(
@@ -3555,9 +3555,9 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let vote_address = solana_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
         let mut vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
         vote_account
             .set_state(&VoteStateVersions::new_current(VoteState::default()))
             .unwrap();
@@ -3828,7 +3828,7 @@ mod tests {
     fn test_initialize_minimum_balance(feature_set: Arc<FeatureSet>) {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let instruction_data = serialize(&StakeInstruction::Initialize(
             Authorized::auto(&stake_address),
             Lockup::default(),
@@ -3884,14 +3884,14 @@ mod tests {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta {
             rent_exempt_reserve,
             ..Meta::auto(&stake_address)
         };
-        let vote_address = solana_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
         let vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -4385,12 +4385,12 @@ mod tests {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta {
             rent_exempt_reserve,
             ..Meta::auto(&stake_address)
         };
-        let recipient_address = solana_sdk::pubkey::new_rand();
+        let recipient_address = solomka_sdk::pubkey::new_rand();
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -4498,16 +4498,16 @@ mod tests {
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new(
             rent_exempt_reserve + minimum_delegation,
             StakeState::size_of(),
             &id(),
         );
-        let vote_address = solana_sdk::pubkey::new_rand();
+        let vote_address = solomka_sdk::pubkey::new_rand();
         let vote_account =
-            vote_state::create_account(&vote_address, &solana_sdk::pubkey::new_rand(), 0, 100);
-        let recipient_address = solana_sdk::pubkey::new_rand();
+            vote_state::create_account(&vote_address, &solomka_sdk::pubkey::new_rand(), 0, 100);
+        let recipient_address = solomka_sdk::pubkey::new_rand();
         let mut clock = Clock::default();
         let mut transaction_accounts = vec![
             (stake_address, stake_account),
@@ -4666,7 +4666,7 @@ mod tests {
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = (rent_exempt_reserve + minimum_delegation) * 2;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
             stake_lamports,
             &StakeState::Uninitialized,
@@ -4674,7 +4674,7 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let split_to_account = AccountSharedData::new_data_with_space(
             0,
             &StakeState::Uninitialized,
@@ -4763,7 +4763,7 @@ mod tests {
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_split_split_not_uninitialized(feature_set: Arc<FeatureSet>) {
         let stake_lamports = 42;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
             stake_lamports,
             &just_stake(Meta::auto(&stake_address), stake_lamports),
@@ -4771,7 +4771,7 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -4817,7 +4817,7 @@ mod tests {
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = (rent_exempt_reserve + minimum_delegation) * 2;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let stake_account = AccountSharedData::new_data_with_space(
             stake_lamports,
             &just_stake(
@@ -4831,7 +4831,7 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let split_to_account = AccountSharedData::new_data_with_space(
             0,
             &StakeState::Uninitialized,
@@ -4872,8 +4872,8 @@ mod tests {
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
-        let stake_address = solana_sdk::pubkey::new_rand();
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let split_to_account = AccountSharedData::new_data_with_space(
             0,
             &StakeState::Uninitialized,
@@ -4980,7 +4980,7 @@ mod tests {
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = (rent_exempt_reserve + minimum_delegation) * 2;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve,
@@ -4994,7 +4994,7 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -5103,7 +5103,7 @@ mod tests {
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = (source_larger_rent_exempt_reserve + minimum_delegation) * 2;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve: source_larger_rent_exempt_reserve,
@@ -5117,7 +5117,7 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -5230,7 +5230,7 @@ mod tests {
         let source_smaller_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of() + 100);
         let stake_lamports = split_rent_exempt_reserve + 1;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve: source_smaller_rent_exempt_reserve,
@@ -5244,7 +5244,7 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -5306,13 +5306,13 @@ mod tests {
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = rent_exempt_reserve + minimum_delegation;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve,
             ..Meta::default()
         };
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let split_to_account = AccountSharedData::new_data_with_space(
             0,
             &StakeState::Uninitialized,
@@ -5399,7 +5399,7 @@ mod tests {
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = rent_exempt_reserve + minimum_delegation;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve,
@@ -5413,7 +5413,7 @@ mod tests {
             &id(),
         )
         .unwrap();
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -5493,13 +5493,13 @@ mod tests {
         let split_rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let minimum_delegation = crate::get_minimum_delegation(&feature_set);
         let stake_lamports = source_rent_exempt_reserve + minimum_delegation;
-        let stake_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta {
             authorized: Authorized::auto(&stake_address),
             rent_exempt_reserve: source_rent_exempt_reserve,
             ..Meta::default()
         };
-        let split_to_address = solana_sdk::pubkey::new_rand();
+        let split_to_address = solomka_sdk::pubkey::new_rand();
         let instruction_accounts = vec![
             AccountMeta {
                 pubkey: stake_address,
@@ -5620,9 +5620,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_merge(feature_set: Arc<FeatureSet>) {
-        let stake_address = solana_sdk::pubkey::new_rand();
-        let merge_from_address = solana_sdk::pubkey::new_rand();
-        let authorized_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
+        let merge_from_address = solomka_sdk::pubkey::new_rand();
+        let authorized_address = solomka_sdk::pubkey::new_rand();
         let meta = Meta::auto(&authorized_address);
         let stake_lamports = 42;
         let mut instruction_accounts = vec![
@@ -5750,8 +5750,8 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_merge_self_fails(feature_set: Arc<FeatureSet>) {
-        let stake_address = solana_sdk::pubkey::new_rand();
-        let authorized_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
+        let authorized_address = solomka_sdk::pubkey::new_rand();
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());
         let stake_amount = 4242424242;
@@ -5827,10 +5827,10 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_merge_incorrect_authorized_staker(feature_set: Arc<FeatureSet>) {
-        let stake_address = solana_sdk::pubkey::new_rand();
-        let merge_from_address = solana_sdk::pubkey::new_rand();
-        let authorized_address = solana_sdk::pubkey::new_rand();
-        let wrong_authorized_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
+        let merge_from_address = solomka_sdk::pubkey::new_rand();
+        let authorized_address = solomka_sdk::pubkey::new_rand();
+        let wrong_authorized_address = solomka_sdk::pubkey::new_rand();
         let stake_lamports = 42;
         let mut instruction_accounts = vec![
             AccountMeta {
@@ -5921,9 +5921,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_merge_invalid_account_data(feature_set: Arc<FeatureSet>) {
-        let stake_address = solana_sdk::pubkey::new_rand();
-        let merge_from_address = solana_sdk::pubkey::new_rand();
-        let authorized_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
+        let merge_from_address = solomka_sdk::pubkey::new_rand();
+        let authorized_address = solomka_sdk::pubkey::new_rand();
         let stake_lamports = 42;
         let instruction_accounts = vec![
             AccountMeta {
@@ -6002,9 +6002,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_merge_fake_stake_source(feature_set: Arc<FeatureSet>) {
-        let stake_address = solana_sdk::pubkey::new_rand();
-        let merge_from_address = solana_sdk::pubkey::new_rand();
-        let authorized_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
+        let merge_from_address = solomka_sdk::pubkey::new_rand();
+        let authorized_address = solomka_sdk::pubkey::new_rand();
         let stake_lamports = 42;
         let stake_account = AccountSharedData::new_data_with_space(
             stake_lamports,
@@ -6017,7 +6017,7 @@ mod tests {
             stake_lamports,
             &just_stake(Meta::auto(&authorized_address), stake_lamports),
             StakeState::size_of(),
-            &solana_sdk::pubkey::new_rand(),
+            &solomka_sdk::pubkey::new_rand(),
         )
         .unwrap();
         let transaction_accounts = vec![
@@ -6073,9 +6073,9 @@ mod tests {
     #[test_case(feature_set_old_behavior(); "old_behavior")]
     #[test_case(feature_set_new_behavior(); "new_behavior")]
     fn test_merge_active_stake(feature_set: Arc<FeatureSet>) {
-        let stake_address = solana_sdk::pubkey::new_rand();
-        let merge_from_address = solana_sdk::pubkey::new_rand();
-        let authorized_address = solana_sdk::pubkey::new_rand();
+        let stake_address = solomka_sdk::pubkey::new_rand();
+        let merge_from_address = solomka_sdk::pubkey::new_rand();
+        let authorized_address = solomka_sdk::pubkey::new_rand();
         let base_lamports = 4242424242;
         let rent = Rent::default();
         let rent_exempt_reserve = rent.minimum_balance(StakeState::size_of());

@@ -1,7 +1,7 @@
 use {
     itertools::Itertools,
     lru::LruCache,
-    solana_sdk::pubkey::Pubkey,
+    solomka_sdk::pubkey::Pubkey,
     std::{cmp::Reverse, collections::HashMap},
 };
 

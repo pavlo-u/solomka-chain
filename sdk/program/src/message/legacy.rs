@@ -169,19 +169,19 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_sdk`], [`solana_rpc_client`] and [`anyhow`] crates.
+    /// This example uses the [`solomka_sdk`], [`solana_rpc_client`] and [`anyhow`] crates.
     ///
-    /// [`solana_sdk`]: https://docs.rs/solana-sdk
+    /// [`solomka_sdk`]: https://docs.rs/solomka-sdk
     /// [`solana_rpc_client`]: https://docs.rs/solana-rpc-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solana_program::example_mocks::solana_sdk;
+    /// # use solana_program::example_mocks::solomka_sdk;
     /// # use solana_program::example_mocks::solana_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
     /// use solana_rpc_client::rpc_client::RpcClient;
-    /// use solana_sdk::{
+    /// use solomka_sdk::{
     ///     instruction::Instruction,
     ///     message::Message,
     ///     pubkey::Pubkey,
@@ -240,19 +240,19 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_sdk`], [`solana_rpc_client`] and [`anyhow`] crates.
+    /// This example uses the [`solomka_sdk`], [`solana_rpc_client`] and [`anyhow`] crates.
     ///
-    /// [`solana_sdk`]: https://docs.rs/solana-sdk
+    /// [`solomka_sdk`]: https://docs.rs/solomka-sdk
     /// [`solana_rpc_client`]: https://docs.rs/solana-rpc-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solana_program::example_mocks::solana_sdk;
+    /// # use solana_program::example_mocks::solomka_sdk;
     /// # use solana_program::example_mocks::solana_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
     /// use solana_rpc_client::rpc_client::RpcClient;
-    /// use solana_sdk::{
+    /// use solomka_sdk::{
     ///     instruction::Instruction,
     ///     message::Message,
     ///     pubkey::Pubkey,
@@ -336,19 +336,19 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_sdk`], [`solana_rpc_client`] and [`anyhow`] crates.
+    /// This example uses the [`solomka_sdk`], [`solana_rpc_client`] and [`anyhow`] crates.
     ///
-    /// [`solana_sdk`]: https://docs.rs/solana-sdk
+    /// [`solomka_sdk`]: https://docs.rs/solomka-sdk
     /// [`solana_rpc_client`]: https://docs.rs/solana-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solana_program::example_mocks::solana_sdk;
+    /// # use solana_program::example_mocks::solomka_sdk;
     /// # use solana_program::example_mocks::solana_rpc_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
     /// use solana_rpc_client::rpc_client::RpcClient;
-    /// use solana_sdk::{
+    /// use solomka_sdk::{
     ///     hash::Hash,
     ///     instruction::Instruction,
     ///     message::Message,

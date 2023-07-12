@@ -20,7 +20,7 @@ use {
             PROGRAM_ENVIRONMENT_KEY_SHIFT,
         },
     },
-    solana_sdk::{
+    solomka_sdk::{
         entrypoint::{HEAP_LENGTH, SUCCESS},
         feature_set::{self, FeatureSet},
         instruction::InstructionError,
@@ -625,7 +625,7 @@ mod tests {
     use {
         super::*,
         solana_program_runtime::invoke_context::mock_process_instruction,
-        solana_sdk::{
+        solomka_sdk::{
             account::{
                 create_account_shared_data_for_test, AccountSharedData, ReadableAccount,
                 WritableAccount,

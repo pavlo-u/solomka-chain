@@ -6,7 +6,7 @@ use {
         },
         snapshot_package::{retain_max_n_elements, SnapshotType},
     },
-    solana_sdk::{clock::Slot, hash::Hash},
+    solomka_sdk::{clock::Slot, hash::Hash},
     std::sync::Arc,
 };
 

@@ -1,6 +1,6 @@
 #![allow(clippy::integer_arithmetic)]
 
-pub use {crate::extract_memos::extract_and_fmt_memos, solana_sdk::reward_type::RewardType};
+pub use {crate::extract_memos::extract_and_fmt_memos, solomka_sdk::reward_type::RewardType};
 use {
     crate::{
         option_serializer::OptionSerializer,
@@ -9,7 +9,7 @@ use {
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     solana_account_decoder::parse_token::UiTokenAmount,
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, UnixTimestamp},
         commitment_config::CommitmentConfig,
         instruction::CompiledInstruction,

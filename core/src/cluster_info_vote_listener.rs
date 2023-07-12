@@ -34,7 +34,7 @@ use {
         vote_sender_types::ReplayVoteReceiver,
         vote_transaction::VoteTransaction,
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, DEFAULT_MS_PER_SLOT, DEFAULT_TICKS_PER_SLOT},
         hash::Hash,
         pubkey::Pubkey,
@@ -883,7 +883,7 @@ mod tests {
             },
             vote_sender_types::ReplayVoteSender,
         },
-        solana_sdk::{
+        solomka_sdk::{
             hash::Hash,
             pubkey::Pubkey,
             signature::{Keypair, Signature, Signer},
@@ -926,7 +926,7 @@ mod tests {
         let (vote_tracker, bank, _, _) = setup();
 
         // Check outdated slots are purged with new root
-        let new_voter = solana_sdk::pubkey::new_rand();
+        let new_voter = solomka_sdk::pubkey::new_rand();
         // Make separate copy so the original doesn't count toward
         // the ref count, which would prevent cleanup
         let new_voter_ = new_voter;

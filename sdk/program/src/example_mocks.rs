@@ -18,7 +18,7 @@ pub mod solana_rpc_client {
         use {
             super::super::{
                 solana_rpc_client_api::client_error::Result as ClientResult,
-                solana_sdk::{
+                solomka_sdk::{
                     account::Account, hash::Hash, pubkey::Pubkey, signature::Signature,
                     transaction::Transaction,
                 },
@@ -87,7 +87,7 @@ pub mod solana_rpc_client_api {
 
 pub mod solana_rpc_client_nonce_utils {
     use {
-        super::solana_sdk::{account::ReadableAccount, account_utils::StateMut, pubkey::Pubkey},
+        super::solomka_sdk::{account::ReadableAccount, account_utils::StateMut, pubkey::Pubkey},
         crate::nonce::state::{Data, DurableNonce, Versions},
     };
 
@@ -111,7 +111,7 @@ pub mod solana_rpc_client_nonce_utils {
 ///
 /// This lets examples in solana-program appear to be written as client
 /// programs.
-pub mod solana_sdk {
+pub mod solomka_sdk {
     pub use crate::{
         address_lookup_table_account, hash, instruction, keccak, message, nonce,
         pubkey::{self, Pubkey},

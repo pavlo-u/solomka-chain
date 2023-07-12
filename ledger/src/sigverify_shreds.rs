@@ -12,7 +12,7 @@ use {
         recycler_cache::RecyclerCache,
         sigverify::{self, count_packets_in_batches, TxOffset},
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         hash::Hash,
         pubkey::Pubkey,
@@ -482,7 +482,7 @@ mod tests {
         rand::{seq::SliceRandom, Rng},
         rayon::ThreadPoolBuilder,
         solana_entry::entry::Entry,
-        solana_sdk::{
+        solomka_sdk::{
             hash,
             hash::Hash,
             signature::{Keypair, Signer},

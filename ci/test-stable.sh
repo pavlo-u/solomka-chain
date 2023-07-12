@@ -55,7 +55,7 @@ test-stable-sbf)
   cargo_build_sbf="$(realpath ./cargo-build-sbf)"
   cargo_test_sbf="$(realpath ./cargo-test-sbf)"
 
-  # SBF solana-sdk legacy compile test
+  # SBF solomka-sdk legacy compile test
   "$cargo_build_sbf" --manifest-path sdk/Cargo.toml
 
   # SBF C program system tests

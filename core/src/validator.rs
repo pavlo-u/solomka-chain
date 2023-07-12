@@ -97,7 +97,7 @@ use {
             self, clean_orphaned_account_snapshot_dirs, move_and_async_delete_path_contents,
         },
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         epoch_schedule::MAX_LEADER_SCHEDULE_EPOCH_OFFSET,
         exit::Exit,
@@ -2286,7 +2286,7 @@ mod tests {
         crossbeam_channel::{bounded, RecvTimeoutError},
         solana_gossip::contact_info::{ContactInfo, LegacyContactInfo},
         solana_ledger::{create_new_tmp_ledger, genesis_utils::create_genesis_config_with_leader},
-        solana_sdk::{genesis_config::create_genesis_config, poh_config::PohConfig},
+        solomka_sdk::{genesis_config::create_genesis_config, poh_config::PohConfig},
         solana_tpu_client::tpu_client::{
             DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_ENABLE_UDP, DEFAULT_TPU_USE_QUIC,
         },
@@ -2460,7 +2460,7 @@ mod tests {
     #[test]
     fn test_wait_for_supermajority() {
         solana_logger::setup();
-        use solana_sdk::hash::hash;
+        use solomka_sdk::hash::hash;
         let node_keypair = Arc::new(Keypair::new());
         let cluster_info = ClusterInfo::new(
             ContactInfo::new_localhost(&node_keypair.pubkey(), timestamp()),
@@ -2630,9 +2630,9 @@ mod tests {
     fn test_poh_speed() {
         solana_logger::setup();
         let poh_config = PohConfig {
-            target_tick_duration: Duration::from_millis(solana_sdk::clock::MS_PER_TICK),
+            target_tick_duration: Duration::from_millis(solomka_sdk::clock::MS_PER_TICK),
             // make PoH rate really fast to cause the panic condition
-            hashes_per_tick: Some(100 * solana_sdk::clock::DEFAULT_HASHES_PER_TICK),
+            hashes_per_tick: Some(100 * solomka_sdk::clock::DEFAULT_HASHES_PER_TICK),
             ..PohConfig::default()
         };
         let genesis_config = GenesisConfig {
@@ -2645,7 +2645,7 @@ mod tests {
     #[test]
     fn test_poh_speed_no_hashes_per_tick() {
         let poh_config = PohConfig {
-            target_tick_duration: Duration::from_millis(solana_sdk::clock::MS_PER_TICK),
+            target_tick_duration: Duration::from_millis(solomka_sdk::clock::MS_PER_TICK),
             hashes_per_tick: None,
             ..PohConfig::default()
         };

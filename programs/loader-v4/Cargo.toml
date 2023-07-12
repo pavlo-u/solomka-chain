@@ -14,7 +14,7 @@ log = { workspace = true }
 rand = { workspace = true }
 solana-measure = { workspace = true }
 solana-program-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana_rbpf = { workspace = true }
 
 [dev-dependencies]

@@ -1,4 +1,4 @@
-use solana_sdk::pubkey::Pubkey;
+use solomka_sdk::pubkey::Pubkey;
 
 #[derive(Default)]
 pub struct AddressGenerator {

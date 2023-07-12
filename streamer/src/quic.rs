@@ -8,7 +8,7 @@ use {
     quinn::{Endpoint, IdleTimeout, ServerConfig},
     rustls::{server::ClientCertVerified, Certificate, DistinguishedNames},
     solana_perf::packet::PacketBatch,
-    solana_sdk::{
+    solomka_sdk::{
         packet::PACKET_DATA_SIZE,
         quic::{QUIC_MAX_TIMEOUT, QUIC_MAX_UNSTAKED_CONCURRENT_STREAMS},
         signature::Keypair,
@@ -439,7 +439,7 @@ mod test {
         super::*,
         crate::nonblocking::quic::{test::*, DEFAULT_WAIT_FOR_CHUNK_TIMEOUT},
         crossbeam_channel::unbounded,
-        solana_sdk::net::DEFAULT_TPU_COALESCE,
+        solomka_sdk::net::DEFAULT_TPU_COALESCE,
         std::net::SocketAddr,
     };
 

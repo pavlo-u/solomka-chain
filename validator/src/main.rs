@@ -47,7 +47,7 @@ use {
             self, create_all_accounts_run_and_snapshot_dirs, ArchiveFormat, SnapshotVersion,
         },
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, DEFAULT_S_PER_SLOT},
         commitment_config::CommitmentConfig,
         hash::Hash,

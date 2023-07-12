@@ -15,7 +15,7 @@ log = { workspace = true }
 serde = { workspace = true }
 serde_derive = { workspace = true }
 solana-program-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 
 [dev-dependencies]
 assert_matches = { workspace = true }

@@ -231,7 +231,7 @@ pub(crate) mod tests {
             bank::{Bank, NonceFull, NoncePartial, TransactionBalancesSet},
             rent_debits::RentDebits,
         },
-        solana_sdk::{
+        solomka_sdk::{
             account_utils::StateMut,
             clock::Slot,
             hash::Hash,

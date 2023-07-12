@@ -5,7 +5,7 @@
 
 use {
     solana_rbpf::memory_region::MemoryState,
-    solana_sdk::feature_set::bpf_account_data_direct_mapping, std::slice,
+    solomka_sdk::feature_set::bpf_account_data_direct_mapping, std::slice,
 };
 
 extern crate test;
@@ -31,7 +31,7 @@ use {
         genesis_utils::{create_genesis_config, GenesisConfigInfo},
         loader_utils::{load_program, load_program_from_file},
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::AccountSharedData,
         bpf_loader,
         client::SyncClient,

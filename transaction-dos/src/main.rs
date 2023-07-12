@@ -14,7 +14,7 @@ use {
     solana_faucet::faucet::{request_airdrop_transaction, FAUCET_PORT},
     solana_gossip::gossip_service::discover,
     solana_rpc_client::rpc_client::RpcClient,
-    solana_sdk::{
+    solomka_sdk::{
         commitment_config::CommitmentConfig,
         instruction::{AccountMeta, Instruction},
         message::Message,
@@ -641,7 +641,7 @@ pub mod test {
             validator_configs::make_identical_validator_configs,
         },
         solana_measure::measure::Measure,
-        solana_sdk::poh_config::PohConfig,
+        solomka_sdk::poh_config::PohConfig,
     };
 
     #[test]
@@ -664,7 +664,7 @@ pub mod test {
             &account_metas,
         );
         let signers: Vec<&Keypair> = vec![&keypair];
-        let blockhash = solana_sdk::hash::Hash::default();
+        let blockhash = solomka_sdk::hash::Hash::default();
         let tx = Transaction::new(&signers, message, blockhash);
         let size = bincode::serialized_size(&tx).unwrap();
         info!("size:{}", size);

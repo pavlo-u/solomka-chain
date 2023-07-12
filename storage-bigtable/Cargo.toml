@@ -28,7 +28,7 @@ serde = { workspace = true }
 serde_derive = { workspace = true }
 smpl_jwt = { workspace = true }
 solana-metrics = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-storage-proto = { workspace = true }
 solana-transaction-status = { workspace = true }
 thiserror = { workspace = true }

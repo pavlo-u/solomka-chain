@@ -21,7 +21,7 @@ use {
         packet::{to_packet_batches, PacketBatch},
         test_tx::test_tx,
     },
-    solana_sdk::{
+    solomka_sdk::{
         hash::Hash,
         packet::PacketFlags,
         signature::{Keypair, Signer},

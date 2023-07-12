@@ -15,7 +15,7 @@ bs58 = { workspace = true }
 prost = { workspace = true }
 serde = { workspace = true }
 solana-account-decoder = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-transaction-status = { workspace = true }
 
 [dev-dependencies]

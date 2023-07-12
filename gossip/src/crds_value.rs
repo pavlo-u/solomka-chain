@@ -11,7 +11,7 @@ use {
     rand::{CryptoRng, Rng},
     serde::de::{Deserialize, Deserializer},
     solana_runtime::vote_parser,
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         hash::Hash,
         pubkey::{self, Pubkey},
@@ -198,7 +198,7 @@ impl AccountsHashes {
         let num_hashes = rng.gen_range(0, MAX_LEGACY_SNAPSHOT_HASHES) + 1;
         let hashes = std::iter::repeat_with(|| {
             let slot = 47825632 + rng.gen_range(0, 512);
-            let hash = solana_sdk::hash::new_rand(rng);
+            let hash = solomka_sdk::hash::new_rand(rng);
             (slot, hash)
         })
         .take(num_hashes)
@@ -706,7 +706,7 @@ mod test {
         rand::SeedableRng,
         rand_chacha::ChaChaRng,
         solana_perf::test_tx::new_test_vote_tx,
-        solana_sdk::{
+        solomka_sdk::{
             signature::{Keypair, Signer},
             timing::timestamp,
         },
@@ -802,7 +802,7 @@ mod test {
         let mut rng = rand::thread_rng();
         let vote = vote_state::Vote::new(
             vec![1, 3, 7], // slots
-            solana_sdk::hash::new_rand(&mut rng),
+            solomka_sdk::hash::new_rand(&mut rng),
         );
         let ix = vote_instruction::vote(
             &Pubkey::new_unique(), // vote_pubkey

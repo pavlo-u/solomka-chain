@@ -11,7 +11,7 @@ use {
         snapshot_utils::{self, ArchiveFormat, BankSnapshotInfo, Result, SnapshotVersion},
     },
     log::*,
-    solana_sdk::{clock::Slot, feature_set, sysvar::epoch_schedule::EpochSchedule},
+    solomka_sdk::{clock::Slot, feature_set, sysvar::epoch_schedule::EpochSchedule},
     std::{
         path::{Path, PathBuf},
         sync::Arc,

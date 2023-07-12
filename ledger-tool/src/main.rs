@@ -60,7 +60,7 @@ use {
             SUPPORTED_ARCHIVE_COMPRESSION,
         },
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::{AccountSharedData, ReadableAccount, WritableAccount},
         account_utils::StateMut,
         clock::{Epoch, Slot},
@@ -3151,7 +3151,7 @@ fn main() {
                     if let Some((pubkey, account, slot)) = some_account_tuple
                         .filter(|(_, account, _)| Accounts::is_loadable(account.lamports()))
                     {
-                        if !include_sysvars && solana_sdk::sysvar::is_sysvar_id(pubkey) {
+                        if !include_sysvars && solomka_sdk::sysvar::is_sysvar_id(pubkey) {
                             return;
                         }
 
@@ -3534,7 +3534,7 @@ fn main() {
                             for (pubkey, warped_account) in all_accounts {
                                 // Don't output sysvars; it's always updated but not related to
                                 // inflation.
-                                if solana_sdk::sysvar::is_sysvar_id(&pubkey) {
+                                if solomka_sdk::sysvar::is_sysvar_id(&pubkey) {
                                     continue;
                                 }
 

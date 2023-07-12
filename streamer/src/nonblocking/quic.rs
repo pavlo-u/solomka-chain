@@ -15,7 +15,7 @@ use {
     quinn_proto::VarIntBoundsExceeded,
     rand::{thread_rng, Rng},
     solana_perf::packet::{PacketBatch, PACKETS_PER_BATCH},
-    solana_sdk::{
+    solomka_sdk::{
         packet::{Meta, PACKET_DATA_SIZE},
         pubkey::Pubkey,
         quic::{
@@ -1095,7 +1095,7 @@ pub mod test {
         async_channel::unbounded as async_unbounded,
         crossbeam_channel::{unbounded, Receiver},
         quinn::{ClientConfig, IdleTimeout, TransportConfig},
-        solana_sdk::{
+        solomka_sdk::{
             net::DEFAULT_TPU_COALESCE,
             quic::{QUIC_KEEP_ALIVE, QUIC_MAX_TIMEOUT},
             signature::Keypair,

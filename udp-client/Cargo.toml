@@ -13,7 +13,7 @@ edition = { workspace = true }
 async-trait = { workspace = true }
 solana-connection-cache = { workspace = true }
 solana-net-utils = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-streamer = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }

@@ -19,7 +19,7 @@ use {
         shred::{Shred, ShredFlags},
     },
     solana_runtime::{bank::Bank, bank_forks::BankForks},
-    solana_sdk::{
+    solomka_sdk::{
         pubkey,
         signature::{Keypair, Signer},
         timing::{timestamp, AtomicInterval},

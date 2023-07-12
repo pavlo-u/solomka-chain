@@ -11,7 +11,7 @@ edition = { workspace = true }
 
 [dependencies]
 serde = { workspace = true, features = ["derive"] }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 tarpc = { workspace = true, features = ["full"] }
 
 [lib]

@@ -13,7 +13,7 @@ use {
     },
     solana_measure::measure::Measure,
     solana_runtime::epoch_stakes::EpochStakes,
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         epoch_schedule::{Epoch, EpochSchedule},
         hash::Hash,
@@ -982,7 +982,7 @@ mod test {
             get_tmp_ledger_path,
         },
         solana_runtime::{bank::Bank, bank_utils, contains::Contains},
-        solana_sdk::hash::Hash,
+        solomka_sdk::hash::Hash,
         trees::tr,
     };
 

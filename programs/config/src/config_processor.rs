@@ -4,7 +4,7 @@ use {
     crate::ConfigKeys,
     bincode::deserialize,
     solana_program_runtime::{declare_process_instruction, ic_msg},
-    solana_sdk::{
+    solomka_sdk::{
         feature_set, instruction::InstructionError, program_utils::limited_deserialize,
         pubkey::Pubkey, transaction_context::IndexOfAccount,
     },
@@ -141,7 +141,7 @@ mod tests {
         bincode::serialized_size,
         serde_derive::{Deserialize, Serialize},
         solana_program_runtime::invoke_context::mock_process_instruction,
-        solana_sdk::{
+        solomka_sdk::{
             account::{AccountSharedData, ReadableAccount},
             instruction::AccountMeta,
             pubkey::Pubkey,

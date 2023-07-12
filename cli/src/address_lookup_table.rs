@@ -13,7 +13,7 @@ use {
     solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::config::RpcSendTransactionConfig,
-    solana_sdk::{
+    solomka_sdk::{
         account::from_account, clock::Clock, commitment_config::CommitmentConfig, message::Message,
         pubkey::Pubkey, signer::Signer, sysvar, transaction::Transaction,
     },

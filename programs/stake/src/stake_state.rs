@@ -5,12 +5,12 @@
 
 #[deprecated(
     since = "1.8.0",
-    note = "Please use `solana_sdk::stake::state` or `solana_program::stake::state` instead"
+    note = "Please use `solomka_sdk::stake::state` or `solana_program::stake::state` instead"
 )]
-pub use solana_sdk::stake::state::*;
+pub use solomka_sdk::stake::state::*;
 use {
     solana_program_runtime::{ic_msg, invoke_context::InvokeContext},
-    solana_sdk::{
+    solomka_sdk::{
         account::{AccountSharedData, ReadableAccount, WritableAccount},
         account_utils::StateMut,
         clock::{Clock, Epoch},
@@ -1803,7 +1803,7 @@ mod tests {
         super::*,
         proptest::prelude::*,
         solana_program_runtime::with_mock_invoke_context,
-        solana_sdk::{
+        solomka_sdk::{
             account::{create_account_shared_data_for_test, AccountSharedData},
             native_token,
             pubkey::Pubkey,
@@ -1813,7 +1813,7 @@ mod tests {
 
     #[test]
     fn test_authorized_authorize() {
-        let staker = solana_sdk::pubkey::new_rand();
+        let staker = solomka_sdk::pubkey::new_rand();
         let mut authorized = Authorized::auto(&staker);
         let mut signers = HashSet::new();
         assert_eq!(
@@ -1829,9 +1829,9 @@ mod tests {
 
     #[test]
     fn test_authorized_authorize_with_custodian() {
-        let staker = solana_sdk::pubkey::new_rand();
-        let custodian = solana_sdk::pubkey::new_rand();
-        let invalid_custodian = solana_sdk::pubkey::new_rand();
+        let staker = solomka_sdk::pubkey::new_rand();
+        let custodian = solomka_sdk::pubkey::new_rand();
+        let invalid_custodian = solomka_sdk::pubkey::new_rand();
         let mut authorized = Authorized::auto(&staker);
         let mut signers = HashSet::new();
         signers.insert(staker);
@@ -2940,7 +2940,7 @@ mod tests {
 
     #[test]
     fn test_lockup_is_expired() {
-        let custodian = solana_sdk::pubkey::new_rand();
+        let custodian = solomka_sdk::pubkey::new_rand();
         let lockup = Lockup {
             epoch: 1,
             unix_timestamp: 1,
@@ -3001,7 +3001,7 @@ mod tests {
         panic!(
             "stake minimum_balance: {} lamports, {} SOL",
             minimum_balance,
-            minimum_balance as f64 / solana_sdk::native_token::LAMPORTS_PER_SOL as f64
+            minimum_balance as f64 / solomka_sdk::native_token::LAMPORTS_PER_SOL as f64
         );
     }
 
@@ -3026,7 +3026,7 @@ mod tests {
             rent_exempt_reserve
         );
 
-        let even_larger_data = solana_sdk::system_instruction::MAX_PERMITTED_DATA_LENGTH;
+        let even_larger_data = solomka_sdk::system_instruction::MAX_PERMITTED_DATA_LENGTH;
         let even_larger_rent_exempt_reserve = rent.minimum_balance(even_larger_data as usize);
         assert_eq!(
             calculate_split_rent_exempt_reserve(rent_exempt_reserve, data_len, even_larger_data),

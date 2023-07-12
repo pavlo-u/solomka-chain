@@ -13,7 +13,7 @@ use {
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::response::{RpcStakeActivation, StakeActivationState},
     solana_rpc_client_nonce_utils::blockhash_query::{self, BlockhashQuery},
-    solana_sdk::{
+    solomka_sdk::{
         account_utils::StateMut,
         commitment_config::CommitmentConfig,
         epoch_schedule::EpochSchedule,

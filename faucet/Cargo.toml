@@ -21,7 +21,7 @@ solana-clap-utils = { workspace = true }
 sonoma-cli-config = { workspace = true }
 solana-logger = { workspace = true }
 solana-metrics = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-version = { workspace = true }
 spl-memo = { workspace = true, features = ["no-entrypoint"] }
 thiserror = { workspace = true }

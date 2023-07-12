@@ -5,7 +5,7 @@ use {
     console::Emoji,
     dialoguer::{theme::ColorfulTheme, Select},
     semver::Version as FirmwareVersion,
-    solana_sdk::derivation_path::DerivationPath,
+    solomka_sdk::derivation_path::DerivationPath,
     std::{fmt, sync::Arc},
 };
 #[cfg(feature = "hidapi")]
@@ -13,7 +13,7 @@ use {
     crate::{ledger_error::LedgerError, locator::Manufacturer},
     log::*,
     num_traits::FromPrimitive,
-    solana_sdk::{pubkey::Pubkey, signature::Signature},
+    solomka_sdk::{pubkey::Pubkey, signature::Signature},
     std::{cmp::min, convert::TryFrom},
 };
 
@@ -530,8 +530,8 @@ impl RemoteWallet<hidapi::DeviceInfo> for LedgerWallet {
         message: &[u8],
     ) -> Result<Signature, RemoteWalletError> {
         if message.len()
-            > solana_sdk::offchain_message::v0::OffchainMessage::MAX_LEN_LEDGER
-                + solana_sdk::offchain_message::v0::OffchainMessage::HEADER_LEN
+            > solomka_sdk::offchain_message::v0::OffchainMessage::MAX_LEN_LEDGER
+                + solomka_sdk::offchain_message::v0::OffchainMessage::HEADER_LEN
         {
             return Err(RemoteWalletError::InvalidInput(
                 "Off-chain message to sign is too long".to_string(),

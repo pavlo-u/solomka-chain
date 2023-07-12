@@ -1,7 +1,7 @@
 use {
     bytemuck::Pod,
     solana_program_test::*,
-    solana_sdk::{
+    solomka_sdk::{
         instruction::InstructionError,
         signature::Signer,
         signer::keypair::Keypair,

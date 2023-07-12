@@ -55,7 +55,7 @@ use {
     },
     solana_measure::measure::Measure,
     solana_rpc_client::rpc_client::RpcClient,
-    solana_sdk::{
+    solomka_sdk::{
         hash::Hash,
         instruction::CompiledInstruction,
         message::Message,
@@ -430,7 +430,7 @@ fn get_target(
     let mut target = None;
     if nodes.is_empty() {
         // skip-gossip case
-        target = Some((solana_sdk::pubkey::new_rand(), entrypoint_addr));
+        target = Some((solomka_sdk::pubkey::new_rand(), entrypoint_addr));
     } else {
         info!("************ NODE ***********");
         for node in nodes {
@@ -820,7 +820,7 @@ pub mod test {
             validator_configs::make_identical_validator_configs,
         },
         solana_rpc::rpc::JsonRpcConfig,
-        solana_sdk::timing::timestamp,
+        solomka_sdk::timing::timestamp,
     };
 
     const TEST_SEND_BATCH_SIZE: usize = 1;
@@ -834,7 +834,7 @@ pub mod test {
     #[test]
     fn test_dos() {
         let nodes = [ContactInfo::new_localhost(
-            &solana_sdk::pubkey::new_rand(),
+            &solomka_sdk::pubkey::new_rand(),
             timestamp(),
         )];
         let entrypoint_addr = nodes[0].gossip().unwrap();

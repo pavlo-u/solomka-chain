@@ -25,7 +25,7 @@ use {
         verifier::RequisiteVerifier,
         vm::{BuiltInProgram, ContextObject, EbpfVm, ProgramResult},
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::WritableAccount,
         bpf_loader, bpf_loader_deprecated,
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
@@ -315,10 +315,10 @@ macro_rules! create_vm {
         let heap_size = invoke_context
             .get_compute_budget()
             .heap_size
-            .unwrap_or(solana_sdk::entrypoint::HEAP_LENGTH);
+            .unwrap_or(solomka_sdk::entrypoint::HEAP_LENGTH);
         let round_up_heap_size = invoke_context
             .feature_set
-            .is_active(&solana_sdk::feature_set::round_up_heap_size::id());
+            .is_active(&solomka_sdk::feature_set::round_up_heap_size::id());
         let mut heap_cost_result = invoke_context.consume_checked($crate::calculate_heap_cost(
             heap_size as u64,
             invoke_context.get_compute_budget().heap_cost,
@@ -747,7 +747,7 @@ fn process_loader_upgradeable_instruction(
             let signers = [[new_program_id.as_ref(), &[bump_seed]]]
                 .iter()
                 .map(|seeds| Pubkey::create_program_address(seeds, caller_program_id))
-                .collect::<Result<Vec<Pubkey>, solana_sdk::pubkey::PubkeyError>>()?;
+                .collect::<Result<Vec<Pubkey>, solomka_sdk::pubkey::PubkeyError>>()?;
             invoke_context.native_invoke(instruction.into(), signers.as_slice())?;
 
             // Load and verify the program bits
@@ -1655,7 +1655,7 @@ fn execute<'a, 'b: 'a>(
 pub mod test_utils {
     use {
         super::*, solana_program_runtime::loaded_programs::DELAY_VISIBILITY_SLOT_OFFSET,
-        solana_sdk::account::ReadableAccount,
+        solomka_sdk::account::ReadableAccount,
     };
 
     pub fn load_all_invoked_programs(invoke_context: &mut InvokeContext) {
@@ -1716,7 +1716,7 @@ mod tests {
             verifier::Verifier,
             vm::{Config, ContextObject, FunctionRegistry},
         },
-        solana_sdk::{
+        solomka_sdk::{
             account::{
                 create_account_shared_data_for_test as create_account_for_test, AccountSharedData,
                 ReadableAccount, WritableAccount,

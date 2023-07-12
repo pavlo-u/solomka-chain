@@ -10,7 +10,7 @@ use {
     log::*,
     solana_measure::measure::Measure,
     solana_program_runtime::loaded_programs::{BlockRelation, ForkGraph, WorkingSlot},
-    solana_sdk::{clock::Slot, feature_set, hash::Hash, timing},
+    solomka_sdk::{clock::Slot, feature_set, hash::Hash, timing},
     std::{
         collections::{hash_map::Entry, HashMap, HashSet},
         ops::Index,
@@ -681,7 +681,7 @@ mod tests {
                 create_genesis_config, create_genesis_config_with_leader, GenesisConfigInfo,
             },
         },
-        solana_sdk::{
+        solomka_sdk::{
             clock::UnixTimestamp,
             epoch_schedule::EpochSchedule,
             hash::Hash,

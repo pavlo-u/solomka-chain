@@ -7,7 +7,7 @@ use {
     solana_gossip::cluster_info::ClusterInfo,
     solana_measure::measure::Measure,
     solana_poh::poh_recorder::PohRecorder,
-    solana_sdk::{clock::Slot, transaction::Transaction},
+    solomka_sdk::{clock::Slot, transaction::Transaction},
     std::{
         sync::{Arc, RwLock},
         thread::{self, Builder, JoinHandle},

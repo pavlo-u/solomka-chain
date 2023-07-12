@@ -10,7 +10,7 @@ use {
     rayon::prelude::*,
     solana_client::{nonce_utils, rpc_request::MAX_MULTIPLE_ACCOUNTS},
     solana_metrics::{self, datapoint_info},
-    solana_sdk::{
+    solomka_sdk::{
         account::Account,
         clock::{DEFAULT_MS_PER_SLOT, DEFAULT_S_PER_SLOT, MAX_PROCESSING_AGE},
         compute_budget::ComputeBudgetInstruction,
@@ -1087,7 +1087,7 @@ mod tests {
     use {
         super::*,
         solana_runtime::{bank::Bank, bank_client::BankClient},
-        solana_sdk::{
+        solomka_sdk::{
             commitment_config::CommitmentConfig, fee_calculator::FeeRateGovernor,
             genesis_config::create_genesis_config, native_token::sol_to_lamports, nonce::State,
         },

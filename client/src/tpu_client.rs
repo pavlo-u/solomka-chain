@@ -6,7 +6,7 @@ use {
     },
     solana_quic_client::{QuicConfig, QuicConnectionManager, QuicPool},
     solana_rpc_client::rpc_client::RpcClient,
-    solana_sdk::{
+    solomka_sdk::{
         message::Message,
         signers::Signers,
         transaction::{Transaction, TransactionError},

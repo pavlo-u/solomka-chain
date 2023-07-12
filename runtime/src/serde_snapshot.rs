@@ -27,7 +27,7 @@ use {
     log::*,
     serde::{de::DeserializeOwned, Deserialize, Serialize},
     solana_measure::measure::Measure,
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Epoch, Slot, UnixTimestamp},
         deserialize_utils::default_on_eof,
         epoch_schedule::EpochSchedule,

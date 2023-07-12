@@ -99,18 +99,18 @@
 //! Accessing via the RPC client:
 //!
 //! ```
-//! # use solana_program::example_mocks::solana_sdk;
+//! # use solana_program::example_mocks::solomka_sdk;
 //! # use solana_program::example_mocks::solana_rpc_client;
-//! # use solana_sdk::account::Account;
+//! # use solomka_sdk::account::Account;
 //! # use solana_rpc_client::rpc_client::RpcClient;
-//! # use solana_sdk::sysvar::rent::{self, Rent};
+//! # use solomka_sdk::sysvar::rent::{self, Rent};
 //! # use anyhow::Result;
 //! #
 //! fn print_sysvar_rent(client: &RpcClient) -> Result<()> {
 //! #   client.set_get_account_response(rent::ID, Account {
 //! #       lamports: 1009200,
 //! #       data: vec![152, 13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 100],
-//! #       owner: solana_sdk::system_program::ID,
+//! #       owner: solomka_sdk::system_program::ID,
 //! #       executable: false,
 //! #       rent_epoch: 307,
 //! # });

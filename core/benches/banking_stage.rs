@@ -35,7 +35,7 @@ use {
     solana_runtime::{
         bank::Bank, bank_forks::BankForks, prioritization_fee_cache::PrioritizationFeeCache,
     },
-    solana_sdk::{
+    solomka_sdk::{
         genesis_config::GenesisConfig,
         hash::Hash,
         message::Message,

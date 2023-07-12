@@ -1,7 +1,7 @@
 use {
     super::*,
     crate::declare_syscall,
-    solana_sdk::{
+    solomka_sdk::{
         feature_set::enable_bpf_loader_set_authority_checked_ix,
         stable_layout::stable_instruction::StableInstruction,
         syscalls::{
@@ -1268,7 +1268,7 @@ mod tests {
         crate::mock_create_vm,
         solana_program_runtime::with_mock_invoke_context,
         solana_rbpf::{ebpf::MM_INPUT_START, memory_region::MemoryRegion, vm::Config},
-        solana_sdk::{
+        solomka_sdk::{
             account::{Account, AccountSharedData},
             clock::Epoch,
             feature_set::bpf_account_data_direct_mapping,

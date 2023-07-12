@@ -3,7 +3,7 @@
 #[cfg(test)]
 use {
     crate::duplicate_repair_status::DuplicateSlotRepairStatus, solana_ledger::shred::Nonce,
-    solana_sdk::clock::DEFAULT_MS_PER_SLOT,
+    solomka_sdk::clock::DEFAULT_MS_PER_SLOT,
 };
 use {
     crate::{
@@ -24,7 +24,7 @@ use {
     },
     solana_measure::measure::Measure,
     solana_runtime::bank_forks::BankForks,
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, DEFAULT_TICKS_PER_SECOND, MS_PER_TICK},
         epoch_schedule::EpochSchedule,
         hash::Hash,
@@ -863,7 +863,7 @@ mod test {
             shred::max_ticks_per_n_shreds,
         },
         solana_runtime::bank::Bank,
-        solana_sdk::{
+        solomka_sdk::{
             signature::{Keypair, Signer},
             timing::timestamp,
         },

@@ -182,25 +182,25 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_address_lookup_table_program`], [`solana_rpc_client`], [`solana_sdk`], and [`anyhow`] crates.
+    /// This example uses the [`solana_address_lookup_table_program`], [`solana_rpc_client`], [`solomka_sdk`], and [`anyhow`] crates.
     ///
     /// [`solana_address_lookup_table_program`]: https://docs.rs/solana-address-lookup-table-program
     /// [`solana_rpc_client`]: https://docs.rs/solana-rpc-client
-    /// [`solana_sdk`]: https://docs.rs/solana-sdk
+    /// [`solomka_sdk`]: https://docs.rs/solomka-sdk
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use solana_program::example_mocks::{
     /// #     solana_address_lookup_table_program,
     /// #     solana_rpc_client,
-    /// #     solana_sdk,
+    /// #     solomka_sdk,
     /// # };
     /// # use std::borrow::Cow;
-    /// # use solana_sdk::account::Account;
+    /// # use solomka_sdk::account::Account;
     /// use anyhow::Result;
     /// use solana_address_lookup_table_program::state::AddressLookupTable;
     /// use solana_rpc_client::rpc_client::RpcClient;
-    /// use solana_sdk::{
+    /// use solomka_sdk::{
     ///      address_lookup_table_account::AddressLookupTableAccount,
     ///      instruction::{AccountMeta, Instruction},
     ///      message::{VersionedMessage, v0},

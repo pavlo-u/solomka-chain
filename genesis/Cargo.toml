@@ -23,7 +23,7 @@ solana-entry = { workspace = true }
 solana-ledger = { workspace = true }
 solana-logger = { workspace = true }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-stake-program = { workspace = true }
 solana-version = { workspace = true }
 solana-vote-program = { workspace = true }

@@ -12,7 +12,7 @@ use {
     jsonrpc_core::IoHandler,
     soketto::handshake::{server, Server},
     solana_metrics::TokenCounter,
-    solana_sdk::timing::AtomicInterval,
+    solomka_sdk::timing::AtomicInterval,
     std::{
         io,
         net::SocketAddr,

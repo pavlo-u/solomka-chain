@@ -98,18 +98,18 @@
 //! Accessing via the RPC client:
 //!
 //! ```
-//! # use solana_program::example_mocks::solana_sdk;
+//! # use solana_program::example_mocks::solomka_sdk;
 //! # use solana_program::example_mocks::solana_rpc_client;
-//! # use solana_sdk::account::Account;
+//! # use solomka_sdk::account::Account;
 //! # use solana_rpc_client::rpc_client::RpcClient;
-//! # use solana_sdk::sysvar::epoch_schedule::{self, EpochSchedule};
+//! # use solomka_sdk::sysvar::epoch_schedule::{self, EpochSchedule};
 //! # use anyhow::Result;
 //! #
 //! fn print_sysvar_epoch_schedule(client: &RpcClient) -> Result<()> {
 //! #   client.set_get_account_response(epoch_schedule::ID, Account {
 //! #       lamports: 1120560,
 //! #       data: vec![0, 32, 0, 0, 0, 0, 0, 0, 0, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-//! #       owner: solana_sdk::system_program::ID,
+//! #       owner: solomka_sdk::system_program::ID,
 //! #       executable: false,
 //! #       rent_epoch: 307,
 //! # });

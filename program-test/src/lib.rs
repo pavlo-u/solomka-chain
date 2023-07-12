@@ -24,7 +24,7 @@ use {
         genesis_utils::{create_genesis_config_with_leader_ex, GenesisConfigInfo},
         runtime_config::RuntimeConfig,
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::{Account, AccountSharedData},
         account_info::AccountInfo,
         clock::Slot,
@@ -66,7 +66,7 @@ pub use {
     solana_banks_client::{BanksClient, BanksClientError},
     solana_banks_interface::BanksTransactionResultWithMetadata,
     solana_program_runtime::invoke_context::InvokeContext,
-    solana_sdk::transaction_context::IndexOfAccount,
+    solomka_sdk::transaction_context::IndexOfAccount,
 };
 
 pub mod programs;
@@ -95,7 +95,7 @@ fn get_invoke_context<'a, 'b>() -> &'a mut InvokeContext<'b> {
 }
 
 pub fn builtin_process_instruction(
-    process_instruction: solana_sdk::entrypoint::ProcessInstruction,
+    process_instruction: solomka_sdk::entrypoint::ProcessInstruction,
     invoke_context: &mut InvokeContext,
 ) -> Result<(), Box<dyn std::error::Error>> {
     set_invoke_context(invoke_context);
@@ -210,7 +210,7 @@ fn get_sysvar<T: Default + Sysvar + Sized + serde::de::DeserializeOwned + Clone>
 }
 
 struct SyscallStubs {}
-impl solana_sdk::program_stubs::SyscallStubs for SyscallStubs {
+impl solomka_sdk::program_stubs::SyscallStubs for SyscallStubs {
     fn sol_log(&self, message: &str) {
         let invoke_context = get_invoke_context();
         ic_msg!(invoke_context, "Program log: {}", message);
@@ -467,7 +467,7 @@ impl Default for ProgramTest {
         // deactivate feature `native_program_consume_cu` to continue support existing mock/test
         // programs that do not consume units.
         let deactivate_feature_set =
-            HashSet::from([solana_sdk::feature_set::native_programs_consume_cu::id()]);
+            HashSet::from([solomka_sdk::feature_set::native_programs_consume_cu::id()]);
 
         Self {
             accounts: vec![],
@@ -613,7 +613,7 @@ impl ProgramTest {
                 Account {
                     lamports: Rent::default().minimum_balance(data.len()).max(1),
                     data,
-                    owner: solana_sdk::bpf_loader::id(),
+                    owner: solomka_sdk::bpf_loader::id(),
                     executable: true,
                     rent_epoch: 0,
                 },
@@ -719,7 +719,7 @@ impl ProgramTest {
             static ONCE: Once = Once::new();
 
             ONCE.call_once(|| {
-                solana_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
+                solomka_sdk::program_stubs::set_syscall_stubs(Box::new(SyscallStubs {}));
             });
         }
 

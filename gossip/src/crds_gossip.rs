@@ -21,7 +21,7 @@ use {
     rand::{CryptoRng, Rng},
     rayon::ThreadPool,
     solana_ledger::shred::Shred,
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         hash::Hash,
         pubkey::Pubkey,
@@ -426,7 +426,7 @@ mod test {
     use {
         super::*,
         crate::crds_value::CrdsData,
-        solana_sdk::{hash::hash, timing::timestamp},
+        solomka_sdk::{hash::hash, timing::timestamp},
     };
 
     #[test]

@@ -24,7 +24,7 @@ spl() {
     cp "$SOLANA_DIR"/rust-toolchain.toml spl/
     cd spl || exit 1
 
-    project_used_solana_version=$(sed -nE 's/solana-sdk = \"[>=<~]*(.*)\"/\1/p' <"token/program/Cargo.toml")
+    project_used_solana_version=$(sed -nE 's/solomka-sdk = \"[>=<~]*(.*)\"/\1/p' <"token/program/Cargo.toml")
     echo "used solana version: $project_used_solana_version"
     if semverGT "$project_used_solana_version" "$SOLANA_VER"; then
       echo "skip"

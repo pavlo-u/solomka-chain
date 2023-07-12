@@ -20,7 +20,7 @@ use {
         bigtable_upload::ConfirmedBlockUploadConfig, blockstore::Blockstore,
         blockstore_options::AccessType,
     },
-    solana_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
+    solomka_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
     solana_storage_bigtable::CredentialType,
     solana_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, EncodeError, TransactionDetails,

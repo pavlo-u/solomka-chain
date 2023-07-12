@@ -23,7 +23,7 @@ use {
     solana_runtime::{
         bank::Bank, bank_forks::BankForks, prioritization_fee_cache::PrioritizationFeeCache,
     },
-    solana_sdk::{
+    solomka_sdk::{
         compute_budget::ComputeBudgetInstruction,
         hash::Hash,
         message::Message,
@@ -469,7 +469,7 @@ fn main() {
         let mut tx_total_us = 0;
         let base_tx_count = bank.transaction_count();
         let mut txs_processed = 0;
-        let collector = solana_sdk::pubkey::new_rand();
+        let collector = solomka_sdk::pubkey::new_rand();
         let mut total_sent = 0;
         for current_iteration_index in 0..iterations {
             trace!("RUNNING ITERATION {}", current_iteration_index);

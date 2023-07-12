@@ -4,7 +4,7 @@ use {
     itertools::Itertools,
     solana_entry::entry::Entry,
     solana_ledger::shred::{ProcessShredsStats, ReedSolomonCache, Shredder},
-    solana_sdk::{
+    solomka_sdk::{
         hash::Hash,
         signature::{Keypair, Signature, Signer},
         system_transaction,

@@ -25,7 +25,7 @@ use {
         verifier::RequisiteVerifier,
     },
     solana_runtime::{bank::Bank, runtime_config::RuntimeConfig},
-    solana_sdk::{
+    solomka_sdk::{
         account::AccountSharedData,
         account_utils::StateMut,
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
@@ -527,7 +527,7 @@ pub fn program(ledger_path: &Path, matches: &ArgMatches<'_>) {
     let program_index: u16 = instruction_accounts.len().try_into().unwrap();
     transaction_accounts.push((
         loader_id,
-        AccountSharedData::new(0, 0, &solana_sdk::native_loader::id()),
+        AccountSharedData::new(0, 0, &solomka_sdk::native_loader::id()),
     ));
     transaction_accounts.push((
         program_id, // ID of the loaded program. It can modify accounts with the same owner key

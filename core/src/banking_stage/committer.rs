@@ -16,7 +16,7 @@ use {
         transaction_batch::TransactionBatch,
         vote_sender_types::ReplayVoteSender,
     },
-    solana_sdk::{pubkey::Pubkey, saturating_add_assign},
+    solomka_sdk::{pubkey::Pubkey, saturating_add_assign},
     solana_transaction_status::{
         token_balances::TransactionTokenBalancesSet, TransactionTokenBalance,
     },

@@ -19,7 +19,7 @@ pub mod validator_info;
 use {
     crate::parse_account_data::{parse_account_data, AccountAdditionalData, ParsedAccount},
     base64::{prelude::BASE64_STANDARD, Engine},
-    solana_sdk::{
+    solomka_sdk::{
         account::{ReadableAccount, WritableAccount},
         clock::Epoch,
         fee_calculator::FeeCalculator,
@@ -213,7 +213,7 @@ fn slice_data(data: &[u8], data_slice_config: Option<UiDataSliceConfig>) -> &[u8
 mod test {
     use {
         super::*,
-        solana_sdk::account::{Account, AccountSharedData},
+        solomka_sdk::account::{Account, AccountSharedData},
     };
 
     #[test]

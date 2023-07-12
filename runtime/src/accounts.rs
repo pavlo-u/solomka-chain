@@ -28,7 +28,7 @@ use {
         compute_budget::{self, ComputeBudget},
         loaded_programs::{LoadedProgram, LoadedProgramType, LoadedProgramsForTxBatch},
     },
-    solana_sdk::{
+    solomka_sdk::{
         account::{Account, AccountSharedData, ReadableAccount, WritableAccount},
         account_utils::StateMut,
         bpf_loader_upgradeable,
@@ -352,7 +352,7 @@ impl Accounts {
         let mut rent_debits = RentDebits::default();
 
         let set_exempt_rent_epoch_max =
-            feature_set.is_active(&solana_sdk::feature_set::set_exempt_rent_epoch_max::id());
+            feature_set.is_active(&solomka_sdk::feature_set::set_exempt_rent_epoch_max::id());
 
         let requested_loaded_accounts_data_size_limit =
             Self::get_requested_loaded_accounts_data_size_limit(tx, feature_set)?;
@@ -371,7 +371,7 @@ impl Accounts {
             .map(|(i, key)| {
                 let mut account_found = true;
                 #[allow(clippy::collapsible_else_if)]
-                let account = if solana_sdk::sysvar::instructions::check_id(key) {
+                let account = if solomka_sdk::sysvar::instructions::check_id(key) {
                     Self::construct_instructions_account(message)
                 } else {
                     let instruction_account = u8::try_from(i)
@@ -1466,7 +1466,7 @@ mod tests {
         solana_program_runtime::prioritization_fee::{
             PrioritizationFeeDetails, PrioritizationFeeType,
         },
-        solana_sdk::{
+        solomka_sdk::{
             account::{AccountSharedData, WritableAccount},
             bpf_loader_upgradeable::UpgradeableLoaderState,
             compute_budget::ComputeBudgetInstruction,
@@ -1776,7 +1776,7 @@ mod tests {
         let keypair = Keypair::new();
         let key0 = keypair.pubkey();
 
-        let account = AccountSharedData::new(1, 1, &solana_sdk::pubkey::new_rand()); // <-- owner is not the system program
+        let account = AccountSharedData::new(1, 1, &solomka_sdk::pubkey::new_rand()); // <-- owner is not the system program
         accounts.push((key0, account));
 
         let instructions = vec![CompiledInstruction::new(1, &(), vec![0])];
@@ -2415,13 +2415,13 @@ mod tests {
         );
 
         // Load accounts owned by various programs into AccountsDb
-        let pubkey0 = solana_sdk::pubkey::new_rand();
+        let pubkey0 = solomka_sdk::pubkey::new_rand();
         let account0 = AccountSharedData::new(1, 0, &Pubkey::from([2; 32]));
         accounts.store_slow_uncached(0, &pubkey0, &account0);
-        let pubkey1 = solana_sdk::pubkey::new_rand();
+        let pubkey1 = solomka_sdk::pubkey::new_rand();
         let account1 = AccountSharedData::new(1, 0, &Pubkey::from([2; 32]));
         accounts.store_slow_uncached(0, &pubkey1, &account1);
-        let pubkey2 = solana_sdk::pubkey::new_rand();
+        let pubkey2 = solomka_sdk::pubkey::new_rand();
         let account2 = AccountSharedData::new(1, 0, &Pubkey::from([3; 32]));
         accounts.store_slow_uncached(0, &pubkey2, &account2);
 
@@ -3197,7 +3197,7 @@ mod tests {
     fn test_collect_accounts_to_store() {
         let keypair0 = Keypair::new();
         let keypair1 = Keypair::new();
-        let pubkey = solana_sdk::pubkey::new_rand();
+        let pubkey = solomka_sdk::pubkey::new_rand();
         let account0 = AccountSharedData::new(1, 0, &Pubkey::default());
         let account1 = AccountSharedData::new(2, 0, &Pubkey::default());
         let account2 = AccountSharedData::new(3, 0, &Pubkey::default());
@@ -3317,7 +3317,7 @@ mod tests {
         let zero_account = AccountSharedData::new(0, 0, AccountSharedData::default().owner());
         info!("storing..");
         for i in 0..2_000 {
-            let pubkey = solana_sdk::pubkey::new_rand();
+            let pubkey = solomka_sdk::pubkey::new_rand();
             let account = AccountSharedData::new(i + 1, 0, AccountSharedData::default().owner());
             accounts.store_for_tests(i, &pubkey, &account);
             accounts.store_for_tests(i, &old_pubkey, &zero_account);
@@ -3370,12 +3370,12 @@ mod tests {
             AccountShrinkThreshold::default(),
         );
 
-        let instructions_key = solana_sdk::sysvar::instructions::id();
+        let instructions_key = solomka_sdk::sysvar::instructions::id();
         let keypair = Keypair::new();
         let instructions = vec![CompiledInstruction::new(1, &(), vec![0, 1])];
         let tx = Transaction::new_with_compiled_instructions(
             &[&keypair],
-            &[solana_sdk::pubkey::new_rand(), instructions_key],
+            &[solomka_sdk::pubkey::new_rand(), instructions_key],
             Hash::default(),
             vec![native_loader::id()],
             instructions,
@@ -4198,7 +4198,7 @@ mod tests {
     fn test_get_requested_loaded_accounts_data_size_limit() {
         // an prrivate helper function
         fn test(
-            instructions: &[solana_sdk::instruction::Instruction],
+            instructions: &[solomka_sdk::instruction::Instruction],
             feature_set: &FeatureSet,
             expected_result: &Result<Option<NonZeroUsize>>,
         ) {
@@ -4214,20 +4214,20 @@ mod tests {
             );
         }
 
-        let tx_not_set_limit = &[solana_sdk::instruction::Instruction::new_with_bincode(
+        let tx_not_set_limit = &[solomka_sdk::instruction::Instruction::new_with_bincode(
             Pubkey::new_unique(),
             &0_u8,
             vec![],
         )];
         let tx_set_limit_99 =
                 &[
-                    solana_sdk::compute_budget::ComputeBudgetInstruction::set_loaded_accounts_data_size_limit(99u32),
-                    solana_sdk::instruction::Instruction::new_with_bincode(Pubkey::new_unique(), &0_u8, vec![]),
+                    solomka_sdk::compute_budget::ComputeBudgetInstruction::set_loaded_accounts_data_size_limit(99u32),
+                    solomka_sdk::instruction::Instruction::new_with_bincode(Pubkey::new_unique(), &0_u8, vec![]),
                 ];
         let tx_set_limit_0 =
                 &[
-                    solana_sdk::compute_budget::ComputeBudgetInstruction::set_loaded_accounts_data_size_limit(0u32),
-                    solana_sdk::instruction::Instruction::new_with_bincode(Pubkey::new_unique(), &0_u8, vec![]),
+                    solomka_sdk::compute_budget::ComputeBudgetInstruction::set_loaded_accounts_data_size_limit(0u32),
+                    solomka_sdk::instruction::Instruction::new_with_bincode(Pubkey::new_unique(), &0_u8, vec![]),
                 ];
 
         let result_no_limit = Ok(None);

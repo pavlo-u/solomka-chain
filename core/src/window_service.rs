@@ -25,7 +25,7 @@ use {
     solana_metrics::inc_new_counter_error,
     solana_perf::packet::{Packet, PacketBatch},
     solana_rayon_threadlimit::get_thread_count,
-    solana_sdk::clock::Slot,
+    solomka_sdk::clock::Slot,
     std::{
         cmp::Reverse,
         collections::{HashMap, HashSet},
@@ -176,7 +176,7 @@ fn verify_repair(
                 .register_response(
                     repair_meta.nonce,
                     shred,
-                    solana_sdk::timing::timestamp(),
+                    solomka_sdk::timing::timestamp(),
                     |_| (),
                 )
                 .is_some()
@@ -489,7 +489,7 @@ mod test {
             get_tmp_ledger_path,
             shred::{ProcessShredsStats, Shredder},
         },
-        solana_sdk::{
+        solomka_sdk::{
             hash::Hash,
             signature::{Keypair, Signer},
             timing::timestamp,

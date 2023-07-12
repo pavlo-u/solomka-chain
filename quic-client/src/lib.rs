@@ -23,7 +23,7 @@ use {
         },
         connection_cache_stats::ConnectionCacheStats,
     },
-    solana_sdk::{pubkey::Pubkey, signature::Keypair},
+    solomka_sdk::{pubkey::Pubkey, signature::Keypair},
     solana_streamer::{
         nonblocking::quic::{compute_max_allowed_uni_streams, ConnectionPeerType},
         streamer::StakedNodes,
@@ -226,7 +226,7 @@ impl QuicConnectionManager {
 mod tests {
     use {
         super::*,
-        solana_sdk::quic::{
+        solomka_sdk::quic::{
             QUIC_MAX_UNSTAKED_CONCURRENT_STREAMS, QUIC_MIN_STAKED_CONCURRENT_STREAMS,
             QUIC_TOTAL_STAKED_CONCURRENT_STREAMS,
         },

@@ -1,6 +1,6 @@
 use {
     solana_program_runtime::{ic_msg, invoke_context::InvokeContext},
-    solana_sdk::{
+    solomka_sdk::{
         instruction::{checked_add, InstructionError},
         nonce::{
             self,
@@ -241,7 +241,7 @@ mod test {
         super::*,
         assert_matches::assert_matches,
         solana_program_runtime::with_mock_invoke_context,
-        solana_sdk::{
+        solomka_sdk::{
             account::AccountSharedData,
             hash::hash,
             nonce::{self, State},

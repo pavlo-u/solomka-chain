@@ -31,7 +31,7 @@ use {
         bank_forks::BankForks, prioritization_fee_cache::PrioritizationFeeCache,
         vote_sender_types::ReplayVoteSender,
     },
-    solana_sdk::{feature_set::allow_votes_to_directly_update_vote_state, timing::AtomicInterval},
+    solomka_sdk::{feature_set::allow_votes_to_directly_update_vote_state, timing::AtomicInterval},
     std::{
         cmp, env,
         sync::{
@@ -606,7 +606,7 @@ mod tests {
             bank_forks::BankForks,
             genesis_utils::{activate_feature, bootstrap_validator_stake_lamports},
         },
-        solana_sdk::{
+        solomka_sdk::{
             hash::Hash,
             poh_config::PohConfig,
             pubkey::Pubkey,
@@ -819,16 +819,16 @@ mod tests {
             bank.process_transaction(&fund_tx).unwrap();
 
             // good tx
-            let to = solana_sdk::pubkey::new_rand();
+            let to = solomka_sdk::pubkey::new_rand();
             let tx = system_transaction::transfer(&mint_keypair, &to, 1, start_hash);
 
             // good tx, but no verify
-            let to2 = solana_sdk::pubkey::new_rand();
+            let to2 = solomka_sdk::pubkey::new_rand();
             let tx_no_ver = system_transaction::transfer(&keypair, &to2, 2, start_hash);
 
             // bad tx, AccountNotFound
             let keypair = Keypair::new();
-            let to3 = solana_sdk::pubkey::new_rand();
+            let to3 = solomka_sdk::pubkey::new_rand();
             let tx_anf = system_transaction::transfer(&keypair, &to3, 1, start_hash);
 
             // send 'em over
@@ -1041,9 +1041,9 @@ mod tests {
             let poh_simulator = simulate_poh(record_receiver, &poh_recorder);
 
             poh_recorder.write().unwrap().set_bank(bank.clone(), false);
-            let pubkey = solana_sdk::pubkey::new_rand();
+            let pubkey = solomka_sdk::pubkey::new_rand();
             let keypair2 = Keypair::new();
-            let pubkey2 = solana_sdk::pubkey::new_rand();
+            let pubkey2 = solomka_sdk::pubkey::new_rand();
 
             let txs = vec![
                 system_transaction::transfer(&mint_keypair, &pubkey, 1, genesis_config.hash())
@@ -1075,7 +1075,7 @@ mod tests {
     }
 
     pub(crate) fn create_slow_genesis_config(lamports: u64) -> GenesisConfigInfo {
-        create_slow_genesis_config_with_leader(lamports, &solana_sdk::pubkey::new_rand())
+        create_slow_genesis_config_with_leader(lamports, &solomka_sdk::pubkey::new_rand())
     }
 
     pub(crate) fn create_slow_genesis_config_with_leader(

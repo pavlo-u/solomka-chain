@@ -22,7 +22,7 @@ use {
         snapshot_utils,
         sorted_storages::SortedStorages,
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, DEFAULT_MS_PER_SLOT},
         hash::Hash,
     },
@@ -578,7 +578,7 @@ mod tests {
         rand::seq::SliceRandom,
         solana_gossip::contact_info::ContactInfo,
         solana_runtime::snapshot_package::SnapshotType,
-        solana_sdk::{
+        solomka_sdk::{
             signature::{Keypair, Signer},
             timing::timestamp,
         },

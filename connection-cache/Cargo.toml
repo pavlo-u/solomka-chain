@@ -21,7 +21,7 @@ rayon = { workspace = true }
 rcgen = { workspace = true }
 solana-measure = { workspace = true }
 solana-metrics = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 

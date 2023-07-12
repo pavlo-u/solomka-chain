@@ -18,7 +18,7 @@ use {
     solana_measure::measure::Measure,
     solana_net_utils::VALIDATOR_PORT_RANGE,
     solana_rpc_client_api::client_error::ErrorKind as ClientErrorKind,
-    solana_sdk::{
+    solomka_sdk::{
         quic::{
             QUIC_CONNECTION_HANDSHAKE_TIMEOUT, QUIC_KEEP_ALIVE, QUIC_MAX_TIMEOUT,
             QUIC_MAX_UNSTAKED_CONCURRENT_STREAMS,

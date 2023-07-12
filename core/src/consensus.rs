@@ -13,7 +13,7 @@ use {
         bank::Bank, bank_forks::BankForks, commitment::VOTE_THRESHOLD_SIZE,
         vote_account::VoteAccountsHashMap,
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, UnixTimestamp},
         feature_set,
         hash::Hash,
@@ -1496,7 +1496,7 @@ pub mod test {
         itertools::Itertools,
         solana_ledger::{blockstore::make_slot_entries, get_tmp_ledger_path},
         solana_runtime::{bank::Bank, vote_account::VoteAccount},
-        solana_sdk::{
+        solomka_sdk::{
             account::{Account, AccountSharedData, ReadableAccount, WritableAccount},
             clock::Slot,
             hash::Hash,
@@ -1536,7 +1536,7 @@ pub mod test {
                 )
                 .expect("serialize state");
                 (
-                    solana_sdk::pubkey::new_rand(),
+                    solomka_sdk::pubkey::new_rand(),
                     (*lamports, VoteAccount::try_from(account).unwrap()),
                 )
             })
@@ -3092,7 +3092,7 @@ pub mod test {
 
     #[test]
     fn test_adjust_lockouts_after_replay_all_rooted_with_too_old() {
-        use solana_sdk::slot_history::MAX_ENTRIES;
+        use solomka_sdk::slot_history::MAX_ENTRIES;
 
         let mut tower = Tower::new_for_tests(10, 0.9);
         tower.record_vote(0, Hash::default());
@@ -3218,7 +3218,7 @@ pub mod test {
 
     #[test]
     fn test_adjust_lockouts_after_replay_too_old_tower() {
-        use solana_sdk::slot_history::MAX_ENTRIES;
+        use solomka_sdk::slot_history::MAX_ENTRIES;
 
         let mut tower = Tower::new_for_tests(10, 0.9);
         tower.record_vote(0, Hash::default());
@@ -3285,7 +3285,7 @@ pub mod test {
 
     #[test]
     fn test_adjust_lockouts_after_replay_out_of_order() {
-        use solana_sdk::slot_history::MAX_ENTRIES;
+        use solomka_sdk::slot_history::MAX_ENTRIES;
 
         let mut tower = Tower::new_for_tests(10, 0.9);
         tower

@@ -19,7 +19,7 @@ use {
         snapshot_archive_info::SnapshotArchiveInfoGetter, snapshot_package::SnapshotType,
         snapshot_utils,
     },
-    solana_sdk::{
+    solomka_sdk::{
         clock::Slot,
         commitment_config::CommitmentConfig,
         hash::Hash,

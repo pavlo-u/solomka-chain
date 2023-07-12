@@ -13,7 +13,7 @@ use {
     sonoma_cli_config::Config,
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::client_error::Error as ClientError,
-    solana_sdk::{
+    solomka_sdk::{
         message::Message,
         native_token::lamports_to_sol,
         pubkey::Pubkey,

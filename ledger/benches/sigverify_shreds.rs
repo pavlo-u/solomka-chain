@@ -12,7 +12,7 @@ use {
         recycler_cache::RecyclerCache,
     },
     solana_rayon_threadlimit::get_thread_count,
-    solana_sdk::signature::Keypair,
+    solomka_sdk::signature::Keypair,
     std::sync::Arc,
     test::Bencher,
 };

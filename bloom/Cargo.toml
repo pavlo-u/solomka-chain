@@ -19,7 +19,7 @@ serde = { workspace = true, features = ["rc"] }
 serde_derive = { workspace = true }
 solana-frozen-abi = { workspace = true }
 solana-frozen-abi-macro = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 
 [lib]
 crate-type = ["lib"]

@@ -23,7 +23,7 @@ thiserror = { workspace = true }
 
 [target.'cfg(not(target_os = "solana"))'.dependencies]
 solana-program-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 
 [build-dependencies]
 rustc_version = { workspace = true }

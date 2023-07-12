@@ -21,7 +21,7 @@ solana-metrics = { workspace = true }
 solana-notifier = { workspace = true }
 solana-rpc-client = { workspace = true }
 solana-rpc-client-api = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-version = { workspace = true }
 
 [package.metadata.docs.rs]

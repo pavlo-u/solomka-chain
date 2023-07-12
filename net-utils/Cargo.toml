@@ -20,7 +20,7 @@ serde = { workspace = true }
 serde_derive = { workspace = true }
 socket2 = { workspace = true }
 solana-logger = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-version = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 url = { workspace = true }

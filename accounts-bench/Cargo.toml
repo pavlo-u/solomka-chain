@@ -15,7 +15,7 @@ rayon = { workspace = true }
 solana-logger = { workspace = true }
 solana-measure = { workspace = true }
 solana-runtime = { workspace = true }
-solana-sdk = { workspace = true }
+solomka-sdk = { workspace = true }
 solana-version = { workspace = true }
 
 [package.metadata.docs.rs]

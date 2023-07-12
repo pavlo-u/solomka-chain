@@ -1,6 +1,6 @@
 use {
     crate::snapshot_utils::{self, ArchiveFormat, SnapshotVersion},
-    solana_sdk::clock::Slot,
+    solomka_sdk::clock::Slot,
     std::{num::NonZeroUsize, path::PathBuf},
 };
 

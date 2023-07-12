@@ -1,6 +1,6 @@
 use {
     crate::bank::RewardInfo,
-    solana_sdk::{pubkey::Pubkey, reward_type::RewardType},
+    solomka_sdk::{pubkey::Pubkey, reward_type::RewardType},
     std::collections::HashMap,
 };
 

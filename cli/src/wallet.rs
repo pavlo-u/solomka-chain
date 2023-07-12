@@ -32,7 +32,7 @@ use {
     solana_rpc_client::rpc_client::RpcClient,
     solana_rpc_client_api::config::RpcTransactionConfig,
     solana_rpc_client_nonce_utils::blockhash_query::BlockhashQuery,
-    solana_sdk::{
+    solomka_sdk::{
         commitment_config::CommitmentConfig,
         message::Message,
         offchain_message::OffchainMessage,

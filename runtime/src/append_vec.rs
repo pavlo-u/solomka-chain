@@ -16,7 +16,7 @@ use {
     },
     log::*,
     memmap2::MmapMut,
-    solana_sdk::{
+    solomka_sdk::{
         account::{Account, AccountSharedData, ReadableAccount},
         clock::Slot,
         hash::Hash,
@@ -558,7 +558,7 @@ impl AppendVec {
     pub fn get_account_test(
         &self,
         offset: usize,
-    ) -> Option<(StoredMeta, solana_sdk::account::AccountSharedData)> {
+    ) -> Option<(StoredMeta, solomka_sdk::account::AccountSharedData)> {
         let (stored_account, _) = self.get_account(offset)?;
         let meta = stored_account.meta().clone();
         Some((meta, stored_account.clone_account()))
@@ -672,7 +672,7 @@ pub mod tests {
         assert_matches::assert_matches,
         memoffset::offset_of,
         rand::{thread_rng, Rng},
-        solana_sdk::{
+        solomka_sdk::{
             account::{accounts_equal, Account, AccountSharedData, WritableAccount},
             timing::duration_as_ms,
         },
@@ -1121,7 +1121,7 @@ pub mod tests {
             let mut av = AppendVec::new(path, true, 256);
             av.set_no_remove_on_drop();
 
-            let pubkey = solana_sdk::pubkey::new_rand();
+            let pubkey = solomka_sdk::pubkey::new_rand();
             let owner = Pubkey::default();
             let data_len = 3_u64;
             let mut account = AccountSharedData::new(0, data_len as usize, &owner);

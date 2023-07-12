@@ -5,7 +5,7 @@ use {
     log::*,
     serde::{Deserialize, Serialize},
     solana_metrics::datapoint_info,
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, UnixTimestamp},
         deserialize_utils::default_on_eof,
         message::v0::LoadedAddresses,

@@ -3,7 +3,7 @@
 /// In addition, the dynamic library must export a "C" function _create_plugin which
 /// creates the implementation of the plugin.
 use {
-    solana_sdk::{
+    solomka_sdk::{
         clock::{Slot, UnixTimestamp},
         signature::Signature,
         transaction::SanitizedTransaction,

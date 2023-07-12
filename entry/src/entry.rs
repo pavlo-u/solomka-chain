@@ -23,7 +23,7 @@ use {
         sigverify,
     },
     solana_rayon_threadlimit::get_max_thread_count,
-    solana_sdk::{
+    solomka_sdk::{
         hash::Hash,
         packet::Meta,
         timing,
@@ -674,7 +674,7 @@ impl EntrySlice for [Entry] {
     }
 
     fn verify_cpu_x86_simd(&self, start_hash: &Hash, simd_len: usize) -> EntryVerificationState {
-        use solana_sdk::hash::HASH_BYTES;
+        use solomka_sdk::hash::HASH_BYTES;
         let now = Instant::now();
         let genesis = [Entry {
             num_hashes: 0,
@@ -945,7 +945,7 @@ mod tests {
     use {
         super::*,
         solana_perf::test_tx::{test_invalid_tx, test_tx},
-        solana_sdk::{
+        solomka_sdk::{
             hash::{hash, Hash},
             pubkey::Pubkey,
             signature::{Keypair, Signer},
@@ -1099,7 +1099,7 @@ mod tests {
 
     #[test]
     fn test_transaction_signing() {
-        use solana_sdk::signature::Signature;
+        use solomka_sdk::signature::Signature;
         let zero = Hash::default();
 
         let keypair = Keypair::new();

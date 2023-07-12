@@ -12,7 +12,7 @@ use {
     solana_gossip::gossip_service::discover,
     solana_rpc_client::rpc_client::RpcClient,
     solana_runtime::inline_spl_token,
-    solana_sdk::{
+    solomka_sdk::{
         commitment_config::CommitmentConfig,
         hash::Hash,
         instruction::{AccountMeta, Instruction},
@@ -710,7 +710,7 @@ pub mod test {
             validator_configs::make_identical_validator_configs,
         },
         solana_measure::measure::Measure,
-        solana_sdk::{native_token::sol_to_lamports, poh_config::PohConfig},
+        solomka_sdk::{native_token::sol_to_lamports, poh_config::PohConfig},
         solana_test_validator::TestValidator,
         spl_token::{
             solana_program::program_pack::Pack,

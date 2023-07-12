@@ -5140,26 +5140,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-cargo-build-sbf"
-version = "1.16.0"
-dependencies = [
- "assert_cmd",
- "bzip2",
- "cargo_metadata",
- "clap 3.2.25",
- "log",
- "predicates 2.1.5",
- "regex",
- "reqwest",
- "semver",
- "serial_test",
- "solana-download-utils",
- "solana-logger",
- "solomka-sdk",
- "tar",
-]
-
-[[package]]
 name = "solana-cargo-test-bpf"
 version = "1.16.0"
 dependencies = [
@@ -6963,6 +6943,26 @@ dependencies = [
  "scroll",
  "thiserror",
  "winapi 0.3.9",
+]
+
+[[package]]
+name = "solomka-cargo-build-sbf"
+version = "1.16.0"
+dependencies = [
+ "assert_cmd",
+ "bzip2",
+ "cargo_metadata",
+ "clap 3.2.25",
+ "log",
+ "predicates 2.1.5",
+ "regex",
+ "reqwest",
+ "semver",
+ "serial_test",
+ "solana-download-utils",
+ "solana-logger",
+ "solomka-sdk",
+ "tar",
 ]
 
 [[package]]

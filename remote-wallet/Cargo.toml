@@ -4,7 +4,7 @@ edition = "2021"
 name = "solomka-remote-wallet"
 description = "Blockchain, Rebuilt for Scale"
 version = "1.14.20"
-repository = "https://github.com/solana-labs/solana"
+repository = "https://github.com/pavlo-u/solomka-chain"
 license = "Apache-2.0"
 documentation = "https://docs.rs/solana-remote-wallet"
 

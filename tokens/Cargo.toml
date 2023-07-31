@@ -23,7 +23,7 @@ solana-account-decoder = { path = "../account-decoder", version = "=1.14.20" }
 solomka-clap-utils = { path = "../clap-utils", version = "=1.14.20" }
 solomka-cli-config = { path = "../cli-config", version = "=1.14.20" }
 solomka-client = { path = "../client", version = "=1.14.20" }
-solana-remote-wallet = { path = "../remote-wallet", version = "=1.14.20" }
+solomka-remote-wallet = { path = "../remote-wallet", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 solana-version = { path = "../version", version = "=1.14.20" }

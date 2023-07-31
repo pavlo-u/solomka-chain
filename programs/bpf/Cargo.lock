@@ -4624,7 +4624,7 @@ dependencies = [
  "clap 2.33.3",
  "rpassword",
  "solana-perf",
- "solana-remote-wallet",
+ "solomka-remote-wallet",
  "solana-sdk 1.14.20",
  "thiserror",
  "tiny-bip39",

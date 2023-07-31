@@ -30,7 +30,7 @@ use {
         blockhash_query::BlockhashQuery, nonce_utils, rpc_client::RpcClient,
         rpc_config::RpcGetVoteAccountsConfig,
     },
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::Account, commitment_config::CommitmentConfig, message::Message,
         native_token::lamports_to_sol, pubkey::Pubkey, system_instruction::SystemError,

@@ -16,7 +16,7 @@ use {
         OutputFormat,
     },
     solomka_client::rpc_config::RpcSendTransactionConfig,
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     std::{collections::HashMap, error, path::PathBuf, sync::Arc, time::Duration},
 };
 

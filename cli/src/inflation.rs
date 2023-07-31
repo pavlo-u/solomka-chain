@@ -10,7 +10,7 @@ use {
         CliEpochRewardshMetadata, CliInflation, CliKeyedEpochReward, CliKeyedEpochRewards,
     },
     solomka_client::rpc_client::RpcClient,
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{clock::Epoch, pubkey::Pubkey},
     std::sync::Arc,
 };

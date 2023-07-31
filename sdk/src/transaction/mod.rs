@@ -18,11 +18,11 @@
 //! more keypairs, and this signing is typically performed by an abstract
 //! [`Signer`], which may be a [`Keypair`] but may also be other types of
 //! signers including remote wallets, such as Ledger devices, as represented by
-//! the [`RemoteKeypair`] type in the [`solana-remote-wallet`] crate.
+//! the [`RemoteKeypair`] type in the [`solomka-remote-wallet`] crate.
 //!
 //! [`Signer`]: crate::signer::Signer
 //! [`Keypair`]: crate::signer::keypair::Keypair
-//! [`solana-remote-wallet`]: https://docs.rs/solana-remote-wallet/latest/
+//! [`solomka-remote-wallet`]: https://docs.rs/solana-remote-wallet/latest/
 //! [`RemoteKeypair`]: https://docs.rs/solana-remote-wallet/latest/solana_remote_wallet/remote_keypair/struct.RemoteKeypair.html
 //!
 //! Every transaction must be signed by a fee-paying account, the account from
@@ -899,7 +899,7 @@ impl Transaction {
     ///   - Some device-specific protocol error occurs ([`SignerError::Protocol`]).
     ///   - Some other error occurs ([`SignerError::Custom`]).
     ///
-    /// See the documentation for the [`solana-remote-wallet`] crate for details
+    /// See the documentation for the [`solomka-remote-wallet`] crate for details
     /// on the operation of [`RemoteKeypair`] signers.
     ///
     /// [`num_required_signatures`]: crate::message::MessageHeader::num_required_signatures
@@ -907,7 +907,7 @@ impl Transaction {
     /// [`Presigner`]: crate::signer::presigner::Presigner
     /// [`PresignerError`]: crate::signer::presigner::PresignerError
     /// [`PresignerError::VerificationFailure`]: crate::signer::presigner::PresignerError::VerificationFailure
-    /// [`solana-remote-wallet`]: https://docs.rs/solana-remote-wallet/latest/
+    /// [`solomka-remote-wallet`]: https://docs.rs/solana-remote-wallet/latest/
     /// [`RemoteKeypair`]: https://docs.rs/solana-remote-wallet/latest/solana_remote_wallet/remote_keypair/struct.RemoteKeypair.html
     pub fn try_partial_sign<T: Signers>(
         &mut self,

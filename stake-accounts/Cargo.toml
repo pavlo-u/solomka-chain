@@ -14,7 +14,7 @@ clap = "2.33.1"
 solomka-clap-utils = { path = "../clap-utils", version = "=1.14.20" }
 solomka-cli-config = { path = "../cli-config", version = "=1.14.20" }
 solomka-client = { path = "../client", version = "=1.14.20" }
-solana-remote-wallet = { path = "../remote-wallet", version = "=1.14.20" }
+solomka-remote-wallet = { path = "../remote-wallet", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-stake-program = { path = "../programs/stake", version = "=1.14.20" }
 

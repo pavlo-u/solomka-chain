@@ -21,7 +21,7 @@ use {
             RpcLargestAccountsFilter, RpcSendTransactionConfig, RpcTransactionLogsFilter,
         },
     },
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         clock::{Epoch, Slot},
         commitment_config::CommitmentConfig,

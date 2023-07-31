@@ -21,7 +21,7 @@ use {
     },
     solomka_cli_output::CliNonceAccount,
     solomka_client::{nonce_utils::*, rpc_client::RpcClient},
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::Account,
         feature_set::merge_nonce_error_into_system_error,

@@ -5,7 +5,7 @@ use {
     },
     chrono::DateTime,
     clap::ArgMatches,
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         clock::UnixTimestamp,
         commitment_config::CommitmentConfig,

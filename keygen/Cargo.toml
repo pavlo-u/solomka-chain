@@ -15,7 +15,7 @@ dirs-next = "2.0.0"
 num_cpus = "1.13.1"
 solomka-clap-v3-utils = { path = "../clap-v3-utils", version = "=1.14.20" }
 solomka-cli-config = { path = "../cli-config", version = "=1.14.20" }
-solana-remote-wallet = { path = "../remote-wallet", version = "=1.14.20" }
+solomka-remote-wallet = { path = "../remote-wallet", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-version = { path = "../version", version = "=1.14.20" }
 tiny-bip39 = "0.8.2"

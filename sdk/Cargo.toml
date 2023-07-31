@@ -4,7 +4,6 @@ version = "1.14.20"
 description = "Solana SDK"
 authors = ["Solana Maintainers <maintainers@solana.foundation>"]
 repository = "https://github.com/solana-labs/solana"
-homepage = "https://solana.com/"
 documentation = "https://docs.rs/solomka-sdk"
 readme = "README.md"
 license = "Apache-2.0"

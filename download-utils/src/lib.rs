@@ -4,16 +4,14 @@ use {
     indicatif::{ProgressBar, ProgressStyle},
     log::*,
     solana_runtime::{
-        snapshot_hash::SnapshotHash,
         snapshot_package::SnapshotType,
         snapshot_utils::{self, ArchiveFormat},
     },
-    solomka_sdk::{clock::Slot, genesis_config::DEFAULT_GENESIS_ARCHIVE},
+    solomka_sdk::{clock::Slot, genesis_config::DEFAULT_GENESIS_ARCHIVE, hash::Hash},
     std::{
         fs::{self, File},
         io::{self, Read},
         net::SocketAddr,
-        num::NonZeroUsize,
         path::{Path, PathBuf},
         time::{Duration, Instant},
     },
@@ -25,12 +23,9 @@ static SPARKLE: Emoji = Emoji("✨ ", "");
 /// Creates a new process bar for processing that will take an unknown amount of time
 fn new_spinner_progress_bar() -> ProgressBar {
     let progress_bar = ProgressBar::new(42);
-    progress_bar.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.green} {wide_msg}")
-            .expect("ProgresStyle::template direct input to be correct"),
-    );
-    progress_bar.enable_steady_tick(Duration::from_millis(100));
+    progress_bar
+        .set_style(ProgressStyle::default_spinner().template("{spinner:.green} {wide_msg}"));
+    progress_bar.enable_steady_tick(100);
     progress_bar
 }
 
@@ -70,7 +65,7 @@ pub fn download_file<'a, 'b>(
     progress_notify_callback: &'a mut DownloadProgressCallbackOption<'b>,
 ) -> Result<(), String> {
     if destination_file.is_file() {
-        return Err(format!("{destination_file:?} already exists"));
+        return Err(format!("{:?} already exists", destination_file));
     }
     let download_start = Instant::now();
 
@@ -89,7 +84,7 @@ pub fn download_file<'a, 'b>(
 
     let progress_bar = new_spinner_progress_bar();
     if use_progress_bar {
-        progress_bar.set_message(format!("{TRUCK}Downloading {url}..."));
+        progress_bar.set_message(format!("{}Downloading {}...", TRUCK, url));
     }
 
     let response = reqwest::blocking::Client::new()
@@ -117,10 +112,9 @@ pub fn download_file<'a, 'b>(
                 .template(
                     "{spinner:.green}{msg_wide}[{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})",
                 )
-                .expect("ProgresStyle::template direct input to be correct")
                 .progress_chars("=> "),
         );
-        progress_bar.set_message(format!("{TRUCK}Downloading~ {url}"));
+        progress_bar.set_message(format!("{}Downloading~ {}", TRUCK, url));
     } else {
         info!("Downloading {} bytes from {}", download_size, url);
     }
@@ -213,7 +207,7 @@ pub fn download_file<'a, 'b>(
 
     File::create(&temp_destination_file)
         .and_then(|mut file| std::io::copy(&mut source, &mut file))
-        .map_err(|err| format!("Unable to write {temp_destination_file:?}: {err:?}"))?;
+        .map_err(|err| format!("Unable to write {:?}: {:?}", temp_destination_file, err))?;
 
     source.progress_bar.finish_and_clear();
     info!(
@@ -228,7 +222,7 @@ pub fn download_file<'a, 'b>(
     );
 
     std::fs::rename(temp_destination_file, destination_file)
-        .map_err(|err| format!("Unable to rename: {err:?}"))?;
+        .map_err(|err| format!("Unable to rename: {:?}", err))?;
 
     Ok(())
 }
@@ -244,7 +238,7 @@ pub fn download_genesis_if_missing(
 
         let _ignored = fs::remove_dir_all(&tmp_genesis_path);
         download_file(
-            &format!("http://{rpc_addr}/{DEFAULT_GENESIS_ARCHIVE}"),
+            &format!("http://{}/{}", rpc_addr, DEFAULT_GENESIS_ARCHIVE),
             &tmp_genesis_package,
             use_progress_bar,
             &mut None,
@@ -258,16 +252,16 @@ pub fn download_genesis_if_missing(
 
 /// Download a snapshot archive from `rpc_addr`.  Use `snapshot_type` to specify downloading either
 /// a full snapshot or an incremental snapshot.
-pub fn download_snapshot_archive(
+pub fn download_snapshot_archive<'a, 'b>(
     rpc_addr: &SocketAddr,
     full_snapshot_archives_dir: &Path,
     incremental_snapshot_archives_dir: &Path,
-    desired_snapshot_hash: (Slot, SnapshotHash),
+    desired_snapshot_hash: (Slot, Hash),
     snapshot_type: SnapshotType,
-    maximum_full_snapshot_archives_to_retain: NonZeroUsize,
-    maximum_incremental_snapshot_archives_to_retain: NonZeroUsize,
+    maximum_full_snapshot_archives_to_retain: usize,
+    maximum_incremental_snapshot_archives_to_retain: usize,
     use_progress_bar: bool,
-    progress_notify_callback: &mut DownloadProgressCallbackOption<'_>,
+    progress_notify_callback: &'a mut DownloadProgressCallbackOption<'b>,
 ) -> Result<(), String> {
     snapshot_utils::purge_old_snapshot_archives(
         full_snapshot_archives_dir,

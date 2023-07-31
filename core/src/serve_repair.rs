@@ -1,7 +1,7 @@
 use {
     crate::{
         cluster_slots::ClusterSlots,
-        duplicate_repair_status::get_ancestor_hash_repair_sample_size,
+        duplicate_repair_status::ANCESTOR_HASH_REPAIR_SAMPLE_SIZE,
         repair_response,
         repair_service::{OutstandingShredRepairs, RepairStats, REPAIR_MS},
         request_response::RequestResponse,
@@ -24,6 +24,7 @@ use {
         blockstore::Blockstore,
         shred::{Nonce, Shred, ShredFetchStats, SIZE_OF_NONCE},
     },
+    solana_metrics::inc_new_counter_debug,
     solana_perf::{
         data_budget::DataBudget,
         packet::{Packet, PacketBatch, PacketBatchRecycler},
@@ -41,12 +42,11 @@ use {
     },
     solana_streamer::{
         sendmmsg::{batch_send, SendPktsError},
-        socket::SocketAddrSpace,
         streamer::{PacketBatchReceiver, PacketBatchSender},
     },
     std::{
         cmp::Reverse,
-        collections::{HashMap, HashSet},
+        collections::HashSet,
         net::{SocketAddr, UdpSocket},
         sync::{
             atomic::{AtomicBool, Ordering},
@@ -55,8 +55,9 @@ use {
         thread::{Builder, JoinHandle},
         time::{Duration, Instant},
     },
-    thiserror::Error,
 };
+
+type SlotHash = (Slot, Hash);
 
 /// the number of slots to respond with when responding to `Orphan` requests
 pub const MAX_ORPHAN_REPAIR_RESPONSES: usize = 11;
@@ -64,17 +65,13 @@ pub const MAX_ORPHAN_REPAIR_RESPONSES: usize = 11;
 pub(crate) const REPAIR_PEERS_CACHE_CAPACITY: usize = 128;
 // Limit cache entries ttl in order to avoid re-using outdated data.
 const REPAIR_PEERS_CACHE_TTL: Duration = Duration::from_secs(10);
-
-#[cfg(test)]
-static_assertions::const_assert_eq!(MAX_ANCESTOR_BYTES_IN_PACKET, 1220);
 pub const MAX_ANCESTOR_BYTES_IN_PACKET: usize =
     PACKET_DATA_SIZE -
     SIZE_OF_NONCE -
     4 /*(response version enum discriminator)*/ -
     4 /*slot_hash length*/;
-
 pub const MAX_ANCESTOR_RESPONSES: usize =
-    MAX_ANCESTOR_BYTES_IN_PACKET / std::mem::size_of::<(Slot, Hash)>();
+    MAX_ANCESTOR_BYTES_IN_PACKET / std::mem::size_of::<SlotHash>();
 /// Number of bytes in the randomly generated token sent with ping messages.
 pub(crate) const REPAIR_PING_TOKEN_SIZE: usize = HASH_BYTES;
 pub const REPAIR_PING_CACHE_CAPACITY: usize = 65536;
@@ -87,29 +84,10 @@ const SIGNED_REPAIR_TIME_WINDOW: Duration = Duration::from_secs(60 * 10); // 10 
 #[cfg(test)]
 static_assertions::const_assert_eq!(MAX_ANCESTOR_RESPONSES, 30);
 
-#[derive(Error, Debug)]
-pub enum RepairVerifyError {
-    #[error("IdMismatch")]
-    IdMismatch,
-    #[error("Malformed")]
-    Malformed,
-    #[error("SelfRepair")]
-    SelfRepair,
-    #[error("SigVerify")]
-    SigVerify,
-    #[error("TimeSkew")]
-    TimeSkew,
-    #[error("Unsigned")]
-    Unsigned,
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum ShredRepairType {
-    /// Requesting `MAX_ORPHAN_REPAIR_RESPONSES ` parent shreds
     Orphan(Slot),
-    /// Requesting any shred with index greater than or equal to the particular index
     HighestShred(Slot, u64),
-    /// Requesting the missing shred at a particular index
     Shred(Slot, u64),
 }
 
@@ -136,10 +114,10 @@ impl RequestResponse for ShredRepairType {
         match self {
             ShredRepairType::Orphan(slot) => response_shred.slot() <= *slot,
             ShredRepairType::HighestShred(slot, index) => {
-                response_shred.slot() == *slot && response_shred.index() as u64 >= *index
+                response_shred.slot() as u64 == *slot && response_shred.index() as u64 >= *index
             }
             ShredRepairType::Shred(slot, index) => {
-                response_shred.slot() == *slot && response_shred.index() as u64 == *index
+                response_shred.slot() as u64 == *slot && response_shred.index() as u64 == *index
             }
         }
     }
@@ -152,10 +130,9 @@ impl AncestorHashesRepairType {
     }
 }
 
-#[derive(Debug, AbiEnumVisitor, AbiExample, Deserialize, Serialize)]
-#[frozen_abi(digest = "AKpurCovzn6rsji4aQrP3hUdEHxjtXUfT7AatZXN7Rpz")]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum AncestorHashesResponse {
-    Hashes(Vec<(Slot, Hash)>),
+    Hashes(Vec<SlotHash>),
     Ping(Ping),
 }
 
@@ -178,25 +155,23 @@ struct ServeRepairStats {
     dropped_requests_outbound_bandwidth: usize,
     dropped_requests_load_shed: usize,
     dropped_requests_low_stake: usize,
-    whitelisted_requests: usize,
     total_dropped_response_packets: usize,
     total_response_packets: usize,
     total_response_bytes_staked: usize,
     total_response_bytes_unstaked: usize,
+    handle_requests_staked: usize,
+    handle_requests_unstaked: usize,
     processed: usize,
+    self_repair: usize,
     window_index: usize,
     highest_window_index: usize,
     orphan: usize,
     pong: usize,
     ancestor_hashes: usize,
-    window_index_misses: usize,
     ping_cache_check_failed: usize,
     pings_sent: usize,
     decode_time_us: u64,
     handle_requests_time_us: u64,
-    handle_requests_staked: usize,
-    handle_requests_unstaked: usize,
-    err_self_repair: usize,
     err_time_skew: usize,
     err_malformed: usize,
     err_sig_verify: usize,
@@ -204,7 +179,7 @@ struct ServeRepairStats {
     err_id_mismatch: usize,
 }
 
-#[derive(Debug, AbiExample, Deserialize, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct RepairRequestHeader {
     signature: Signature,
     sender: Pubkey,
@@ -228,8 +203,7 @@ impl RepairRequestHeader {
 pub(crate) type Ping = ping_pong::Ping<[u8; REPAIR_PING_TOKEN_SIZE]>;
 
 /// Window protocol messages
-#[derive(Debug, AbiEnumVisitor, AbiExample, Deserialize, Serialize)]
-#[frozen_abi(digest = "6VyBwHjkAMXAN97fdhQgFv6VdPEnfJo9LdUAd2SFtwF3")]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum RepairProtocol {
     LegacyWindowIndex(LegacyContactInfo, Slot, u64),
     LegacyHighestWindowIndex(LegacyContactInfo, Slot, u64),
@@ -259,27 +233,7 @@ pub enum RepairProtocol {
     },
 }
 
-const REPAIR_REQUEST_PONG_SERIALIZED_BYTES: usize = PUBKEY_BYTES + HASH_BYTES + SIGNATURE_BYTES;
-const REPAIR_REQUEST_MIN_BYTES: usize = REPAIR_REQUEST_PONG_SERIALIZED_BYTES;
-
-fn discard_malformed_repair_requests(
-    batch: &mut PacketBatch,
-    stats: &mut ServeRepairStats,
-) -> usize {
-    let mut well_formed_requests = 0;
-    for packet in batch.iter_mut() {
-        if packet.meta().size < REPAIR_REQUEST_MIN_BYTES {
-            stats.err_malformed += 1;
-            packet.meta_mut().set_discard(true);
-        } else {
-            well_formed_requests += 1;
-        }
-    }
-    well_formed_requests
-}
-
-#[derive(Debug, AbiEnumVisitor, AbiExample, Deserialize, Serialize)]
-#[frozen_abi(digest = "CkffjyMPCwuJgk9NiCMELXLCecAnTPZqpKEnUCb3VyVf")]
+#[derive(Serialize, Deserialize, Debug)]
 pub(crate) enum RepairResponse {
     Ping(Ping),
 }
@@ -287,13 +241,13 @@ pub(crate) enum RepairResponse {
 impl RepairProtocol {
     fn sender(&self) -> &Pubkey {
         match self {
-            Self::LegacyWindowIndex(ci, _, _) => ci.pubkey(),
-            Self::LegacyHighestWindowIndex(ci, _, _) => ci.pubkey(),
-            Self::LegacyOrphan(ci, _) => ci.pubkey(),
-            Self::LegacyWindowIndexWithNonce(ci, _, _, _) => ci.pubkey(),
-            Self::LegacyHighestWindowIndexWithNonce(ci, _, _, _) => ci.pubkey(),
-            Self::LegacyOrphanWithNonce(ci, _, _) => ci.pubkey(),
-            Self::LegacyAncestorHashes(ci, _, _) => ci.pubkey(),
+            Self::LegacyWindowIndex(ci, _, _) => &ci.id,
+            Self::LegacyHighestWindowIndex(ci, _, _) => &ci.id,
+            Self::LegacyOrphan(ci, _) => &ci.id,
+            Self::LegacyWindowIndexWithNonce(ci, _, _, _) => &ci.id,
+            Self::LegacyHighestWindowIndexWithNonce(ci, _, _, _) => &ci.id,
+            Self::LegacyOrphanWithNonce(ci, _, _) => &ci.id,
+            Self::LegacyAncestorHashes(ci, _, _) => &ci.id,
             Self::Pong(pong) => pong.from(),
             Self::WindowIndex { header, .. } => &header.sender,
             Self::HighestWindowIndex { header, .. } => &header.sender,
@@ -318,35 +272,12 @@ impl RepairProtocol {
             | Self::AncestorHashes { .. } => true,
         }
     }
-
-    fn max_response_packets(&self) -> usize {
-        match self {
-            RepairProtocol::WindowIndex { .. }
-            | RepairProtocol::LegacyWindowIndexWithNonce(_, _, _, _)
-            | RepairProtocol::HighestWindowIndex { .. }
-            | RepairProtocol::LegacyHighestWindowIndexWithNonce(_, _, _, _)
-            | RepairProtocol::AncestorHashes { .. }
-            | RepairProtocol::LegacyAncestorHashes(_, _, _) => 1,
-            RepairProtocol::Orphan { .. } | RepairProtocol::LegacyOrphanWithNonce(_, _, _) => {
-                MAX_ORPHAN_REPAIR_RESPONSES
-            }
-            RepairProtocol::Pong(_) => 0, // no response
-            RepairProtocol::LegacyWindowIndex(_, _, _)
-            | RepairProtocol::LegacyHighestWindowIndex(_, _, _)
-            | RepairProtocol::LegacyOrphan(_, _) => 0, // unsupported
-        }
-    }
-
-    fn max_response_bytes(&self) -> usize {
-        self.max_response_packets() * PACKET_DATA_SIZE
-    }
 }
 
 #[derive(Clone)]
 pub struct ServeRepair {
     cluster_info: Arc<ClusterInfo>,
     bank_forks: Arc<RwLock<BankForks>>,
-    repair_whitelist: Arc<RwLock<HashSet<Pubkey>>>,
 }
 
 // Cache entry for repair peers for a slot.
@@ -358,21 +289,17 @@ pub(crate) struct RepairPeers {
 
 impl RepairPeers {
     fn new(asof: Instant, peers: &[ContactInfo], weights: &[u64]) -> Result<Self> {
-        if peers.len() != weights.len() {
-            return Err(Error::from(WeightedError::InvalidWeight));
-        }
-        let (peers, weights): (Vec<_>, Vec<u64>) = peers
-            .iter()
-            .zip(weights)
-            .filter_map(|(peer, &weight)| {
-                let addr = peer.serve_repair().ok()?;
-                Some(((*peer.pubkey(), addr), weight))
-            })
-            .unzip();
         if peers.is_empty() {
             return Err(Error::from(ClusterInfoError::NoPeers));
         }
+        if peers.len() != weights.len() {
+            return Err(Error::from(WeightedError::InvalidWeight));
+        }
         let weighted_index = WeightedIndex::new(weights)?;
+        let peers = peers
+            .iter()
+            .map(|peer| (peer.id, peer.serve_repair))
+            .collect();
         Ok(Self {
             asof,
             peers,
@@ -386,23 +313,11 @@ impl RepairPeers {
     }
 }
 
-struct RepairRequestWithMeta {
-    request: RepairProtocol,
-    from_addr: SocketAddr,
-    stake: u64,
-    whitelisted: bool,
-}
-
 impl ServeRepair {
-    pub fn new(
-        cluster_info: Arc<ClusterInfo>,
-        bank_forks: Arc<RwLock<BankForks>>,
-        repair_whitelist: Arc<RwLock<HashSet<Pubkey>>>,
-    ) -> Self {
+    pub fn new(cluster_info: Arc<ClusterInfo>, bank_forks: Arc<RwLock<BankForks>>) -> Self {
         Self {
             cluster_info,
             bank_forks,
-            repair_whitelist,
         }
     }
 
@@ -428,18 +343,17 @@ impl ServeRepair {
                 }
                 | RepairProtocol::LegacyWindowIndexWithNonce(_, slot, shred_index, nonce) => {
                     stats.window_index += 1;
-                    let batch = Self::run_window_request(
-                        recycler,
-                        from_addr,
-                        blockstore,
-                        *slot,
-                        *shred_index,
-                        *nonce,
-                    );
-                    if batch.is_none() {
-                        stats.window_index_misses += 1;
-                    }
-                    (batch, "WindowIndexWithNonce")
+                    (
+                        Self::run_window_request(
+                            recycler,
+                            from_addr,
+                            blockstore,
+                            *slot,
+                            *shred_index,
+                            *nonce,
+                        ),
+                        "WindowIndexWithNonce",
+                    )
                 }
                 RepairProtocol::HighestWindowIndex {
                     header: RepairRequestHeader { nonce, .. },
@@ -515,122 +429,6 @@ impl ServeRepair {
         }
     }
 
-    fn decode_request(
-        packet: &Packet,
-        epoch_staked_nodes: &Option<Arc<HashMap<Pubkey, u64>>>,
-        whitelist: &HashSet<Pubkey>,
-        my_id: &Pubkey,
-        socket_addr_space: &SocketAddrSpace,
-        stats: &mut ServeRepairStats,
-        cluster_type: ClusterType,
-    ) -> Result<RepairRequestWithMeta> {
-        let request: RepairProtocol = match packet.deserialize_slice(..) {
-            Ok(request) => request,
-            Err(_) => {
-                return Err(Error::from(RepairVerifyError::Malformed));
-            }
-        };
-        let from_addr = packet.meta().socket_addr();
-        if !ContactInfo::is_valid_address(&from_addr, socket_addr_space) {
-            return Err(Error::from(RepairVerifyError::Malformed));
-        }
-        match Self::verify_signed_packet(my_id, packet, &request) {
-            Ok(()) => (),
-            Err(Error::RepairVerify(RepairVerifyError::Unsigned)) => match cluster_type {
-                ClusterType::Testnet | ClusterType::Development => {
-                    return Err(Error::from(RepairVerifyError::Unsigned));
-                }
-                ClusterType::MainnetBeta | ClusterType::Devnet => {
-                    stats.err_unsigned += 1;
-                }
-            },
-            Err(e) => return Err(e),
-        }
-        if request.sender() == my_id {
-            return Err(Error::from(RepairVerifyError::SelfRepair));
-        }
-        let stake = *epoch_staked_nodes
-            .as_ref()
-            .and_then(|stakes| stakes.get(request.sender()))
-            .unwrap_or(&0);
-
-        let whitelisted = whitelist.contains(request.sender());
-
-        Ok(RepairRequestWithMeta {
-            request,
-            from_addr,
-            stake,
-            whitelisted,
-        })
-    }
-
-    fn record_request_decode_error(error: &Error, stats: &mut ServeRepairStats) {
-        match error {
-            Error::RepairVerify(RepairVerifyError::IdMismatch) => {
-                stats.err_id_mismatch += 1;
-            }
-            Error::RepairVerify(RepairVerifyError::Malformed) => {
-                stats.err_malformed += 1;
-            }
-            Error::RepairVerify(RepairVerifyError::SelfRepair) => {
-                stats.err_self_repair += 1;
-            }
-            Error::RepairVerify(RepairVerifyError::SigVerify) => {
-                stats.err_sig_verify += 1;
-            }
-            Error::RepairVerify(RepairVerifyError::TimeSkew) => {
-                stats.err_time_skew += 1;
-            }
-            Error::RepairVerify(RepairVerifyError::Unsigned) => {
-                stats.err_unsigned += 1;
-            }
-            _ => {
-                debug_assert!(false, "unhandled error {error:?}");
-            }
-        }
-    }
-
-    fn decode_requests(
-        reqs_v: Vec<PacketBatch>,
-        epoch_staked_nodes: &Option<Arc<HashMap<Pubkey, u64>>>,
-        whitelist: &HashSet<Pubkey>,
-        my_id: &Pubkey,
-        socket_addr_space: &SocketAddrSpace,
-        stats: &mut ServeRepairStats,
-        cluster_type: ClusterType,
-    ) -> Vec<RepairRequestWithMeta> {
-        let decode_packet = |packet| {
-            let result = Self::decode_request(
-                packet,
-                epoch_staked_nodes,
-                whitelist,
-                my_id,
-                socket_addr_space,
-                stats,
-                cluster_type,
-            );
-            match &result {
-                Ok(req) => {
-                    if req.stake == 0 {
-                        stats.handle_requests_unstaked += 1;
-                    } else {
-                        stats.handle_requests_staked += 1;
-                    }
-                }
-                Err(e) => {
-                    Self::record_request_decode_error(e, stats);
-                }
-            }
-            result.ok()
-        };
-        reqs_v
-            .iter()
-            .flatten()
-            .filter(|packet| !packet.meta().discard())
-            .filter_map(decode_packet)
-            .collect()
-    }
-
     /// Process messages from the network
     fn run_listen(
         &self,
@@ -655,27 +453,19 @@ impl ServeRepair {
         let my_id = identity_keypair.pubkey();
         let cluster_type = root_bank.cluster_type();
 
-        let max_buffered_packets = if self.repair_whitelist.read().unwrap().len() > 0 {
-            4 * MAX_REQUESTS_PER_ITERATION
-        } else {
+        let max_buffered_packets = if cluster_type != ClusterType::MainnetBeta {
             2 * MAX_REQUESTS_PER_ITERATION
+        } else {
+            MAX_REQUESTS_PER_ITERATION
         };
 
         let mut dropped_requests = 0;
-        let mut well_formed_requests = discard_malformed_repair_requests(&mut reqs_v[0], stats);
-        for mut more in requests_receiver.try_iter() {
+        while let Ok(more) = requests_receiver.try_recv() {
             total_requests += more.len();
-            if well_formed_requests > max_buffered_packets {
-                // Already exceeded max. Don't waste time discarding
+            if total_requests > max_buffered_packets {
                 dropped_requests += more.len();
-                continue;
-            }
-            let retained = discard_malformed_repair_requests(&mut more, stats);
-            well_formed_requests += retained;
-            if retained > 0 && well_formed_requests <= max_buffered_packets {
-                reqs_v.push(more);
             } else {
-                dropped_requests += more.len();
+                reqs_v.push(more);
             }
         }
 
@@ -683,26 +473,56 @@ impl ServeRepair {
         stats.total_requests += total_requests;
 
         let decode_start = Instant::now();
-        let mut decoded_requests = {
-            let whitelist = self.repair_whitelist.read().unwrap();
-            Self::decode_requests(
-                reqs_v,
-                &epoch_staked_nodes,
-                &whitelist,
-                &my_id,
-                &socket_addr_space,
-                stats,
-                cluster_type,
-            )
-        };
-        let whitelisted_request_count = decoded_requests.iter().filter(|r| r.whitelisted).count();
-        stats.decode_time_us += decode_start.elapsed().as_micros() as u64;
-        stats.whitelisted_requests += whitelisted_request_count.min(MAX_REQUESTS_PER_ITERATION);
+        let mut decoded_reqs = Vec::default();
+        for packet in reqs_v.iter().flatten() {
+            let request: RepairProtocol = match packet.deserialize_slice(..) {
+                Ok(request) => request,
+                Err(_) => {
+                    stats.err_malformed += 1;
+                    continue;
+                }
+            };
 
-        if decoded_requests.len() > MAX_REQUESTS_PER_ITERATION {
-            stats.dropped_requests_low_stake += decoded_requests.len() - MAX_REQUESTS_PER_ITERATION;
-            decoded_requests.sort_unstable_by_key(|r| Reverse((r.whitelisted, r.stake)));
-            decoded_requests.truncate(MAX_REQUESTS_PER_ITERATION);
+            let from_addr = packet.meta.socket_addr();
+            if !ContactInfo::is_valid_address(&from_addr, &socket_addr_space) {
+                stats.err_malformed += 1;
+                continue;
+            }
+
+            match cluster_type {
+                ClusterType::Testnet | ClusterType::Development => {
+                    if !Self::verify_signed_packet(&my_id, packet, &request, stats) {
+                        continue;
+                    }
+                }
+                ClusterType::MainnetBeta | ClusterType::Devnet => {
+                    // collect stats for signature verification
+                    let _ = Self::verify_signed_packet(&my_id, packet, &request, stats);
+                }
+            }
+
+            if request.sender() == &my_id {
+                stats.self_repair += 1;
+                continue;
+            }
+
+            let stake = epoch_staked_nodes
+                .as_ref()
+                .and_then(|stakes| stakes.get(request.sender()))
+                .unwrap_or(&0);
+            if *stake == 0 {
+                stats.handle_requests_unstaked += 1;
+            } else {
+                stats.handle_requests_staked += 1;
+            }
+            decoded_reqs.push((request, from_addr, *stake));
+        }
+        stats.decode_time_us += decode_start.elapsed().as_micros() as u64;
+
+        if decoded_reqs.len() > MAX_REQUESTS_PER_ITERATION {
+            stats.dropped_requests_low_stake += decoded_reqs.len() - MAX_REQUESTS_PER_ITERATION;
+            decoded_reqs.sort_unstable_by_key(|(_, _, stake)| Reverse(*stake));
+            decoded_reqs.truncate(MAX_REQUESTS_PER_ITERATION);
         }
 
         let handle_requests_start = Instant::now();
@@ -710,7 +530,7 @@ impl ServeRepair {
             ping_cache,
             recycler,
             blockstore,
-            decoded_requests,
+            decoded_reqs,
             response_sender,
             stats,
             data_budget,
@@ -722,12 +542,13 @@ impl ServeRepair {
     }
 
     fn report_reset_stats(&self, stats: &mut ServeRepairStats) {
-        if stats.err_self_repair > 0 {
+        if stats.self_repair > 0 {
             let my_id = self.cluster_info.id();
             warn!(
                 "{}: Ignored received repair requests from ME: {}",
-                my_id, stats.err_self_repair,
+                my_id, stats.self_repair,
             );
+            inc_new_counter_debug!("serve_repair-handle-repair--eq", stats.self_repair);
         }
 
         datapoint_info!(
@@ -748,7 +569,6 @@ impl ServeRepair {
                 stats.dropped_requests_low_stake,
                 i64
             ),
-            ("whitelisted_requests", stats.whitelisted_requests, i64),
             (
                 "total_dropped_response_packets",
                 stats.total_dropped_response_packets,
@@ -772,7 +592,7 @@ impl ServeRepair {
                 stats.total_response_bytes_unstaked,
                 i64
             ),
-            ("self_repair", stats.err_self_repair, i64),
+            ("self_repair", stats.self_repair, i64),
             ("window_index", stats.window_index, i64),
             (
                 "request-highest-window-index",
@@ -786,7 +606,6 @@ impl ServeRepair {
                 i64
             ),
             ("pong", stats.pong, i64),
-            ("window_index_misses", stats.window_index_misses, i64),
             (
                 "ping_cache_check_failed",
                 stats.ping_cache_check_failed,
@@ -863,11 +682,13 @@ impl ServeRepair {
             .unwrap()
     }
 
+    #[must_use]
     fn verify_signed_packet(
         my_id: &Pubkey,
         packet: &Packet,
         request: &RepairProtocol,
-    ) -> Result<()> {
+        stats: &mut ServeRepairStats,
+    ) -> bool {
         match request {
             RepairProtocol::LegacyWindowIndex(_, _, _)
             | RepairProtocol::LegacyHighestWindowIndex(_, _, _)
@@ -876,11 +697,13 @@ impl ServeRepair {
             | RepairProtocol::LegacyHighestWindowIndexWithNonce(_, _, _, _)
             | RepairProtocol::LegacyOrphanWithNonce(_, _, _)
             | RepairProtocol::LegacyAncestorHashes(_, _, _) => {
-                return Err(Error::from(RepairVerifyError::Unsigned));
+                stats.err_unsigned += 1;
+                return false;
             }
             RepairProtocol::Pong(pong) => {
                 if !pong.verify() {
-                    return Err(Error::from(RepairVerifyError::SigVerify));
+                    stats.err_sig_verify += 1;
+                    return false;
                 }
             }
             RepairProtocol::WindowIndex { header, .. }
@@ -888,40 +711,39 @@ impl ServeRepair {
             | RepairProtocol::Orphan { header, .. }
             | RepairProtocol::AncestorHashes { header, .. } => {
                 if &header.recipient != my_id {
-                    return Err(Error::from(RepairVerifyError::IdMismatch));
+                    stats.err_id_mismatch += 1;
+                    return false;
                 }
                 let time_diff_ms = timestamp().abs_diff(header.timestamp);
                 if u128::from(time_diff_ms) > SIGNED_REPAIR_TIME_WINDOW.as_millis() {
-                    return Err(Error::from(RepairVerifyError::TimeSkew));
+                    stats.err_time_skew += 1;
+                    return false;
                 }
                 let leading_buf = match packet.data(..4) {
                     Some(buf) => buf,
                     None => {
-                        debug_assert!(
-                            false,
-                            "request should have failed deserialization: {request:?}",
-                        );
-                        return Err(Error::from(RepairVerifyError::Malformed));
+                        debug_assert!(false); // should have failed deserialize
+                        stats.err_malformed += 1;
+                        return false;
                     }
                 };
                 let trailing_buf = match packet.data(4 + SIGNATURE_BYTES..) {
                     Some(buf) => buf,
                     None => {
-                        debug_assert!(
-                            false,
-                            "request should have failed deserialization: {request:?}",
-                        );
-                        return Err(Error::from(RepairVerifyError::Malformed));
+                        debug_assert!(false); // should have failed deserialize
+                        stats.err_malformed += 1;
+                        return false;
                     }
                 };
                 let from_id = request.sender();
                 let signed_data = [leading_buf, trailing_buf].concat();
                 if !header.signature.verify(from_id.as_ref(), &signed_data) {
-                    return Err(Error::from(RepairVerifyError::SigVerify));
+                    stats.err_sig_verify += 1;
+                    return false;
                 }
             }
         }
-        Ok(())
+        true
     }
 
     fn check_ping_cache(
@@ -966,7 +788,7 @@ impl ServeRepair {
         ping_cache: &mut PingCache,
         recycler: &PacketBatchRecycler,
         blockstore: &Blockstore,
-        requests: Vec<RepairRequestWithMeta>,
+        requests: Vec<(RepairProtocol, SocketAddr, /*stake*/ u64)>,
         response_sender: &PacketBatchSender,
         stats: &mut ServeRepairStats,
         data_budget: &DataBudget,
@@ -975,17 +797,8 @@ impl ServeRepair {
         let identity_keypair = self.cluster_info.keypair().clone();
         let mut pending_pings = Vec::default();
 
-        for RepairRequestWithMeta {
-            request,
-            from_addr,
-            stake,
-            ..
-        } in requests.into_iter()
-        {
-            if !data_budget.check(request.max_response_bytes()) {
-                stats.dropped_requests_outbound_bandwidth += 1;
-                continue;
-            }
+        let requests_len = requests.len();
+        for (i, (request, from_addr, stake)) in requests.into_iter().enumerate() {
             if !matches!(&request, RepairProtocol::Pong(_)) {
                 let (check, ping_pkt) =
                     Self::check_ping_cache(ping_cache, &request, &from_addr, &identity_keypair);
@@ -1008,7 +821,7 @@ impl ServeRepair {
                 Some(rsp) => rsp,
             };
             let num_response_packets = rsp.len();
-            let num_response_bytes = rsp.iter().map(|p| p.meta().size).sum();
+            let num_response_bytes = rsp.iter().map(|p| p.meta.size).sum();
             if data_budget.take(num_response_bytes) && response_sender.send(rsp).is_ok() {
                 stats.total_response_packets += num_response_packets;
                 match stake > 0 {
@@ -1016,8 +829,9 @@ impl ServeRepair {
                     false => stats.total_response_bytes_unstaked += num_response_bytes,
                 }
             } else {
-                stats.dropped_requests_outbound_bandwidth += 1;
+                stats.dropped_requests_outbound_bandwidth += requests_len - i;
                 stats.total_dropped_response_packets += num_response_packets;
+                break;
             }
         }
 
@@ -1082,11 +896,6 @@ impl ServeRepair {
             nonce,
             identity_keypair,
         )?;
-        debug!(
-            "Sending repair request from {} for {:#?}",
-            identity_keypair.pubkey(),
-            repair_request
-        );
         Ok((addr, out))
     }
 
@@ -1106,12 +915,9 @@ impl ServeRepair {
             .unzip();
         let peers = WeightedShuffle::new("repair_request_ancestor_hashes", &weights)
             .shuffle(&mut rand::thread_rng())
+            .take(ANCESTOR_HASH_REPAIR_SAMPLE_SIZE)
             .map(|i| index[i])
-            .filter_map(|i| {
-                let addr = repair_peers[i].serve_repair().ok()?;
-                Some((*repair_peers[i].pubkey(), addr))
-            })
-            .take(get_ancestor_hash_repair_sample_size())
+            .map(|i| (repair_peers[i].id, repair_peers[i].serve_repair))
             .collect();
         Ok(peers)
     }
@@ -1132,7 +938,7 @@ impl ServeRepair {
             .unzip();
         let k = WeightedIndex::new(weights)?.sample(&mut rand::thread_rng());
         let n = index[k];
-        Ok((*repair_peers[n].pubkey(), repair_peers[n].serve_repair()?))
+        Ok((repair_peers[n].id, repair_peers[n].serve_repair))
     }
 
     pub(crate) fn map_repair_request(
@@ -1192,7 +998,7 @@ impl ServeRepair {
     ) {
         let mut pending_pongs = Vec::default();
         for packet in packet_batch.iter_mut() {
-            if packet.meta().size != REPAIR_RESPONSE_SERIALIZED_PING_BYTES {
+            if packet.meta.size != REPAIR_RESPONSE_SERIALIZED_PING_BYTES {
                 continue;
             }
             if let Ok(RepairResponse::Ping(ping)) = packet.deserialize_slice(..) {
@@ -1206,12 +1012,12 @@ impl ServeRepair {
                     stats.ping_err_verify_count += 1;
                     continue;
                 }
-                packet.meta_mut().set_discard(true);
+                packet.meta.set_discard(true);
                 stats.ping_count += 1;
                 if let Ok(pong) = Pong::new(&ping, keypair) {
                     let pong = RepairProtocol::Pong(pong);
                     if let Ok(pong_bytes) = serialize(&pong) {
-                        let from_addr = packet.meta().socket_addr();
+                        let from_addr = packet.meta.socket_addr();
                         pending_pongs.push((pong_bytes, from_addr));
                     }
                 }
@@ -1277,6 +1083,8 @@ impl ServeRepair {
             from_addr,
             nonce,
         )?;
+
+        inc_new_counter_debug!("serve_repair-window-request-ledger", 1);
         Some(PacketBatch::new_unpinned_with_recycler_data(
             recycler,
             "run_window_request",
@@ -1316,29 +1124,40 @@ impl ServeRepair {
         recycler: &PacketBatchRecycler,
         from_addr: &SocketAddr,
         blockstore: &Blockstore,
-        slot: Slot,
+        mut slot: Slot,
         max_responses: usize,
         nonce: Nonce,
     ) -> Option<PacketBatch> {
         let mut res =
             PacketBatch::new_unpinned_with_recycler(recycler.clone(), max_responses, "run_orphan");
         // Try to find the next "n" parent slots of the input slot
-        let packets = std::iter::successors(blockstore.meta(slot).ok()?, |meta| {
-            blockstore.meta(meta.parent_slot?).ok()?
-        })
-        .map_while(|meta| {
-            repair_response::repair_response_packet(
+        while let Ok(Some(meta)) = blockstore.meta(slot) {
+            if meta.received == 0 {
+                break;
+            }
+            let packet = repair_response::repair_response_packet(
                 blockstore,
-                meta.slot,
-                meta.received.checked_sub(1u64)?,
+                slot,
+                meta.received - 1,
                 from_addr,
                 nonce,
-            )
-        });
-        for packet in packets.take(max_responses) {
-            res.push(packet);
+            );
+            if let Some(packet) = packet {
+                res.push(packet);
+            } else {
+                break;
+            }
+
+            if meta.parent_slot.is_some() && res.len() < max_responses {
+                slot = meta.parent_slot.unwrap();
+            } else {
+                break;
+            }
         }
-        (!res.is_empty()).then_some(res)
+        if res.is_empty() {
+            return None;
+        }
+        Some(res)
     }
 
     fn run_ancestor_hashes(
@@ -1380,7 +1199,7 @@ mod tests {
     use {
         super::*,
         crate::{repair_response, result::Error},
-        solana_gossip::{contact_info::ContactInfo, socketaddr, socketaddr_any},
+        solana_gossip::{socketaddr, socketaddr_any},
         solana_ledger::{
             blockstore::make_many_slot_entries,
             blockstore_processor::fill_blockstore_slot_with_ticks,
@@ -1395,7 +1214,7 @@ mod tests {
             timing::timestamp,
         },
         solana_streamer::socket::SocketAddrSpace,
-        std::{io::Cursor, net::Ipv4Addr},
+        std::io::Cursor,
     };
 
     #[test]
@@ -1405,7 +1224,7 @@ mod tests {
         let ping = Ping::new_rand(&mut rng, &keypair).unwrap();
         let ping = RepairResponse::Ping(ping);
         let pkt = Packet::from_data(None, ping).unwrap();
-        assert_eq!(pkt.meta().size, REPAIR_RESPONSE_SERIALIZED_PING_BYTES);
+        assert_eq!(pkt.meta.size, REPAIR_RESPONSE_SERIALIZED_PING_BYTES);
     }
 
     #[test]
@@ -1425,7 +1244,7 @@ mod tests {
         shred.sign(&keypair);
         let mut pkt = Packet::default();
         shred.copy_to_packet(&mut pkt);
-        pkt.meta_mut().size = REPAIR_RESPONSE_SERIALIZED_PING_BYTES;
+        pkt.meta.size = REPAIR_RESPONSE_SERIALIZED_PING_BYTES;
         let res = pkt.deserialize_slice::<RepairResponse, _>(..);
         if let Ok(RepairResponse::Ping(ping)) = res {
             assert!(!ping.verify());
@@ -1434,93 +1253,14 @@ mod tests {
         }
     }
 
-    fn repair_request_header_for_tests() -> RepairRequestHeader {
-        RepairRequestHeader {
-            signature: Signature::default(),
-            sender: Pubkey::default(),
-            recipient: Pubkey::default(),
-            timestamp: timestamp(),
-            nonce: Nonce::default(),
-        }
-    }
-
-    #[test]
-    fn test_check_well_formed_repair_request() {
-        let mut rng = rand::thread_rng();
-        let keypair = Keypair::new();
-        let ping = ping_pong::Ping::<[u8; 32]>::new_rand(&mut rng, &keypair).unwrap();
-        let pong = Pong::new(&ping, &keypair).unwrap();
-        let request = RepairProtocol::Pong(pong);
-        let mut pkt = Packet::from_data(None, request).unwrap();
-        let mut batch = PacketBatch::new(vec![pkt.clone()]);
-        let mut stats = ServeRepairStats::default();
-        let num_well_formed = discard_malformed_repair_requests(&mut batch, &mut stats);
-        assert_eq!(num_well_formed, 1);
-        pkt.meta_mut().size = 5;
-        let mut batch = PacketBatch::new(vec![pkt]);
-        let mut stats = ServeRepairStats::default();
-        let num_well_formed = discard_malformed_repair_requests(&mut batch, &mut stats);
-        assert_eq!(num_well_formed, 0);
-        assert_eq!(stats.err_malformed, 1);
-
-        let request = RepairProtocol::WindowIndex {
-            header: repair_request_header_for_tests(),
-            slot: 123,
-            shred_index: 456,
-        };
-        let mut pkt = Packet::from_data(None, request).unwrap();
-        let mut batch = PacketBatch::new(vec![pkt.clone()]);
-        let mut stats = ServeRepairStats::default();
-        let num_well_formed = discard_malformed_repair_requests(&mut batch, &mut stats);
-        assert_eq!(num_well_formed, 1);
-        pkt.meta_mut().size = 8;
-        let mut batch = PacketBatch::new(vec![pkt]);
-        let mut stats = ServeRepairStats::default();
-        let num_well_formed = discard_malformed_repair_requests(&mut batch, &mut stats);
-        assert_eq!(num_well_formed, 0);
-        assert_eq!(stats.err_malformed, 1);
-
-        let request = RepairProtocol::AncestorHashes {
-            header: repair_request_header_for_tests(),
-            slot: 123,
-        };
-        let mut pkt = Packet::from_data(None, request).unwrap();
-        let mut batch = PacketBatch::new(vec![pkt.clone()]);
-        let mut stats = ServeRepairStats::default();
-        let num_well_formed = discard_malformed_repair_requests(&mut batch, &mut stats);
-        assert_eq!(num_well_formed, 1);
-        pkt.meta_mut().size = 1;
-        let mut batch = PacketBatch::new(vec![pkt]);
-        let mut stats = ServeRepairStats::default();
-        let num_well_formed = discard_malformed_repair_requests(&mut batch, &mut stats);
-        assert_eq!(num_well_formed, 0);
-        assert_eq!(stats.err_malformed, 1);
-
-        let request = RepairProtocol::LegacyOrphan(LegacyContactInfo::default(), 123);
-        let mut pkt = Packet::from_data(None, request).unwrap();
-        let mut batch = PacketBatch::new(vec![pkt.clone()]);
-        let mut stats = ServeRepairStats::default();
-        let num_well_formed = discard_malformed_repair_requests(&mut batch, &mut stats);
-        assert_eq!(num_well_formed, 1);
-        pkt.meta_mut().size = 3;
-        let mut batch = PacketBatch::new(vec![pkt]);
-        let mut stats = ServeRepairStats::default();
-        let num_well_formed = discard_malformed_repair_requests(&mut batch, &mut stats);
-        assert_eq!(num_well_formed, 0);
-        assert_eq!(stats.err_malformed, 1);
-    }
-
     #[test]
     fn test_serialize_deserialize_signed_request() {
         let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10_000);
         let bank = Bank::new_for_tests(&genesis_config);
         let bank_forks = Arc::new(RwLock::new(BankForks::new(bank)));
-        let cluster_info = Arc::new(new_test_cluster_info());
-        let serve_repair = ServeRepair::new(
-            cluster_info.clone(),
-            bank_forks,
-            Arc::new(RwLock::new(HashSet::default())),
-        );
+        let me = ContactInfo::new_localhost(&solomka_sdk::pubkey::new_rand(), timestamp());
+        let cluster_info = Arc::new(new_test_cluster_info(me));
+        let serve_repair = ServeRepair::new(cluster_info.clone(), bank_forks);
         let keypair = cluster_info.keypair().clone();
         let repair_peer_id = solomka_sdk::pubkey::new_rand();
         let repair_request = ShredRepairType::Orphan(123);
@@ -1557,7 +1297,8 @@ mod tests {
     fn test_serialize_deserialize_ancestor_hashes_request() {
         let slot: Slot = 50;
         let nonce = 70;
-        let cluster_info = Arc::new(new_test_cluster_info());
+        let me = ContactInfo::new_localhost(&solomka_sdk::pubkey::new_rand(), timestamp());
+        let cluster_info = Arc::new(new_test_cluster_info(me));
         let repair_peer_id = solomka_sdk::pubkey::new_rand();
         let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10_000);
         let keypair = cluster_info.keypair().clone();
@@ -1565,11 +1306,7 @@ mod tests {
         let mut bank = Bank::new_for_tests(&genesis_config);
         bank.feature_set = Arc::new(FeatureSet::all_enabled());
         let bank_forks = Arc::new(RwLock::new(BankForks::new(bank)));
-        let serve_repair = ServeRepair::new(
-            cluster_info,
-            bank_forks,
-            Arc::new(RwLock::new(HashSet::default())),
-        );
+        let serve_repair = ServeRepair::new(cluster_info, bank_forks);
 
         let request_bytes = serve_repair
             .ancestor_repair_request_bytes(&keypair, &repair_peer_id, slot, nonce)
@@ -1601,12 +1338,9 @@ mod tests {
         let GenesisConfigInfo { genesis_config, .. } = create_genesis_config(10_000);
         let bank = Bank::new_for_tests(&genesis_config);
         let bank_forks = Arc::new(RwLock::new(BankForks::new(bank)));
-        let cluster_info = Arc::new(new_test_cluster_info());
-        let serve_repair = ServeRepair::new(
-            cluster_info.clone(),
-            bank_forks,
-            Arc::new(RwLock::new(HashSet::default())),
-        );
+        let me = ContactInfo::new_localhost(&solomka_sdk::pubkey::new_rand(), timestamp());
+        let cluster_info = Arc::new(new_test_cluster_info(me));
+        let serve_repair = ServeRepair::new(cluster_info.clone(), bank_forks);
         let keypair = cluster_info.keypair().clone();
         let repair_peer_id = solomka_sdk::pubkey::new_rand();
 
@@ -1708,14 +1442,17 @@ mod tests {
             );
             let slot = 239847;
             let request = RepairProtocol::Orphan { header, slot };
-            let mut packet = Packet::from_data(None, request).unwrap();
+            let mut packet = Packet::from_data(None, &request).unwrap();
             sign_packet(&mut packet, &my_keypair);
             packet
         };
         let request: RepairProtocol = packet.deserialize_slice(..).unwrap();
-        assert!(
-            ServeRepair::verify_signed_packet(&other_keypair.pubkey(), &packet, &request).is_ok()
-        );
+        assert!(ServeRepair::verify_signed_packet(
+            &other_keypair.pubkey(),
+            &packet,
+            &request,
+            &mut ServeRepairStats::default(),
+        ));
 
         // recipient mismatch
         let packet = {
@@ -1727,15 +1464,19 @@ mod tests {
             );
             let slot = 239847;
             let request = RepairProtocol::Orphan { header, slot };
-            let mut packet = Packet::from_data(None, request).unwrap();
+            let mut packet = Packet::from_data(None, &request).unwrap();
             sign_packet(&mut packet, &my_keypair);
             packet
         };
         let request: RepairProtocol = packet.deserialize_slice(..).unwrap();
-        assert!(matches!(
-            ServeRepair::verify_signed_packet(&my_keypair.pubkey(), &packet, &request),
-            Err(Error::RepairVerify(RepairVerifyError::IdMismatch))
+        let mut stats = ServeRepairStats::default();
+        assert!(!ServeRepair::verify_signed_packet(
+            &my_keypair.pubkey(),
+            &packet,
+            &request,
+            &mut stats,
         ));
+        assert_eq!(stats.err_id_mismatch, 1);
 
         // outside time window
         let packet = {
@@ -1749,15 +1490,19 @@ mod tests {
             );
             let slot = 239847;
             let request = RepairProtocol::Orphan { header, slot };
-            let mut packet = Packet::from_data(None, request).unwrap();
+            let mut packet = Packet::from_data(None, &request).unwrap();
             sign_packet(&mut packet, &my_keypair);
             packet
         };
         let request: RepairProtocol = packet.deserialize_slice(..).unwrap();
-        assert!(matches!(
-            ServeRepair::verify_signed_packet(&other_keypair.pubkey(), &packet, &request),
-            Err(Error::RepairVerify(RepairVerifyError::TimeSkew))
+        let mut stats = ServeRepairStats::default();
+        assert!(!ServeRepair::verify_signed_packet(
+            &other_keypair.pubkey(),
+            &packet,
+            &request,
+            &mut stats,
         ));
+        assert_eq!(stats.err_time_skew, 1);
 
         // bad signature
         let packet = {
@@ -1769,15 +1514,19 @@ mod tests {
             );
             let slot = 239847;
             let request = RepairProtocol::Orphan { header, slot };
-            let mut packet = Packet::from_data(None, request).unwrap();
+            let mut packet = Packet::from_data(None, &request).unwrap();
             sign_packet(&mut packet, &other_keypair);
             packet
         };
         let request: RepairProtocol = packet.deserialize_slice(..).unwrap();
-        assert!(matches!(
-            ServeRepair::verify_signed_packet(&other_keypair.pubkey(), &packet, &request),
-            Err(Error::RepairVerify(RepairVerifyError::SigVerify))
+        let mut stats = ServeRepairStats::default();
+        assert!(!ServeRepair::verify_signed_packet(
+            &other_keypair.pubkey(),
+            &packet,
+            &request,
+            &mut stats,
         ));
+        assert_eq!(stats.err_sig_verify, 1);
     }
 
     #[test]
@@ -1902,10 +1651,12 @@ mod tests {
         Blockstore::destroy(&ledger_path).expect("Expected successful database destruction");
     }
 
-    fn new_test_cluster_info() -> ClusterInfo {
-        let keypair = Arc::new(Keypair::new());
-        let contact_info = ContactInfo::new_localhost(&keypair.pubkey(), timestamp());
-        ClusterInfo::new(contact_info, keypair, SocketAddrSpace::Unspecified)
+    fn new_test_cluster_info(contact_info: ContactInfo) -> ClusterInfo {
+        ClusterInfo::new(
+            contact_info,
+            Arc::new(Keypair::new()),
+            SocketAddrSpace::Unspecified,
+        )
     }
 
     #[test]
@@ -1914,12 +1665,9 @@ mod tests {
         let bank = Bank::new_for_tests(&genesis_config);
         let bank_forks = Arc::new(RwLock::new(BankForks::new(bank)));
         let cluster_slots = ClusterSlots::default();
-        let cluster_info = Arc::new(new_test_cluster_info());
-        let serve_repair = ServeRepair::new(
-            cluster_info.clone(),
-            bank_forks,
-            Arc::new(RwLock::new(HashSet::default())),
-        );
+        let me = ContactInfo::new_localhost(&solomka_sdk::pubkey::new_rand(), timestamp());
+        let cluster_info = Arc::new(new_test_cluster_info(me));
+        let serve_repair = ServeRepair::new(cluster_info.clone(), bank_forks);
         let identity_keypair = cluster_info.keypair().clone();
         let mut outstanding_requests = OutstandingShredRepairs::default();
         let rv = serve_repair.repair_request(
@@ -1933,22 +1681,22 @@ mod tests {
         );
         assert_matches!(rv, Err(Error::ClusterInfo(ClusterInfoError::NoPeers)));
 
-        let serve_repair_addr = socketaddr!(Ipv4Addr::LOCALHOST, 1243);
-        let mut nxt = ContactInfo::new(
-            solomka_sdk::pubkey::new_rand(),
-            timestamp(), // wallclock
-            0u16,        // shred_version
-        );
-        nxt.set_gossip((Ipv4Addr::LOCALHOST, 1234)).unwrap();
-        nxt.set_tvu((Ipv4Addr::LOCALHOST, 1235)).unwrap();
-        nxt.set_tvu_forwards((Ipv4Addr::LOCALHOST, 1236)).unwrap();
-        nxt.set_repair((Ipv4Addr::LOCALHOST, 1237)).unwrap();
-        nxt.set_tpu((Ipv4Addr::LOCALHOST, 1238)).unwrap();
-        nxt.set_tpu_forwards((Ipv4Addr::LOCALHOST, 1239)).unwrap();
-        nxt.set_tpu_vote((Ipv4Addr::LOCALHOST, 1240)).unwrap();
-        nxt.set_rpc((Ipv4Addr::LOCALHOST, 1241)).unwrap();
-        nxt.set_rpc_pubsub((Ipv4Addr::LOCALHOST, 1242)).unwrap();
-        nxt.set_serve_repair(serve_repair_addr).unwrap();
+        let serve_repair_addr = socketaddr!([127, 0, 0, 1], 1243);
+        let nxt = ContactInfo {
+            id: solomka_sdk::pubkey::new_rand(),
+            gossip: socketaddr!([127, 0, 0, 1], 1234),
+            tvu: socketaddr!([127, 0, 0, 1], 1235),
+            tvu_forwards: socketaddr!([127, 0, 0, 1], 1236),
+            repair: socketaddr!([127, 0, 0, 1], 1237),
+            tpu: socketaddr!([127, 0, 0, 1], 1238),
+            tpu_forwards: socketaddr!([127, 0, 0, 1], 1239),
+            tpu_vote: socketaddr!([127, 0, 0, 1], 1240),
+            rpc: socketaddr!([127, 0, 0, 1], 1241),
+            rpc_pubsub: socketaddr!([127, 0, 0, 1], 1242),
+            serve_repair: serve_repair_addr,
+            wallclock: 0,
+            shred_version: 0,
+        };
         cluster_info.insert_info(nxt.clone());
         let rv = serve_repair
             .repair_request(
@@ -1961,25 +1709,25 @@ mod tests {
                 &identity_keypair,
             )
             .unwrap();
-        assert_eq!(nxt.serve_repair().unwrap(), serve_repair_addr);
-        assert_eq!(rv.0, nxt.serve_repair().unwrap());
+        assert_eq!(nxt.serve_repair, serve_repair_addr);
+        assert_eq!(rv.0, nxt.serve_repair);
 
         let serve_repair_addr2 = socketaddr!([127, 0, 0, 2], 1243);
-        let mut nxt = ContactInfo::new(
-            solomka_sdk::pubkey::new_rand(),
-            timestamp(), // wallclock
-            0u16,        // shred_version
-        );
-        nxt.set_gossip((Ipv4Addr::LOCALHOST, 1234)).unwrap();
-        nxt.set_tvu((Ipv4Addr::LOCALHOST, 1235)).unwrap();
-        nxt.set_tvu_forwards((Ipv4Addr::LOCALHOST, 1236)).unwrap();
-        nxt.set_repair((Ipv4Addr::LOCALHOST, 1237)).unwrap();
-        nxt.set_tpu((Ipv4Addr::LOCALHOST, 1238)).unwrap();
-        nxt.set_tpu_forwards((Ipv4Addr::LOCALHOST, 1239)).unwrap();
-        nxt.set_tpu_vote((Ipv4Addr::LOCALHOST, 1240)).unwrap();
-        nxt.set_rpc((Ipv4Addr::LOCALHOST, 1241)).unwrap();
-        nxt.set_rpc_pubsub((Ipv4Addr::LOCALHOST, 1242)).unwrap();
-        nxt.set_serve_repair(serve_repair_addr2).unwrap();
+        let nxt = ContactInfo {
+            id: solomka_sdk::pubkey::new_rand(),
+            gossip: socketaddr!([127, 0, 0, 1], 1234),
+            tvu: socketaddr!([127, 0, 0, 1], 1235),
+            tvu_forwards: socketaddr!([127, 0, 0, 1], 1236),
+            repair: socketaddr!([127, 0, 0, 1], 1237),
+            tpu: socketaddr!([127, 0, 0, 1], 1238),
+            tpu_forwards: socketaddr!([127, 0, 0, 1], 1239),
+            tpu_vote: socketaddr!([127, 0, 0, 1], 1240),
+            rpc: socketaddr!([127, 0, 0, 1], 1241),
+            rpc_pubsub: socketaddr!([127, 0, 0, 1], 1242),
+            serve_repair: serve_repair_addr2,
+            wallclock: 0,
+            shred_version: 0,
+        };
         cluster_info.insert_info(nxt);
         let mut one = false;
         let mut two = false;
@@ -2136,7 +1884,7 @@ mod tests {
     fn test_run_ancestor_hashes() {
         fn deserialize_ancestor_hashes_response(packet: &Packet) -> AncestorHashesResponse {
             packet
-                .deserialize_slice(..packet.meta().size - SIZE_OF_NONCE)
+                .deserialize_slice(..packet.meta.size - SIZE_OF_NONCE)
                 .unwrap()
         }
 
@@ -2239,8 +1987,8 @@ mod tests {
         let bank = Bank::new_for_tests(&genesis_config);
         let bank_forks = Arc::new(RwLock::new(BankForks::new(bank)));
         let cluster_slots = ClusterSlots::default();
-        let cluster_info = Arc::new(new_test_cluster_info());
-        let me = cluster_info.my_contact_info();
+        let me = ContactInfo::new_localhost(&solomka_sdk::pubkey::new_rand(), timestamp());
+        let cluster_info = Arc::new(new_test_cluster_info(me.clone()));
 
         // Insert two peers on the network
         let contact_info2 =
@@ -2250,17 +1998,13 @@ mod tests {
         cluster_info.insert_info(contact_info2.clone());
         cluster_info.insert_info(contact_info3.clone());
         let identity_keypair = cluster_info.keypair().clone();
-        let serve_repair = ServeRepair::new(
-            cluster_info,
-            bank_forks,
-            Arc::new(RwLock::new(HashSet::default())),
-        );
+        let serve_repair = ServeRepair::new(cluster_info, bank_forks);
 
         // If:
         // 1) repair validator set doesn't exist in gossip
         // 2) repair validator set only includes our own id
         // then no repairs should be generated
-        for pubkey in &[solomka_sdk::pubkey::new_rand(), *me.pubkey()] {
+        for pubkey in &[solomka_sdk::pubkey::new_rand(), me.id] {
             let known_validators = Some(vec![*pubkey].into_iter().collect());
             assert!(serve_repair.repair_peers(&known_validators, 1).is_empty());
             assert!(serve_repair
@@ -2277,10 +2021,10 @@ mod tests {
         }
 
         // If known validator exists in gossip, should return repair successfully
-        let known_validators = Some(vec![*contact_info2.pubkey()].into_iter().collect());
+        let known_validators = Some(vec![contact_info2.id].into_iter().collect());
         let repair_peers = serve_repair.repair_peers(&known_validators, 1);
         assert_eq!(repair_peers.len(), 1);
-        assert_eq!(repair_peers[0].pubkey(), contact_info2.pubkey());
+        assert_eq!(repair_peers[0].id, contact_info2.id);
         assert!(serve_repair
             .repair_request(
                 &cluster_slots,
@@ -2298,11 +2042,11 @@ mod tests {
         let repair_peers: HashSet<Pubkey> = serve_repair
             .repair_peers(&None, 1)
             .into_iter()
-            .map(|node| *node.pubkey())
+            .map(|c| c.id)
             .collect();
         assert_eq!(repair_peers.len(), 2);
-        assert!(repair_peers.contains(contact_info2.pubkey()));
-        assert!(repair_peers.contains(contact_info3.pubkey()));
+        assert!(repair_peers.contains(&contact_info2.id));
+        assert!(repair_peers.contains(&contact_info3.id));
         assert!(serve_repair
             .repair_request(
                 &cluster_slots,
@@ -2376,7 +2120,8 @@ mod tests {
     fn test_verify_ancestor_response() {
         let request_slot = MAX_ANCESTOR_RESPONSES as Slot;
         let repair = AncestorHashesRepairType(request_slot);
-        let mut response: Vec<(Slot, Hash)> = (0..request_slot)
+        let mut response: Vec<SlotHash> = (0..request_slot)
+            .into_iter()
             .map(|slot| (slot, Hash::new_unique()))
             .collect();
         assert!(repair.verify_response(&AncestorHashesResponse::Hashes(response.clone())));

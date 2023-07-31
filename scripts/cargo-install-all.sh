@@ -82,10 +82,10 @@ if [[ $CI_OS_NAME = windows ]]; then
     cargo-build-sbf
     cargo-test-bpf
     cargo-test-sbf
-    sonoma
+    solana
     solana-install
     solana-install-init
-    sonoma-keygen
+    solomka-keygen
     solana-stake-accounts
     solana-test-validator
     solana-tokens
@@ -94,15 +94,16 @@ else
   ./fetch-perf-libs.sh
 
   BINS=(
-    sonoma
+    solana
     solana-bench-tps
     solana-faucet
     solana-gossip
     solana-install
-    sonoma-keygen
+    solomka-keygen
     solana-ledger-tool
     solana-log-analyzer
     solana-net-shaper
+    solana-sys-tuner
     solana-validator
     rbpf-cli
   )
@@ -143,7 +144,7 @@ mkdir -p "$installDir/bin"
   # Exclude `spl-token` binary for net.sh builds
   if [[ -z "$validatorOnly" ]]; then
     # shellcheck disable=SC2086 # Don't want to double quote $rust_version
-    "$cargo" $maybeRustVersion install --locked spl-token-cli --root "$installDir"
+    "$cargo" $maybeRustVersion install --locked spl-token-cli --version 2.3.0 --root "$installDir"
   fi
 )
 
@@ -160,42 +161,8 @@ if [[ -z "$validatorOnly" ]]; then
   "$cargo" $maybeRustVersion build --manifest-path programs/bpf_loader/gen-syscall-list/Cargo.toml
   # shellcheck disable=SC2086 # Don't want to double quote $rust_version
   "$cargo" $maybeRustVersion run --bin gen-headers
-  mkdir -p "$installDir"/bin/sdk/sbf
-  cp -a sdk/sbf/* "$installDir"/bin/sdk/sbf
-fi
-
-# Add Solidity Compiler
-if [[ -z "$validatorOnly" ]]; then
-  base="https://github.com/hyperledger/solang/releases/download"
-  version="v0.3.0"
-  curlopt="-sSfL --retry 5 --retry-delay 2 --retry-connrefused"
-
-  case $(uname -s) in
-  "Linux")
-    if [[ $(uname -m) == "x86_64" ]]; then
-      arch="x86-64"
-    else
-      arch="arm64"
-    fi
-    # shellcheck disable=SC2086
-    curl $curlopt -o "$installDir/bin/solang" $base/$version/solang-linux-$arch
-    chmod 755 "$installDir/bin/solang"
-    ;;
-  "Darwin")
-    if [[ $(uname -m) == "x86_64" ]]; then
-      arch="intel"
-    else
-      arch="arm"
-    fi
-    # shellcheck disable=SC2086
-    curl $curlopt -o "$installDir/bin/solang" $base/$version/solang-mac-$arch
-    chmod 755 "$installDir/bin/solang"
-    ;;
-  *)
-    # shellcheck disable=SC2086
-    curl $curlopt -o "$installDir/bin/solang.exe" $base/$version/solang.exe
-    ;;
-  esac
+  mkdir -p "$installDir"/bin/sdk/bpf
+  cp -a sdk/bpf/* "$installDir"/bin/sdk/bpf
 fi
 
 (

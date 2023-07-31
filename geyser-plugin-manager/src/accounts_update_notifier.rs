@@ -3,19 +3,18 @@ use {
     crate::geyser_plugin_manager::GeyserPluginManager,
     log::*,
     solana_geyser_plugin_interface::geyser_plugin_interface::{
-        ReplicaAccountInfoV3, ReplicaAccountInfoVersions,
+        ReplicaAccountInfoV2, ReplicaAccountInfoVersions,
     },
     solana_measure::measure::Measure,
     solana_metrics::*,
     solana_runtime::{
-        account_storage::meta::StoredAccountMeta,
         accounts_update_notifier_interface::AccountsUpdateNotifierInterface,
+        append_vec::{StoredAccountMeta, StoredMeta},
     },
     solomka_sdk::{
         account::{AccountSharedData, ReadableAccount},
         clock::Slot,
-        pubkey::Pubkey,
-        transaction::SanitizedTransaction,
+        signature::Signature,
     },
     std::sync::{Arc, RwLock},
 };
@@ -28,13 +27,12 @@ impl AccountsUpdateNotifierInterface for AccountsUpdateNotifierImpl {
     fn notify_account_update(
         &self,
         slot: Slot,
+        meta: &StoredMeta,
         account: &AccountSharedData,
-        txn: &Option<&SanitizedTransaction>,
-        pubkey: &Pubkey,
-        write_version: u64,
+        txn_signature: &Option<&Signature>,
     ) {
         if let Some(account_info) =
-            self.accountinfo_from_shared_account_data(account, txn, pubkey, write_version)
+            self.accountinfo_from_shared_account_data(meta, account, txn_signature)
         {
             self.notify_plugins_of_account_update(account_info, slot, false);
         }
@@ -68,12 +66,12 @@ impl AccountsUpdateNotifierInterface for AccountsUpdateNotifierImpl {
     }
 
     fn notify_end_of_restore_from_snapshot(&self) {
-        let plugin_manager = self.plugin_manager.read().unwrap();
+        let mut plugin_manager = self.plugin_manager.write().unwrap();
         if plugin_manager.plugins.is_empty() {
             return;
         }
 
-        for plugin in plugin_manager.plugins.iter() {
+        for plugin in plugin_manager.plugins.iter_mut() {
             let mut measure = Measure::start("geyser-plugin-end-of-restore-from-snapshot");
             match plugin.notify_end_of_startup() {
                 Err(err) => {
@@ -106,55 +104,54 @@ impl AccountsUpdateNotifierImpl {
 
     fn accountinfo_from_shared_account_data<'a>(
         &self,
+        meta: &'a StoredMeta,
         account: &'a AccountSharedData,
-        txn: &'a Option<&'a SanitizedTransaction>,
-        pubkey: &'a Pubkey,
-        write_version: u64,
-    ) -> Option<ReplicaAccountInfoV3<'a>> {
-        Some(ReplicaAccountInfoV3 {
-            pubkey: pubkey.as_ref(),
+        txn_signature: &'a Option<&'a Signature>,
+    ) -> Option<ReplicaAccountInfoV2<'a>> {
+        Some(ReplicaAccountInfoV2 {
+            pubkey: meta.pubkey.as_ref(),
             lamports: account.lamports(),
             owner: account.owner().as_ref(),
             executable: account.executable(),
             rent_epoch: account.rent_epoch(),
             data: account.data(),
-            write_version,
-            txn: *txn,
+            write_version: meta.write_version,
+            txn_signature: *txn_signature,
         })
     }
 
     fn accountinfo_from_stored_account_meta<'a>(
         &self,
         stored_account_meta: &'a StoredAccountMeta,
-    ) -> Option<ReplicaAccountInfoV3<'a>> {
-        Some(ReplicaAccountInfoV3 {
-            pubkey: stored_account_meta.pubkey().as_ref(),
-            lamports: stored_account_meta.lamports(),
-            owner: stored_account_meta.owner().as_ref(),
-            executable: stored_account_meta.executable(),
-            rent_epoch: stored_account_meta.rent_epoch(),
-            data: stored_account_meta.data(),
-            write_version: stored_account_meta.write_version(),
-            txn: None,
+    ) -> Option<ReplicaAccountInfoV2<'a>> {
+        Some(ReplicaAccountInfoV2 {
+            pubkey: stored_account_meta.meta.pubkey.as_ref(),
+            lamports: stored_account_meta.account_meta.lamports,
+            owner: stored_account_meta.account_meta.owner.as_ref(),
+            executable: stored_account_meta.account_meta.executable,
+            rent_epoch: stored_account_meta.account_meta.rent_epoch,
+            data: stored_account_meta.data,
+            write_version: stored_account_meta.meta.write_version,
+            txn_signature: None,
         })
     }
 
     fn notify_plugins_of_account_update(
         &self,
-        account: ReplicaAccountInfoV3,
+        account: ReplicaAccountInfoV2,
         slot: Slot,
         is_startup: bool,
     ) {
         let mut measure2 = Measure::start("geyser-plugin-notify_plugins_of_account_update");
-        let plugin_manager = self.plugin_manager.read().unwrap();
+        let mut plugin_manager = self.plugin_manager.write().unwrap();
 
         if plugin_manager.plugins.is_empty() {
             return;
         }
-        for plugin in plugin_manager.plugins.iter() {
+        for plugin in plugin_manager.plugins.iter_mut() {
             let mut measure = Measure::start("geyser-plugin-update-account");
             match plugin.update_account(
-                ReplicaAccountInfoVersions::V0_0_3(&account),
+                ReplicaAccountInfoVersions::V0_0_2(&account),
                 slot,
                 is_startup,
             ) {

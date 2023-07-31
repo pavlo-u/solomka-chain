@@ -1,37 +1,36 @@
 [package]
-name = "sonoma-cli-output"
+authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+edition = "2021"
+name = "solomka-cli-output"
 description = "Blockchain, Rebuilt for Scale"
-documentation = "https://docs.rs/solana-cli-output"
-version = { workspace = true }
-authors = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-edition = { workspace = true }
+version = "1.14.20"
+repository = "https://github.com/pavlo-u/solomka-chain"
+license = "Apache-2.0"
+documentation = "https://docs.rs/solomka-cli-output"
 
 [dependencies]
-Inflector = { workspace = true }
-base64 = { workspace = true }
-chrono = { workspace = true, features = ["default", "serde"] }
+Inflector = "0.11.4"
+base64 = "0.13.0"
+chrono = { version = "0.4.11", features = ["serde"] }
 clap = "2.33.0"
-console = { workspace = true }
-humantime = { workspace = true }
-indicatif = { workspace = true }
-pretty-hex = { workspace = true }
-semver = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-solana-account-decoder = { workspace = true }
-solana-clap-utils = { workspace = true }
-sonoma-cli-config = { workspace = true }
-solana-rpc-client-api = { workspace = true }
-solomka-sdk = { workspace = true }
-solana-transaction-status = { workspace = true }
-solana-vote-program = { workspace = true }
-spl-memo = { workspace = true, features = ["no-entrypoint"] }
+console = "0.15.0"
+humantime = "2.0.1"
+indicatif = "0.16.2"
+pretty-hex = "0.3.0"
+semver = "1.0.10"
+serde = "1.0.138"
+serde_json = "1.0.81"
+solana-account-decoder = { path = "../account-decoder", version = "=1.14.20" }
+solomka-clap-utils = { path = "../clap-utils", version = "=1.14.20" }
+solomka-cli-config = { path = "../cli-config", version = "=1.14.20" }
+solomka-client = { path = "../client", version = "=1.14.20" }
+solomka-sdk= { path = "../sdk", version = "=1.14.20" }
+solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solana-vote-program = { path = "../programs/vote", version = "=1.14.20" }
+spl-memo = { version = "=3.0.1", features = ["no-entrypoint"] }
 
 [dev-dependencies]
-ed25519-dalek = { workspace = true }
+ed25519-dalek = "=1.0.1"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

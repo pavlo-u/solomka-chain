@@ -3,6 +3,7 @@ use {
     dlopen::symbor::{Container, SymBorApi, Symbol},
     dlopen_derive::SymBorApi,
     log::*,
+    solomka_sdk::packet::Packet,
     std::{
         env,
         ffi::OsStr,
@@ -15,7 +16,7 @@ use {
 
 #[repr(C)]
 pub struct Elems {
-    pub elems: *const u8,
+    pub elems: *const Packet,
     pub num: u32,
 }
 

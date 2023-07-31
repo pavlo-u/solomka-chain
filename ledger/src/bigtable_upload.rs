@@ -41,9 +41,6 @@ struct BlockstoreLoadStats {
     pub elapsed: Duration,
 }
 
-/// Uploads a range of blocks from a Blockstore to bigtable LedgerStorage
-/// Returns the Slot of the last block checked. If no blocks in the range `[staring_slot,
-/// ending_slot]` are found in Blockstore, this value is equal to `ending_slot`.
 pub async fn upload_confirmed_blocks(
     blockstore: Arc<Blockstore>,
     bigtable: solana_storage_bigtable::LedgerStorage,
@@ -54,25 +51,28 @@ pub async fn upload_confirmed_blocks(
 ) -> Result<Slot, Box<dyn std::error::Error>> {
     let mut measure = Measure::start("entire upload");
 
-    info!(
-        "Loading ledger slots from {} to {}",
-        starting_slot, ending_slot
-    );
+    info!("Loading ledger slots starting at {}...", starting_slot);
     let blockstore_slots: Vec<_> = blockstore
         .rooted_slot_iterator(starting_slot)
         .map_err(|err| {
-            format!("Failed to load entries starting from slot {starting_slot}: {err:?}")
+            format!(
+                "Failed to load entries starting from slot {}: {:?}",
+                starting_slot, err
+            )
         })?
-        .take_while(|slot| *slot <= ending_slot)
+        .map_while(|slot| (slot <= ending_slot).then(|| slot))
         .collect();
 
     if blockstore_slots.is_empty() {
-        warn!("Ledger has no slots from {starting_slot} to {ending_slot:?}");
-        return Ok(ending_slot);
+        return Err(format!(
+            "Ledger has no slots from {} to {:?}",
+            starting_slot, ending_slot
+        )
+        .into());
     }
 
-    let first_blockstore_slot = *blockstore_slots.first().unwrap();
-    let last_blockstore_slot = *blockstore_slots.last().unwrap();
+    let first_blockstore_slot = blockstore_slots.first().unwrap();
+    let last_blockstore_slot = blockstore_slots.last().unwrap();
     info!(
         "Found {} slots in the range ({}, {})",
         blockstore_slots.len(),
@@ -88,8 +88,8 @@ pub async fn upload_confirmed_blocks(
             first_blockstore_slot, last_blockstore_slot
         );
 
-        let mut start_slot = first_blockstore_slot;
-        while start_slot <= last_blockstore_slot {
+        let mut start_slot = *first_blockstore_slot;
+        while start_slot <= *last_blockstore_slot {
             let mut next_bigtable_slots = loop {
                 let num_bigtable_blocks = min(1000, config.max_num_slots_to_check * 2);
                 match bigtable
@@ -112,7 +112,7 @@ pub async fn upload_confirmed_blocks(
         }
         bigtable_slots
             .into_iter()
-            .filter(|slot| *slot <= last_blockstore_slot)
+            .filter(|slot| slot <= last_blockstore_slot)
             .collect::<Vec<_>>()
     } else {
         Vec::new()
@@ -121,7 +121,7 @@ pub async fn upload_confirmed_blocks(
     // The blocks that still need to be uploaded is the difference between what's already in the
     // bigtable and what's in blockstore...
     let blocks_to_upload = {
-        let blockstore_slots = blockstore_slots.into_iter().collect::<HashSet<_>>();
+        let blockstore_slots = blockstore_slots.iter().cloned().collect::<HashSet<_>>();
         let bigtable_slots = bigtable_slots.into_iter().collect::<HashSet<_>>();
 
         let mut blocks_to_upload = blockstore_slots
@@ -134,11 +134,8 @@ pub async fn upload_confirmed_blocks(
     };
 
     if blocks_to_upload.is_empty() {
-        info!(
-            "No blocks between {} and {} need to be uploaded to bigtable",
-            starting_slot, ending_slot
-        );
-        return Ok(last_blockstore_slot);
+        info!("No blocks need to be uploaded to bigtable");
+        return Ok(*last_blockstore_slot);
     }
     let last_slot = *blocks_to_upload.last().unwrap();
     info!(
@@ -162,13 +159,13 @@ pub async fn upload_confirmed_blocks(
 
         (
             (0..config.num_blocks_to_upload_in_parallel)
-                .map(|i| {
+                .map(|_| {
                     let blockstore = blockstore.clone();
                     let sender = sender.clone();
                     let slot_receiver = slot_receiver.clone();
                     let exit = exit.clone();
                     std::thread::Builder::new()
-                        .name(format!("solBigTGetBlk{i:02}"))
+                        .name("solBigTGetBlk".into())
                         .spawn(move || {
                             let start = Instant::now();
                             let mut num_blocks_read = 0;
@@ -277,7 +274,7 @@ pub async fn upload_confirmed_blocks(
     );
 
     if failures > 0 {
-        Err(format!("Incomplete upload, {failures} operations failed").into())
+        Err(format!("Incomplete upload, {} operations failed", failures).into())
     } else {
         Ok(last_slot)
     }

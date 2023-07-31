@@ -1,7 +1,9 @@
 use {
     crate::cli::CliError,
-    solana_rpc_client::rpc_client::RpcClient,
-    solana_rpc_client_api::client_error::{Error as ClientError, Result as ClientResult},
+    solomka_client::{
+        client_error::{ClientError, Result as ClientResult},
+        rpc_client::RpcClient,
+    },
     solomka_sdk::{
         commitment_config::CommitmentConfig, message::Message, native_token::lamports_to_sol,
         pubkey::Pubkey,
@@ -165,9 +167,9 @@ mod tests {
     use {
         super::*,
         serde_json::json,
-        solana_rpc_client_api::{
-            request::RpcRequest,
-            response::{Response, RpcResponseContext},
+        solomka_client::{
+            rpc_request::RpcRequest,
+            rpc_response::{Response, RpcResponseContext},
         },
         solomka_sdk::system_instruction,
         std::collections::HashMap,

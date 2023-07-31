@@ -5,7 +5,7 @@ extern crate test;
 
 use {
     log::*,
-    solana_program_runtime::declare_process_instruction,
+    solana_program_runtime::invoke_context::InvokeContext,
     solana_runtime::{
         bank::{test_utils::goto_end_of_slot, *},
         bank_client::BankClient,
@@ -15,6 +15,7 @@ use {
         client::{AsyncClient, SyncClient},
         clock::MAX_RECENT_BLOCKHASHES,
         genesis_config::create_genesis_config,
+        instruction::InstructionError,
         message::Message,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
@@ -33,6 +34,14 @@ const NOOP_PROGRAM_ID: [u8; 32] = [
     98, 117, 105, 108, 116, 105, 110, 95, 112, 114, 111, 103, 114, 97, 109, 95, 105, 100, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
 ];
+
+#[allow(clippy::unnecessary_wraps)]
+fn process_instruction(
+    _first_instruction_account: usize,
+    _invoke_context: &mut InvokeContext,
+) -> Result<(), InstructionError> {
+    Ok(())
+}
 
 pub fn create_builtin_transactions(
     bank_client: &BankClient,
@@ -125,13 +134,12 @@ fn do_bench_transactions(
     // freeze bank so that slot hashes is populated
     bank.freeze();
 
-    declare_process_instruction!(process_instruction, 1, |_invoke_context| {
-        // Do nothing
-        Ok(())
-    });
-
     let mut bank = Bank::new_from_parent(&Arc::new(bank), &Pubkey::default(), 1);
-    bank.add_mockup_builtin(Pubkey::from(BUILTIN_PROGRAM_ID), process_instruction);
+    bank.add_builtin(
+        "builtin_program",
+        &Pubkey::from(BUILTIN_PROGRAM_ID),
+        process_instruction,
+    );
     bank.add_builtin_account("solana_noop_program", &Pubkey::from(NOOP_PROGRAM_ID), false);
     let bank = Arc::new(bank);
     let bank_client = BankClient::new_shared(&bank);
@@ -147,7 +155,7 @@ fn do_bench_transactions(
         bench_work(&bank, &bank_client, &transactions);
     });
 
-    let summary = bencher.bench(|_bencher| Ok(())).unwrap().unwrap();
+    let summary = bencher.bench(|_bencher| {}).unwrap();
     info!("  {:?} transactions", transactions.len());
     info!("  {:?} ns/iter median", summary.median as u64);
     assert!(0f64 != summary.median);

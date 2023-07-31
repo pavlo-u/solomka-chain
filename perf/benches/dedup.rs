@@ -6,8 +6,8 @@ extern crate test;
 use {
     rand::prelude::*,
     solana_perf::{
-        deduper::{self, Deduper},
         packet::{to_packet_batches, PacketBatch},
+        sigverify::{self, Deduper},
     },
     std::time::Duration,
     test::Bencher,
@@ -27,7 +27,8 @@ fn do_bench_dedup_packets(bencher: &mut Bencher, mut batches: Vec<PacketBatch>) 
     let mut rng = rand::thread_rng();
     let mut deduper = Deduper::<2, [u8]>::new(&mut rng, /*num_bits:*/ 63_999_979);
     bencher.iter(|| {
-        let _ans = deduper::dedup_packets_and_count_discards(&deduper, &mut batches, |_, _, _| ());
+        let _ans =
+            sigverify::dedup_packets_and_count_discards(&deduper, &mut batches, |_, _, _| ());
         deduper.maybe_reset(
             &mut rng,
             0.001,                  // false_positive_rate
@@ -35,7 +36,7 @@ fn do_bench_dedup_packets(bencher: &mut Bencher, mut batches: Vec<PacketBatch>) 
         );
         batches
             .iter_mut()
-            .for_each(|b| b.iter_mut().for_each(|p| p.meta_mut().set_discard(false)));
+            .for_each(|b| b.iter_mut().for_each(|p| p.meta.set_discard(false)));
     });
 }
 

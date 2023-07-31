@@ -13,10 +13,19 @@
 #![doc(hidden)]
 #![cfg(feature = "full")]
 
-pub mod solana_rpc_client {
+pub mod solomka_client {
+    pub mod client_error {
+        use thiserror::Error;
+
+        #[derive(Error, Debug)]
+        #[error("mock-error")]
+        pub struct ClientError;
+        pub type Result<T> = std::result::Result<T, ClientError>;
+    }
+
     pub mod rpc_client {
         use {
-            super::super::solana_rpc_client_api::client_error::Result as ClientResult,
+            super::client_error::Result as ClientResult,
             crate::{hash::Hash, signature::Signature, transaction::Transaction},
         };
 
@@ -36,16 +45,5 @@ pub mod solana_rpc_client {
                 Ok(Signature::default())
             }
         }
-    }
-}
-
-pub mod solana_rpc_client_api {
-    pub mod client_error {
-        use thiserror::Error;
-
-        #[derive(Error, Debug)]
-        #[error("mock-error")]
-        pub struct ClientError;
-        pub type Result<T> = std::result::Result<T, ClientError>;
     }
 }

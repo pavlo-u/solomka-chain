@@ -14,13 +14,12 @@ use {
         },
         range_proof::RangeProof,
         sigma_proofs::{
-            ciphertext_commitment_equality_proof::CiphertextCommitmentEqualityProof,
-            fee_proof::FeeSigmaProof, validity_proof::AggregatedValidityProof,
+            ctxt_comm_equality_proof::CiphertextCommitmentEqualityProof, fee_proof::FeeSigmaProof,
+            validity_proof::AggregatedValidityProof,
         },
         transcript::TranscriptProtocol,
     },
     arrayref::{array_ref, array_refs},
-    bytemuck::bytes_of,
     curve25519_dalek::scalar::Scalar,
     merlin::Transcript,
     std::convert::TryInto,
@@ -63,7 +62,7 @@ lazy_static::lazy_static! {
 
 /// The instruction data that is needed for the `ProofInstruction::TransferWithFee` instruction.
 ///
-/// It includes the cryptographic proof as well as the context data information needed to verify
+/// It includes the cryptographic proof as well as the cotnext data information needed to verify
 /// the proof.
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
@@ -198,7 +197,14 @@ impl TransferWithFeeData {
             fee_parameters: fee_parameters.into(),
         };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript = TransferWithFeeProof::transcript_new(
+            &pod_transfer_with_fee_pubkeys,
+            &pod_ciphertext_lo,
+            &pod_ciphertext_hi,
+            &pod_new_source_ciphertext,
+            &pod_fee_ciphertext_lo,
+            &pod_fee_ciphertext_hi,
+        );
 
         let proof = TransferWithFeeProof::new(
             (amount_lo, &ciphertext_lo, &opening_lo),
@@ -347,7 +353,14 @@ impl ZkProofData<TransferWithFeeProofContext> for TransferWithFeeData {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript = TransferWithFeeProof::transcript_new(
+            &self.context.transfer_with_fee_pubkeys,
+            &self.context.ciphertext_lo,
+            &self.context.ciphertext_hi,
+            &self.context.new_source_ciphertext,
+            &self.context.fee_ciphertext_lo,
+            &self.context.fee_ciphertext_hi,
+        );
 
         let ciphertext_lo = self.context.ciphertext_lo.try_into()?;
         let ciphertext_hi = self.context.ciphertext_hi.try_into()?;
@@ -371,28 +384,7 @@ impl ZkProofData<TransferWithFeeProofContext> for TransferWithFeeData {
     }
 }
 
-#[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
-impl TransferWithFeeProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"transfer-with-fee-proof");
-        transcript.append_message(b"ciphertext-lo", bytes_of(&self.ciphertext_lo));
-        transcript.append_message(b"ciphertext-hi", bytes_of(&self.ciphertext_hi));
-        transcript.append_message(
-            b"transfer-with-fee-pubkeys",
-            bytes_of(&self.transfer_with_fee_pubkeys),
-        );
-        transcript.append_message(
-            b"new-source-ciphertext",
-            bytes_of(&self.new_source_ciphertext),
-        );
-        transcript.append_message(b"fee-ciphertext-lo", bytes_of(&self.fee_ciphertext_lo));
-        transcript.append_message(b"fee-ciphertext-hi", bytes_of(&self.fee_ciphertext_hi));
-        transcript.append_message(b"fee-parameters", bytes_of(&self.fee_parameters));
-        transcript
-    }
-}
-
+// #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
 pub struct TransferWithFeeProof {
@@ -408,6 +400,56 @@ pub struct TransferWithFeeProof {
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
 impl TransferWithFeeProof {
+    fn transcript_new(
+        transfer_with_fee_pubkeys: &pod::TransferWithFeePubkeys,
+        ciphertext_lo: &pod::TransferAmountEncryption,
+        ciphertext_hi: &pod::TransferAmountEncryption,
+        new_source_ciphertext: &pod::ElGamalCiphertext,
+        fee_ciphertext_lo: &pod::FeeEncryption,
+        fee_ciphertext_hi: &pod::FeeEncryption,
+    ) -> Transcript {
+        let mut transcript = Transcript::new(b"FeeProof");
+
+        transcript.append_pubkey(b"pubkey-source", &transfer_with_fee_pubkeys.source_pubkey);
+        transcript.append_pubkey(
+            b"pubkey-dest",
+            &transfer_with_fee_pubkeys.destination_pubkey,
+        );
+        transcript.append_pubkey(b"pubkey-auditor", &transfer_with_fee_pubkeys.auditor_pubkey);
+        transcript.append_pubkey(
+            b"withdraw_withheld_authority_pubkey",
+            &transfer_with_fee_pubkeys.withdraw_withheld_authority_pubkey,
+        );
+
+        transcript.append_commitment(b"comm-lo-amount", &ciphertext_lo.commitment);
+        transcript.append_handle(b"handle-lo-source", &ciphertext_lo.source_handle);
+        transcript.append_handle(b"handle-lo-dest", &ciphertext_lo.destination_handle);
+        transcript.append_handle(b"handle-lo-auditor", &ciphertext_lo.auditor_handle);
+
+        transcript.append_commitment(b"comm-hi-amount", &ciphertext_hi.commitment);
+        transcript.append_handle(b"handle-hi-source", &ciphertext_hi.source_handle);
+        transcript.append_handle(b"handle-hi-dest", &ciphertext_hi.destination_handle);
+        transcript.append_handle(b"handle-hi-auditor", &ciphertext_hi.auditor_handle);
+
+        transcript.append_ciphertext(b"ctxt-new-source", new_source_ciphertext);
+
+        transcript.append_commitment(b"comm-fee-lo", &fee_ciphertext_lo.commitment);
+        transcript.append_handle(b"handle-fee-lo-dest", &fee_ciphertext_lo.destination_handle);
+        transcript.append_handle(
+            b"handle-fee-lo-auditor",
+            &fee_ciphertext_lo.withdraw_withheld_authority_handle,
+        );
+
+        transcript.append_commitment(b"comm-fee-hi", &fee_ciphertext_hi.commitment);
+        transcript.append_handle(b"handle-fee-hi-dest", &fee_ciphertext_hi.destination_handle);
+        transcript.append_handle(
+            b"handle-fee-hi-auditor",
+            &fee_ciphertext_hi.withdraw_withheld_authority_handle,
+        );
+
+        transcript
+    }
+
     #[allow(clippy::too_many_arguments)]
     #[allow(clippy::many_single_char_names)]
     pub fn new(

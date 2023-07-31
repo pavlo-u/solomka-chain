@@ -158,16 +158,6 @@ module.exports = {
               id: "developing/lookup-tables",
               label: "Address Lookup Tables",
             },
-            {
-              type: "doc",
-              id: "developing/intro/transaction_fees",
-              label: "Transaction Fees",
-            },
-            {
-              type: "doc",
-              id: "developing/transaction_confirmation",
-              label: "Transaction Confirmation",
-            },
           ],
         },
         {
@@ -277,11 +267,6 @@ module.exports = {
         },
         {
           type: "doc",
-          id: "developing/on-chain-programs/limitations",
-          label: "Limitations",
-        },
-        {
-          type: "doc",
           id: "developing/on-chain-programs/faq",
           label: "FAQ",
         },
@@ -352,7 +337,7 @@ module.exports = {
   ],
   cliSidebar: [
     "cli",
-    "cli/install-solana-cli-tools",
+    "cli/install-solomka-cli-tools",
     {
       type: "category",
       label: "Command-line Wallets",
@@ -379,7 +364,6 @@ module.exports = {
     "offline-signing",
     "offline-signing/durable-nonce",
     "cli/usage",
-    "cli/sign-offchain-message",
   ],
   architectureSidebar: [
     {

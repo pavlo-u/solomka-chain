@@ -15,24 +15,23 @@ use {
 
 /// Account information
 #[derive(Clone)]
-#[repr(C)]
 pub struct AccountInfo<'a> {
     /// Public key of the account
     pub key: &'a Pubkey,
+    /// Was the transaction signed by this account's public key?
+    pub is_signer: bool,
+    /// Is the account writable?
+    pub is_writable: bool,
     /// The lamports in the account.  Modifiable by programs.
     pub lamports: Rc<RefCell<&'a mut u64>>,
     /// The data held in this account.  Modifiable by programs.
     pub data: Rc<RefCell<&'a mut [u8]>>,
     /// Program that owns this account
     pub owner: &'a Pubkey,
-    /// The epoch at which this account will next owe rent
-    pub rent_epoch: Epoch,
-    /// Was the transaction signed by this account's public key?
-    pub is_signer: bool,
-    /// Is the account writable?
-    pub is_writable: bool,
     /// This account's data contains a loaded program (and is now read-only)
     pub executable: bool,
+    /// The epoch at which this account will next owe rent
+    pub rent_epoch: Epoch,
 }
 
 impl<'a> fmt::Debug for AccountInfo<'a> {
@@ -131,7 +130,7 @@ impl<'a> AccountInfo<'a> {
     /// memory.
     ///
     /// Note:  Account data can be increased within a single call by up to
-    /// `solana_program::entrypoint::MAX_PERMITTED_DATA_INCREASE` bytes.
+    /// `solomka_program::entrypoint::MAX_PERMITTED_DATA_INCREASE` bytes.
     ///
     /// Note: Memory used to grow is already zero-initialized upon program
     /// entrypoint and re-zeroing it wastes compute units.  If within the same
@@ -290,12 +289,12 @@ impl<'a, T: Account> IntoAccountInfo<'a> for &'a mut (Pubkey, T) {
 /// # Examples
 ///
 /// ```
-/// use solana_program::{
+/// use solomka_program::{
 ///    account_info::{AccountInfo, next_account_info},
 ///    entrypoint::ProgramResult,
 ///    pubkey::Pubkey,
 /// };
-/// # use solana_program::program_error::ProgramError;
+/// # use solomka_program::program_error::ProgramError;
 ///
 /// pub fn process_instruction(
 ///     program_id: &Pubkey,
@@ -341,12 +340,12 @@ pub fn next_account_info<'a, 'b, I: Iterator<Item = &'a AccountInfo<'b>>>(
 /// # Examples
 ///
 /// ```
-/// use solana_program::{
+/// use solomka_program::{
 ///    account_info::{AccountInfo, next_account_info, next_account_infos},
 ///    entrypoint::ProgramResult,
 ///    pubkey::Pubkey,
 /// };
-/// # use solana_program::program_error::ProgramError;
+/// # use solomka_program::program_error::ProgramError;
 ///
 /// pub fn process_instruction(
 ///     program_id: &Pubkey,
@@ -451,7 +450,7 @@ mod tests {
         let data_str = format!("{:?}", Hex(&data[..MAX_DEBUG_ACCOUNT_DATA]));
         let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
         assert_eq!(
-            format!("{info:?}"),
+            format!("{:?}", info),
             format!(
                 "AccountInfo {{ \
                 key: {}, \
@@ -479,7 +478,7 @@ mod tests {
         let data_str = format!("{:?}", Hex(&data));
         let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
         assert_eq!(
-            format!("{info:?}"),
+            format!("{:?}", info),
             format!(
                 "AccountInfo {{ \
                 key: {}, \
@@ -506,7 +505,7 @@ mod tests {
         let mut data = vec![];
         let info = AccountInfo::new(&key, false, false, &mut lamports, &mut data, &key, false, 0);
         assert_eq!(
-            format!("{info:?}"),
+            format!("{:?}", info),
             format!(
                 "AccountInfo {{ \
                 key: {}, \

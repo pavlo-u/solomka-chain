@@ -28,7 +28,7 @@ pub fn sample_txs<T>(
     sample_period: u64,
     client: &Arc<T>,
 ) where
-    T: BenchTpsClient + ?Sized,
+    T: BenchTpsClient,
 {
     let mut max_tps = 0.0;
     let mut total_elapsed;

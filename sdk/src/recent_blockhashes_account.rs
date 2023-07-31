@@ -1,7 +1,5 @@
-//! Helpers for the recent blockhashes sysvar.
-
 #[allow(deprecated)]
-use solana_program::sysvar::recent_blockhashes::{
+use solomka_program::sysvar::recent_blockhashes::{
     IntoIterSorted, IterItem, RecentBlockhashes, MAX_ENTRIES,
 };
 use {
@@ -89,7 +87,7 @@ mod tests {
         super::*,
         crate::account::from_account,
         rand::{seq::SliceRandom, thread_rng},
-        solana_program::{
+        solomka_program::{
             hash::{Hash, HASH_BYTES},
             sysvar::recent_blockhashes::Entry,
         },

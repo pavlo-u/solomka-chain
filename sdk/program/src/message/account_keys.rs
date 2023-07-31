@@ -170,7 +170,10 @@ mod tests {
             vec![keys[5]],
         ];
 
-        assert!(account_keys.key_segment_iter().eq(expected_segments.iter()));
+        assert!(account_keys
+            .key_segment_iter()
+            .into_iter()
+            .eq(expected_segments.iter()));
     }
 
     #[test]

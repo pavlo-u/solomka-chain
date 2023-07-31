@@ -5,11 +5,7 @@ use {
         socket::SocketAddrSpace,
     },
     solana_metrics::inc_new_counter_debug,
-    std::{
-        io::Result,
-        net::UdpSocket,
-        time::{Duration, Instant},
-    },
+    std::{io::Result, net::UdpSocket, time::Instant},
 };
 pub use {
     solana_perf::packet::{
@@ -18,7 +14,7 @@ pub use {
     solomka_sdk::packet::{Meta, Packet, PACKET_DATA_SIZE},
 };
 
-pub fn recv_from(batch: &mut PacketBatch, socket: &UdpSocket, max_wait: Duration) -> Result<usize> {
+pub fn recv_from(batch: &mut PacketBatch, socket: &UdpSocket, max_wait_ms: u64) -> Result<usize> {
     let mut i = 0;
     //DOCUMENTED SIDE-EFFECT
     //Performance out of the IO without poll
@@ -36,7 +32,7 @@ pub fn recv_from(batch: &mut PacketBatch, socket: &UdpSocket, max_wait: Duration
         );
         match recv_mmsg(socket, &mut batch[i..]) {
             Err(_) if i > 0 => {
-                if start.elapsed() > max_wait {
+                if start.elapsed().as_millis() as u64 > max_wait_ms {
                     break;
                 }
             }
@@ -52,7 +48,7 @@ pub fn recv_from(batch: &mut PacketBatch, socket: &UdpSocket, max_wait: Duration
                 i += npkts;
                 // Try to batch into big enough buffers
                 // will cause less re-shuffling later on.
-                if start.elapsed() > max_wait || i >= PACKETS_PER_BATCH {
+                if start.elapsed().as_millis() as u64 > max_wait_ms || i >= PACKETS_PER_BATCH {
                     break;
                 }
             }
@@ -69,7 +65,7 @@ pub fn send_to(
     socket_addr_space: &SocketAddrSpace,
 ) -> Result<()> {
     for p in batch.iter() {
-        let addr = p.meta().socket_addr();
+        let addr = p.meta.socket_addr();
         if socket_addr_space.check(&addr) {
             if let Some(data) = p.data(..) {
                 socket.send_to(data, addr)?;
@@ -97,7 +93,7 @@ mod tests {
         let packets = vec![Packet::default()];
         let mut packet_batch = PacketBatch::new(packets);
         packet_batch.set_addr(&send_addr);
-        assert_eq!(packet_batch[0].meta().socket_addr(), send_addr);
+        assert_eq!(packet_batch[0].meta.socket_addr(), send_addr);
     }
 
     #[test]
@@ -113,25 +109,19 @@ mod tests {
         batch.resize(packet_batch_size, Packet::default());
 
         for m in batch.iter_mut() {
-            m.meta_mut().set_socket_addr(&addr);
-            m.meta_mut().size = PACKET_DATA_SIZE;
+            m.meta.set_socket_addr(&addr);
+            m.meta.size = PACKET_DATA_SIZE;
         }
         send_to(&batch, &send_socket, &SocketAddrSpace::Unspecified).unwrap();
 
-        batch
-            .iter_mut()
-            .for_each(|pkt| *pkt.meta_mut() = Meta::default());
-        let recvd = recv_from(
-            &mut batch,
-            &recv_socket,
-            Duration::from_millis(1), // max_wait
-        )
-        .unwrap();
+        batch.iter_mut().for_each(|pkt| pkt.meta = Meta::default());
+        let recvd = recv_from(&mut batch, &recv_socket, 1).unwrap();
+
         assert_eq!(recvd, batch.len());
 
         for m in batch.iter() {
-            assert_eq!(m.meta().size, PACKET_DATA_SIZE);
-            assert_eq!(m.meta().socket_addr(), saddr);
+            assert_eq!(m.meta.size, PACKET_DATA_SIZE);
+            assert_eq!(m.meta.socket_addr(), saddr);
         }
     }
 
@@ -146,10 +136,10 @@ mod tests {
         let mut p1 = Packet::default();
         let mut p2 = Packet::default();
 
-        p1.meta_mut().size = 1;
+        p1.meta.size = 1;
         p1.buffer_mut()[0] = 0;
 
-        p2.meta_mut().size = 1;
+        p2.meta.size = 1;
         p2.buffer_mut()[0] = 0;
 
         assert!(p1 == p2);
@@ -174,17 +164,14 @@ mod tests {
             let mut batch = PacketBatch::with_capacity(batch_size);
             batch.resize(batch_size, Packet::default());
             for p in batch.iter_mut() {
-                p.meta_mut().set_socket_addr(&addr);
-                p.meta_mut().size = 1;
+                p.meta.set_socket_addr(&addr);
+                p.meta.size = 1;
             }
             send_to(&batch, &send_socket, &SocketAddrSpace::Unspecified).unwrap();
         }
-        let recvd = recv_from(
-            &mut batch,
-            &recv_socket,
-            Duration::from_millis(100), // max_wait
-        )
-        .unwrap();
+
+        let recvd = recv_from(&mut batch, &recv_socket, 100).unwrap();
+
         // Check we only got PACKETS_PER_BATCH packets
         assert_eq!(recvd, PACKETS_PER_BATCH);
         assert_eq!(batch.capacity(), PACKETS_PER_BATCH);

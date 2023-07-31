@@ -14,7 +14,7 @@ keywords:
   - web3 developer
 ---
 
-For this "hello world" quickstart guide, we will use [Solana Playground](https://beta.solpg.io), a browser based IDE to develop and deploy our Solana program. To use it, you do **NOT** have to install any software on your computer. Simply open Solana Playground in your browser of choice, and you are ready to write and deploy Solana programs.
+For this "hello world" quickstart guide, we will use [Solana Playground](https://beta.solpg.io), a browser the based IDE, to develop and deploy our Solana program. To use it, you do **NOT** have to install any software on your computer. Simply open Solana Playground in your browser of choice, and you are ready to write and deploy Solana programs.
 
 ## What you will learn
 
@@ -216,7 +216,7 @@ Running client...
 
 ### Get transaction logs
 
-We will be using `solana-cli` directly in playground to get the information about any transaction:
+We will be using `solomka-cli` directly in playground to get the information about any transaction:
 
 ```sh
 solana confirm -v <TRANSACTION_HASH>

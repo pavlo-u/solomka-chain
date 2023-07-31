@@ -8,7 +8,7 @@ optimistically confirmed slot your validator observed:
 solana-ledger-tool -l ledger latest-optimistic-slots
 ```
 
-In Solana 1.13 or less, the latest optimistically confirmed can be found by looking for the more recent occurrence of
+In Solana 1.13 or less, the latest optimistically confirmed can be found by looking for the more recent occurence of
 [this](https://github.com/solana-labs/solana/blob/0264147d42d506fb888f5c4c021a998e231a3e74/core/src/optimistic_confirmation_verifier.rs#L71)
 metrics datapoint.
 
@@ -28,10 +28,10 @@ instead.
 ### Step 4. Create a new snapshot for slot `SLOT_X` with a hard fork at slot `SLOT_X`
 
 ```bash
-$ solana-ledger-tool -l <LEDGER_PATH> --snapshot-archive-path <SNAPSHOTS_PATH> --incremental-snapshot-archive-path <INCREMENTAL_SNAPSHOTS_PATH> create-snapshot SLOT_X <SNAPSHOTS_PATH> --hard-fork SLOT_X
+$ solana-ledger-tool -l ledger create-snapshot SLOT_X ledger --hard-fork SLOT_X
 ```
 
-The snapshots directory should now contain the new snapshot.
+The ledger directory should now contain the new snapshot.
 `solana-ledger-tool create-snapshot` will also output the new shred version, and bank hash value,
 call this NEW_SHRED_VERSION and NEW_BANK_HASH respectively.
 

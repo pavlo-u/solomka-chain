@@ -8,7 +8,7 @@ use {
     },
     solana_runtime::bank::{DurableNonceFee, TransactionExecutionDetails},
     solana_transaction_status::{
-        extract_and_fmt_memos, InnerInstruction, InnerInstructions, Reward, TransactionStatusMeta,
+        extract_and_fmt_memos, InnerInstructions, Reward, TransactionStatusMeta,
     },
     std::{
         sync::{
@@ -25,6 +25,7 @@ pub struct TransactionStatusService {
 }
 
 impl TransactionStatusService {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         write_transaction_status_receiver: Receiver<TransactionStatusMessage>,
         max_complete_transaction_status_slot: Arc<AtomicU64>,
@@ -127,13 +128,7 @@ impl TransactionStatusService {
                                 .enumerate()
                                 .map(|(index, instructions)| InnerInstructions {
                                     index: index as u8,
-                                    instructions: instructions
-                                        .into_iter()
-                                        .map(|info| InnerInstruction {
-                                            instruction: info.instruction,
-                                            stack_height: Some(u32::from(info.stack_height)),
-                                        })
-                                        .collect(),
+                                    instructions,
                                 })
                                 .filter(|i| !i.instructions.is_empty())
                                 .collect()
@@ -227,10 +222,7 @@ pub(crate) mod tests {
         dashmap::DashMap,
         solana_account_decoder::parse_token::token_amount_to_ui_amount,
         solana_ledger::{genesis_utils::create_genesis_config, get_tmp_ledger_path},
-        solana_runtime::{
-            bank::{Bank, NonceFull, NoncePartial, TransactionBalancesSet},
-            rent_debits::RentDebits,
-        },
+        solana_runtime::bank::{Bank, NonceFull, NoncePartial, RentDebits, TransactionBalancesSet},
         solomka_sdk::{
             account_utils::StateMut,
             clock::Slot,

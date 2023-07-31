@@ -11,14 +11,16 @@ args=(
   --no-poh-speed-test
   --no-os-network-limits-test
 )
-airdrops_enabled=1
+airdrops_enabled=0
 node_sol=500 # 500 SOL: number of SOL to airdrop the node for transaction fees and vote account rent exemption (ignored if airdrops_enabled=0)
 label=
 identity=
 vote_account=
 no_restart=0
 gossip_entrypoint=
+entrypoint_hostname=3.74.241.65
 ledger_dir=
+maybe_allow_private_addr=
 
 usage() {
   if [[ -n $1 ]]; then
@@ -146,7 +148,7 @@ while [[ -n $1 ]]; do
     elif [[ $1 = --skip-poh-verify ]]; then
       args+=("$1")
       shift
-    elif [[ $1 = --tpu-disable-quic ]]; then
+    elif [[ $1 = --tpu-use-quic ]]; then
       args+=("$1")
       shift
     elif [[ $1 = --tpu-enable-udp ]]; then
@@ -176,6 +178,10 @@ while [[ -n $1 ]]; do
     elif [[ $1 == --expected-bank-hash ]]; then
       args+=("$1" "$2")
       shift 2
+    elif [[ $1 == --allow-private-addr ]]; then
+      args+=("$1")
+      maybe_allow_private_addr=$1
+      shift
     elif [[ $1 == --accounts-db-skip-shrink ]]; then
       args+=("$1")
       shift
@@ -260,7 +266,6 @@ default_arg --ledger "$ledger_dir"
 default_arg --log -
 default_arg --full-rpc-api
 default_arg --no-incremental-snapshots
-default_arg --allow-private-addr
 
 if [[ $maybeRequireTower = true ]]; then
   default_arg --require-tower
@@ -331,8 +336,8 @@ setup_validator_accounts() {
   return 0
 }
 
-# shellcheck disable=SC2086
-rpc_url=$($solana_gossip --allow-private-addr rpc-url --timeout 180 --entrypoint "$gossip_entrypoint")
+# shellcheck disable=SC2086 # Don't want to double quote "$maybe_allow_private_addr"
+rpc_url=$($solana_gossip $maybe_allow_private_addr rpc-url --timeout 180 --entrypoint "$gossip_entrypoint")
 
 [[ -r "$identity" ]] || $solana_keygen new --no-passphrase -so "$identity"
 [[ -r "$vote_account" ]] || $solana_keygen new --no-passphrase -so "$vote_account"

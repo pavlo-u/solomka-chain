@@ -1,6 +1,6 @@
 use {
     crate::{
-        banking_trace::{BankingPacketBatch, BankingPacketSender},
+        banking_stage::BankingPacketSender,
         optimistic_confirmation_verifier::OptimisticConfirmationVerifier,
         replay_stage::DUPLICATE_THRESHOLD,
         result::{Error, Result},
@@ -265,6 +265,7 @@ impl ClusterInfoVoteListener {
                 .unwrap()
         };
         let exit_ = exit.clone();
+        let bank_forks_clone = bank_forks.clone();
         let bank_send_thread = Builder::new()
             .name("solCiBankSend".to_string())
             .spawn(move || {
@@ -273,6 +274,7 @@ impl ClusterInfoVoteListener {
                     verified_vote_label_packets_receiver,
                     poh_recorder,
                     &verified_packets_sender,
+                    bank_forks_clone,
                 );
             })
             .unwrap();
@@ -347,7 +349,7 @@ impl ClusterInfoVoteListener {
             .filter(|(_, packet_batch)| {
                 // to_packet_batches() above splits into 1 packet long batches
                 assert_eq!(packet_batch.len(), 1);
-                !packet_batch[0].meta().discard()
+                !packet_batch[0].meta.discard()
             })
             .filter_map(|(tx, packet_batch)| {
                 let (vote_account_key, vote, ..) = vote_parser::parse_vote_transaction(&tx)?;
@@ -377,6 +379,7 @@ impl ClusterInfoVoteListener {
         verified_vote_label_packets_receiver: VerifiedLabelVotePacketsReceiver,
         poh_recorder: Arc<RwLock<PohRecorder>>,
         verified_packets_sender: &BankingPacketSender,
+        bank_forks: Arc<RwLock<BankForks>>,
     ) -> Result<()> {
         let mut verified_vote_packets = VerifiedVotePackets::default();
         let mut time_since_lock = Instant::now();
@@ -391,11 +394,7 @@ impl ClusterInfoVoteListener {
                 .read()
                 .unwrap()
                 .would_be_leader(3 * slot_hashes::MAX_ENTRIES as u64 * DEFAULT_TICKS_PER_SLOT);
-            let feature_set = poh_recorder
-                .read()
-                .unwrap()
-                .bank()
-                .map(|bank| bank.feature_set.clone());
+            let feature_set = Some(bank_forks.read().unwrap().root_bank().feature_set.clone());
 
             if let Err(e) = verified_vote_packets.receive_and_process_vote_packets(
                 &verified_vote_label_packets_receiver,
@@ -411,7 +410,7 @@ impl ClusterInfoVoteListener {
                 }
             }
 
-            if time_since_lock.elapsed().as_millis() > BANK_SEND_VOTES_LOOP_SLEEP_MS {
+            if time_since_lock.elapsed().as_millis() > BANK_SEND_VOTES_LOOP_SLEEP_MS as u128 {
                 // Always set this to avoid taking the poh lock too often
                 time_since_lock = Instant::now();
                 // We will take this lock at most once every `BANK_SEND_VOTES_LOOP_SLEEP_MS`
@@ -472,8 +471,7 @@ impl ClusterInfoVoteListener {
         for single_validator_votes in gossip_votes_iterator {
             bank_send_votes_stats.num_votes_sent += single_validator_votes.len();
             bank_send_votes_stats.num_batches_sent += 1;
-            verified_packets_sender
-                .send(BankingPacketBatch::new((single_validator_votes, None)))?;
+            verified_packets_sender.send((single_validator_votes, None))?;
         }
         filter_gossip_votes_timing.stop();
         bank_send_votes_stats.total_elapsed += filter_gossip_votes_timing.as_us();
@@ -872,7 +870,6 @@ impl ClusterInfoVoteListener {
 mod tests {
     use {
         super::*,
-        crate::banking_trace::BankingTracer,
         solana_perf::packet,
         solana_rpc::optimistically_confirmed_bank_tracker::OptimisticallyConfirmedBank,
         solana_runtime::{
@@ -1691,8 +1688,7 @@ mod tests {
         let current_leader_bank = Arc::new(Bank::new_for_tests(&genesis_config));
         let mut bank_vote_sender_state_option: Option<BankVoteSenderState> = None;
         let verified_vote_packets = VerifiedVotePackets::default();
-        let (verified_packets_sender, _verified_packets_receiver) =
-            BankingTracer::channel_for_test();
+        let (verified_packets_sender, _verified_packets_receiver) = unbounded();
 
         // 1) If we hand over a `current_leader_bank`, vote sender state should be updated
         ClusterInfoVoteListener::check_for_leader_bank_and_send_votes(

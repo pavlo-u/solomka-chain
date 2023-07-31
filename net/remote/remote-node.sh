@@ -28,8 +28,7 @@ maybeFullRpc="${19}"
 waitForNodeInit="${20}"
 extraPrimordialStakes="${21:=0}"
 tmpfsAccounts="${22:false}"
-disableQuic="${23}"
-enableUdp="${24}"
+enableUdp="${23}"
 
 set +x
 
@@ -107,6 +106,9 @@ cat >> ~/solana/on-reboot <<EOF
   PATH="$HOME"/.cargo/bin:"$PATH"
   export USE_INSTALL=1
 
+  sudo RUST_LOG=info ~solana/.cargo/bin/solana-sys-tuner --user $(whoami) > sys-tuner.log 2>&1 &
+  echo \$! > sys-tuner.pid
+
   (
     sudo SOLANA_METRICS_CONFIG="$SOLANA_METRICS_CONFIG" scripts/oom-monitor.sh
   ) > oom-monitor.log 2>&1 &
@@ -150,17 +152,17 @@ EOF
             cp net/keypairs/"$name".json config/"$name".json
           fi
         else
-          solana-keygen new --no-passphrase -so config/"$name".json
+          solomka-keygen new --no-passphrase -so config/"$name".json
           if [[ "$name" =~ ^validator-identity- ]]; then
             name="${name//-identity-/-vote-}"
-            solana-keygen new --no-passphrase -so config/"$name".json
+            solomka-keygen new --no-passphrase -so config/"$name".json
             name="${name//-vote-/-stake-}"
-            solana-keygen new --no-passphrase -so config/"$name".json
+            solomka-keygen new --no-passphrase -so config/"$name".json
           fi
         fi
         if [[ -n $internalNodesLamports ]]; then
           declare pubkey
-          pubkey="$(solana-keygen pubkey config/"$name".json)"
+          pubkey="$(solomka-keygen pubkey config/"$name".json)"
           cat >> config/validator-balances.yml <<EOF
 $pubkey:
   balance: $internalNodesLamports
@@ -231,9 +233,9 @@ EOF
           extraPrimordialStakes=$numNodes
         fi
         for i in $(seq "$extraPrimordialStakes"); do
-          args+=(--bootstrap-validator "$(solana-keygen pubkey "config/validator-identity-$i.json")"
-                                       "$(solana-keygen pubkey "config/validator-vote-$i.json")"
-                                       "$(solana-keygen pubkey "config/validator-stake-$i.json")"
+          args+=(--bootstrap-validator "$(solomka-keygen pubkey "config/validator-identity-$i.json")"
+                                       "$(solomka-keygen pubkey "config/validator-vote-$i.json")"
+                                       "$(solomka-keygen pubkey "config/validator-stake-$i.json")"
           )
         done
       fi
@@ -263,7 +265,7 @@ EOF
       solana-ledger-tool -l config/bootstrap-validator shred-version --max-genesis-archive-unpacked-size 1073741824 | tee config/shred-version
 
       if [[ -n "$maybeWaitForSupermajority" ]]; then
-        bankHash=$(solana-ledger-tool -l config/bootstrap-validator bank-hash --halt-at-slot 0)
+        bankHash=$(solana-ledger-tool -l config/bootstrap-validator bank-hash)
         extraNodeArgs="$extraNodeArgs --expected-bank-hash $bankHash"
         echo "$bankHash" > config/bank-hash
       fi
@@ -281,11 +283,6 @@ EOF
     if $maybeFullRpc; then
       args+=(--enable-rpc-transaction-history)
       args+=(--enable-extended-tx-metadata-storage)
-    fi
-
-
-    if $disableQuic; then
-      args+=(--tpu-disable-quic)
     fi
 
     if $enableUdp; then
@@ -362,11 +359,11 @@ EOF
     fi
 
     if [[ ! -f "$SOLANA_CONFIG_DIR"/validator-identity.json ]]; then
-      solana-keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/validator-identity.json
+      solomka-keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/validator-identity.json
     fi
     args+=(--identity "$SOLANA_CONFIG_DIR"/validator-identity.json)
     if [[ ! -f "$SOLANA_CONFIG_DIR"/vote-account.json ]]; then
-      solana-keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/vote-account.json
+      solomka-keygen new --no-passphrase -so "$SOLANA_CONFIG_DIR"/vote-account.json
     fi
     args+=(--vote-account "$SOLANA_CONFIG_DIR"/vote-account.json)
 
@@ -420,10 +417,6 @@ EOF
       args+=(--enable-extended-tx-metadata-storage)
     fi
 
-    if $disableQuic; then
-      args+=(--tpu-disable-quic)
-    fi
-
     if $enableUdp; then
       args+=(--tpu-enable-udp)
     fi
@@ -460,7 +453,6 @@ EOF
         echo "0 Primordial stakes, staking with $internalNodesStakeLamports"
         multinode-demo/delegate-stake.sh --vote-account "$SOLANA_CONFIG_DIR"/vote-account.json \
                                          --stake-account "$SOLANA_CONFIG_DIR"/stake-account.json \
-                                         --force \
                                          "${args[@]}" "$internalNodesStakeLamports"
       else
         echo "Skipping staking with extra stakes: ${extraPrimordialStakes}"

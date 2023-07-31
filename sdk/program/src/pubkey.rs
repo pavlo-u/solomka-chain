@@ -58,12 +58,12 @@ impl From<u64> for PubkeyError {
 /// addresses_][pdas] &mdash; or the secret key is not relevant to the operation
 /// of a program, and may have even been disposed of. As running Solana programs
 /// can not safely create or manage secret keys, the full [`Keypair`] is not
-/// defined in `solana-program` but in `solomka-sdk`.
+/// defined in `solana-program` but in `solana-sdk`.
 ///
 /// [acc]: https://docs.solana.com/developing/programming-model/accounts
 /// [ed25519]: https://ed25519.cr.yp.to/
 /// [pdas]: https://docs.solana.com/developing/programming-model/calling-between-programs#program-derived-addresses
-/// [`Keypair`]: https://docs.rs/solomka-sdk/latest/solomka_sdk/signer/keypair/struct.Keypair.html
+/// [`Keypair`]: https://docs.rs/solana-sdk/latest/solana_sdk/signer/keypair/struct.Keypair.html
 #[wasm_bindgen]
 #[repr(transparent)]
 #[derive(
@@ -158,7 +158,6 @@ impl TryFrom<&str> for Pubkey {
     }
 }
 
-#[allow(clippy::used_underscore_binding)]
 pub fn bytes_are_curve_point<T: AsRef<[u8]>>(_bytes: T) -> bool {
     #[cfg(not(target_os = "solana"))]
     {
@@ -312,7 +311,7 @@ impl Pubkey {
     ///
     /// ```
     /// # use borsh::{BorshSerialize, BorshDeserialize};
-    /// # use solana_program::{
+    /// # use solomka_program::{
     /// #     pubkey::Pubkey,
     /// #     entrypoint::ProgramResult,
     /// #     program::invoke_signed,
@@ -391,8 +390,8 @@ impl Pubkey {
     ///
     /// ```
     /// # use borsh::{BorshSerialize, BorshDeserialize};
-    /// # use solana_program::example_mocks::{solomka_sdk, solana_rpc_client};
-    /// # use solana_program::{
+    /// # use solomka_program::example_mocks::{solomka_sdk, solomka_client};
+    /// # use solomka_program::{
     /// #     pubkey::Pubkey,
     /// #     instruction::Instruction,
     /// #     hash::Hash,
@@ -404,7 +403,7 @@ impl Pubkey {
     /// #     signature::{Signer, Signature},
     /// #     transaction::Transaction,
     /// # };
-    /// # use solana_rpc_client::rpc_client::RpcClient;
+    /// # use solomka_client::rpc_client::RpcClient;
     /// # use std::convert::TryFrom;
     /// # use anyhow::Result;
     /// #
@@ -568,7 +567,7 @@ impl Pubkey {
     /// that the returned `Pubkey` has the expected value.
     ///
     /// ```
-    /// # use solana_program::pubkey::Pubkey;
+    /// # use solomka_program::pubkey::Pubkey;
     /// # let program_id = Pubkey::new_unique();
     /// let (expected_pda, bump_seed) = Pubkey::find_program_address(&[b"vault"], &program_id);
     /// let actual_pda = Pubkey::create_program_address(&[b"vault", &[bump_seed]], &program_id)?;

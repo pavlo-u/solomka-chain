@@ -62,7 +62,7 @@ impl ZeroBalanceProofData {
             ciphertext: pod_ciphertext,
         };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript = ZeroBalanceProof::transcript_new(&pod_pubkey, &pod_ciphertext);
         let proof = ZeroBalanceProof::new(keypair, ciphertext, &mut transcript).into();
 
         Ok(ZeroBalanceProofData { context, proof })
@@ -78,7 +78,9 @@ impl ZkProofData<ZeroBalanceProofContext> for ZeroBalanceProofData {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript =
+            ZeroBalanceProof::transcript_new(&self.context.pubkey, &self.context.ciphertext);
+
         let pubkey = self.context.pubkey.try_into()?;
         let ciphertext = self.context.ciphertext.try_into()?;
         let proof: ZeroBalanceProof = self.proof.try_into()?;
@@ -90,12 +92,15 @@ impl ZkProofData<ZeroBalanceProofContext> for ZeroBalanceProofData {
 
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
-impl ZeroBalanceProofContext {
-    fn new_transcript(&self) -> Transcript {
+impl ZeroBalanceProof {
+    fn transcript_new(
+        pubkey: &pod::ElGamalPubkey,
+        ciphertext: &pod::ElGamalCiphertext,
+    ) -> Transcript {
         let mut transcript = Transcript::new(b"ZeroBalanceProof");
 
-        transcript.append_pubkey(b"pubkey", &self.pubkey);
-        transcript.append_ciphertext(b"ciphertext", &self.ciphertext);
+        transcript.append_pubkey(b"pubkey", pubkey);
+        transcript.append_ciphertext(b"ciphertext", ciphertext);
 
         transcript
     }

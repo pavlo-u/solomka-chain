@@ -1,10 +1,8 @@
 use std::{collections::HashSet, hash::Hash};
 
-pub trait TreeDiff<'a> {
-    type TreeKey: 'a + Hash + PartialEq + Eq + Copy;
-    type ChildIter: Iterator<Item = &'a Self::TreeKey>;
-
-    fn children(&self, key: &Self::TreeKey) -> Option<Self::ChildIter>;
+pub trait TreeDiff {
+    type TreeKey: Hash + PartialEq + Eq + Copy;
+    fn children(&self, key: &Self::TreeKey) -> Option<&[Self::TreeKey]>;
 
     fn contains_slot(&self, slot: &Self::TreeKey) -> bool;
 

@@ -1,5 +1,3 @@
-//! The Solana [`Account`] type.
-
 use {
     crate::{
         clock::{Epoch, INITIAL_RENT_EPOCH},
@@ -10,12 +8,10 @@ use {
         ser::{Serialize, Serializer},
         Deserialize,
     },
-    solana_program::{account_info::AccountInfo, debug_account_data::*, sysvar::Sysvar},
+    solomka_program::{account_info::AccountInfo, debug_account_data::*, sysvar::Sysvar},
     std::{
         cell::{Ref, RefCell},
         fmt,
-        mem::MaybeUninit,
-        ptr,
         rc::Rc,
         sync::Arc,
     },
@@ -176,6 +172,7 @@ pub trait WritableAccount: ReadableAccount {
     fn saturating_sub_lamports(&mut self, lamports: u64) {
         self.set_lamports(self.lamports().saturating_sub(lamports))
     }
+    fn data_mut(&mut self) -> &mut Vec<u8>;
     fn data_as_mut_slice(&mut self) -> &mut [u8];
     fn set_owner(&mut self, owner: Pubkey);
     fn copy_into_owner_from_slice(&mut self, source: &[u8]);
@@ -229,6 +226,9 @@ impl WritableAccount for Account {
     fn set_lamports(&mut self, lamports: u64) {
         self.lamports = lamports;
     }
+    fn data_mut(&mut self) -> &mut Vec<u8> {
+        &mut self.data
+    }
     fn data_as_mut_slice(&mut self) -> &mut [u8] {
         &mut self.data
     }
@@ -264,6 +264,9 @@ impl WritableAccount for Account {
 impl WritableAccount for AccountSharedData {
     fn set_lamports(&mut self, lamports: u64) {
         self.lamports = lamports;
+    }
+    fn data_mut(&mut self) -> &mut Vec<u8> {
+        Arc::make_mut(&mut self.data)
     }
     fn data_as_mut_slice(&mut self) -> &mut [u8] {
         &mut self.data_mut()[..]
@@ -483,7 +486,7 @@ fn shared_serialize_data<T: serde::Serialize, U: WritableAccount>(
     if bincode::serialized_size(state)? > account.data().len() as u64 {
         return Err(Box::new(bincode::ErrorKind::SizeLimit));
     }
-    bincode::serialize_into(account.data_as_mut_slice(), state)
+    bincode::serialize_into(&mut account.data_as_mut_slice(), state)
 }
 
 impl Account {
@@ -535,78 +538,17 @@ impl Account {
 }
 
 impl AccountSharedData {
-    pub fn is_shared(&self) -> bool {
-        Arc::strong_count(&self.data) > 1
+    pub fn set_data_from_slice(&mut self, data: &[u8]) {
+        let len = self.data.len();
+        let len_different = len != data.len();
+        let different = len_different || data != &self.data[..];
+        if different {
+            self.data = Arc::new(data.to_vec());
+        }
     }
-
-    pub fn reserve(&mut self, additional: usize) {
-        self.data_mut().reserve(additional)
-    }
-
-    pub fn capacity(&self) -> usize {
-        self.data.capacity()
-    }
-
-    fn data_mut(&mut self) -> &mut Vec<u8> {
-        Arc::make_mut(&mut self.data)
-    }
-
-    pub fn resize(&mut self, new_len: usize, value: u8) {
-        self.data_mut().resize(new_len, value)
-    }
-
-    pub fn extend_from_slice(&mut self, data: &[u8]) {
-        self.data_mut().extend_from_slice(data)
-    }
-
-    pub fn set_data_from_slice(&mut self, new_data: &[u8]) {
-        let data = match Arc::get_mut(&mut self.data) {
-            // The buffer isn't shared, so we're going to memcpy in place.
-            Some(data) => data,
-            // If the buffer is shared, the cheapest thing to do is to clone the
-            // incoming slice and replace the buffer.
-            None => return self.set_data(new_data.to_vec()),
-        };
-
-        let new_len = new_data.len();
-
-        // Reserve additional capacity if needed. Here we make the assumption
-        // that growing the current buffer is cheaper than doing a whole new
-        // allocation to make `new_data` owned.
-        //
-        // This assumption holds true during CPI, especially when the account
-        // size doesn't change but the account is only changed in place. And
-        // it's also true when the account is grown by a small margin (the
-        // realloc limit is quite low), in which case the allocator can just
-        // update the allocation metadata without moving.
-        //
-        // Shrinking and copying in place is always faster than making
-        // `new_data` owned, since shrinking boils down to updating the Vec's
-        // length.
-
-        data.reserve(new_len.saturating_sub(data.len()));
-
-        // Safety:
-        // We just reserved enough capacity. We set data::len to 0 to avoid
-        // possible UB on panic (dropping uninitialized elements), do the copy,
-        // finally set the new length once everything is initialized.
-        #[allow(clippy::uninit_vec)]
-        // this is a false positive, the lint doesn't currently special case set_len(0)
-        unsafe {
-            data.set_len(0);
-            ptr::copy_nonoverlapping(new_data.as_ptr(), data.as_mut_ptr(), new_len);
-            data.set_len(new_len);
-        };
-    }
-
     pub fn set_data(&mut self, data: Vec<u8>) {
         self.data = Arc::new(data);
     }
-
-    pub fn spare_data_capacity_mut(&mut self) -> &mut [MaybeUninit<u8>] {
-        self.data_mut().spare_capacity_mut()
-    }
-
     pub fn new(lamports: u64, space: usize, owner: &Pubkey) -> Self {
         shared_new(lamports, space, owner)
     }
@@ -671,7 +613,7 @@ pub fn create_account_with_fields<S: Sysvar>(
     (lamports, rent_epoch): InheritableAccountFields,
 ) -> Account {
     let data_len = S::size_of().max(bincode::serialized_size(sysvar).unwrap() as usize);
-    let mut account = Account::new(lamports, data_len, &solana_program::sysvar::id());
+    let mut account = Account::new(lamports, data_len, &solomka_program::sysvar::id());
     to_account::<S, Account>(sysvar, &mut account).unwrap();
     account.rent_epoch = rent_epoch;
     account
@@ -719,7 +661,7 @@ pub fn to_account<S: Sysvar, T: WritableAccount>(sysvar: &S, account: &mut T) ->
 
 /// Return the information required to construct an `AccountInfo`.  Used by the
 /// `AccountInfo` conversion implementations.
-impl solana_program::account_info::Account for Account {
+impl solomka_program::account_info::Account for Account {
     fn get(&mut self) -> (&mut u64, &mut [u8], &Pubkey, bool, Epoch) {
         (
             &mut self.lamports,

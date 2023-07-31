@@ -11,13 +11,12 @@ use {
         instruction::{combine_lo_hi_ciphertexts, split_u64, Role},
         range_proof::RangeProof,
         sigma_proofs::{
-            ciphertext_commitment_equality_proof::CiphertextCommitmentEqualityProof,
+            ctxt_comm_equality_proof::CiphertextCommitmentEqualityProof,
             validity_proof::AggregatedValidityProof,
         },
         transcript::TranscriptProtocol,
     },
     arrayref::{array_ref, array_refs},
-    bytemuck::bytes_of,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -140,7 +139,13 @@ impl TransferData {
             new_source_ciphertext: pod_new_source_ciphertext,
         };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript = TransferProof::transcript_new(
+            &pod_transfer_pubkeys,
+            &pod_ciphertext_lo,
+            &pod_ciphertext_hi,
+            &pod_new_source_ciphertext,
+        );
+
         let proof = TransferProof::new(
             (amount_lo, amount_hi),
             source_keypair,
@@ -223,7 +228,12 @@ impl ZkProofData<TransferProofContext> for TransferData {
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofError> {
         // generate transcript and append all public inputs
-        let mut transcript = self.context.new_transcript();
+        let mut transcript = TransferProof::transcript_new(
+            &self.context.transfer_pubkeys,
+            &self.context.ciphertext_lo,
+            &self.context.ciphertext_hi,
+            &self.context.new_source_ciphertext,
+        );
 
         let ciphertext_lo = self.context.ciphertext_lo.try_into()?;
         let ciphertext_hi = self.context.ciphertext_hi.try_into()?;
@@ -237,22 +247,6 @@ impl ZkProofData<TransferProofContext> for TransferData {
             &new_spendable_ciphertext,
             &mut transcript,
         )
-    }
-}
-
-#[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
-impl TransferProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"transfer-proof");
-        transcript.append_message(b"ciphertext-lo", bytes_of(&self.ciphertext_lo));
-        transcript.append_message(b"ciphertext-hi", bytes_of(&self.ciphertext_hi));
-        transcript.append_message(b"transfer-pubkeys", bytes_of(&self.transfer_pubkeys));
-        transcript.append_message(
-            b"new-source-ciphertext",
-            bytes_of(&self.new_source_ciphertext),
-        );
-        transcript
     }
 }
 
@@ -276,6 +270,33 @@ pub struct TransferProof {
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
 impl TransferProof {
+    fn transcript_new(
+        transfer_pubkeys: &pod::TransferPubkeys,
+        ciphertext_lo: &pod::TransferAmountEncryption,
+        ciphertext_hi: &pod::TransferAmountEncryption,
+        new_source_ciphertext: &pod::ElGamalCiphertext,
+    ) -> Transcript {
+        let mut transcript = Transcript::new(b"transfer-proof");
+
+        transcript.append_pubkey(b"pubkey-source", &transfer_pubkeys.source_pubkey);
+        transcript.append_pubkey(b"pubkey-dest", &transfer_pubkeys.destination_pubkey);
+        transcript.append_pubkey(b"pubkey-auditor", &transfer_pubkeys.auditor_pubkey);
+
+        transcript.append_commitment(b"comm-lo-amount", &ciphertext_lo.commitment);
+        transcript.append_handle(b"handle-lo-source", &ciphertext_lo.source_handle);
+        transcript.append_handle(b"handle-lo-dest", &ciphertext_lo.destination_handle);
+        transcript.append_handle(b"handle-lo-auditor", &ciphertext_lo.auditor_handle);
+
+        transcript.append_commitment(b"comm-hi-amount", &ciphertext_hi.commitment);
+        transcript.append_handle(b"handle-hi-source", &ciphertext_hi.source_handle);
+        transcript.append_handle(b"handle-hi-dest", &ciphertext_hi.destination_handle);
+        transcript.append_handle(b"handle-hi-auditor", &ciphertext_hi.auditor_handle);
+
+        transcript.append_ciphertext(b"ciphertext-new-source", new_source_ciphertext);
+
+        transcript
+    }
+
     pub fn new(
         (transfer_amount_lo, transfer_amount_hi): (u64, u64),
         source_keypair: &ElGamalKeypair,
@@ -311,7 +332,11 @@ impl TransferProof {
         // generate the range proof
         let range_proof = if TRANSFER_AMOUNT_LO_BITS == 32 {
             RangeProof::new(
-                vec![source_new_balance, transfer_amount_lo, transfer_amount_hi],
+                vec![
+                    source_new_balance,
+                    transfer_amount_lo as u64,
+                    transfer_amount_hi as u64,
+                ],
                 vec![
                     TRANSFER_SOURCE_AMOUNT_BITS,
                     TRANSFER_AMOUNT_LO_BITS,
@@ -322,15 +347,15 @@ impl TransferProof {
             )
         } else {
             let transfer_amount_lo_negated =
-                (1 << TRANSFER_AMOUNT_LO_NEGATED_BITS) - 1 - transfer_amount_lo;
+                (1 << TRANSFER_AMOUNT_LO_NEGATED_BITS) - 1 - transfer_amount_lo as u64;
             let opening_lo_negated = &PedersenOpening::default() - opening_lo;
 
             RangeProof::new(
                 vec![
                     source_new_balance,
-                    transfer_amount_lo,
+                    transfer_amount_lo as u64,
                     transfer_amount_lo_negated,
-                    transfer_amount_hi,
+                    transfer_amount_hi as u64,
                 ],
                 vec![
                     TRANSFER_SOURCE_AMOUNT_BITS,

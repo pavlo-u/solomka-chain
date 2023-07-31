@@ -10,7 +10,6 @@
 
 use crate::{
     account_info::AccountInfo, entrypoint::ProgramResult, instruction::Instruction, pubkey::Pubkey,
-    stable_layout::stable_instruction::StableInstruction,
 };
 
 /// Invoke a cross-program instruction.
@@ -24,8 +23,6 @@ use crate::{
 /// required by the callee program must transitively be required by the caller
 /// program, and provided by _its_ caller. The same is true of the program ID of
 /// the called program.
-///
-/// [entrypoint!]: crate::entrypoint!
 ///
 /// The `Instruction` is usually built from within the calling program, but may
 /// be deserialized from an external source.
@@ -91,7 +88,7 @@ use crate::{
 /// A simple example of transferring lamports via CPI:
 ///
 /// ```
-/// use solana_program::{
+/// use solomka_program::{
 ///     account_info::{next_account_info, AccountInfo},
 ///     entrypoint,
 ///     entrypoint::ProgramResult,
@@ -184,7 +181,7 @@ pub fn invoke_unchecked(instruction: &Instruction, account_infos: &[AccountInfo]
 /// A simple example of creating an account for a PDA:
 ///
 /// ```
-/// use solana_program::{
+/// use solomka_program::{
 ///     account_info::{next_account_info, AccountInfo},
 ///     entrypoint,
 ///     entrypoint::ProgramResult,
@@ -293,10 +290,9 @@ pub fn invoke_signed_unchecked(
 ) -> ProgramResult {
     #[cfg(target_os = "solana")]
     {
-        let instruction = StableInstruction::from(instruction.clone());
         let result = unsafe {
             crate::syscalls::sol_invoke_signed_rust(
-                &instruction as *const _ as *const u8,
+                instruction as *const _ as *const u8,
                 account_infos as *const _ as *const u8,
                 account_infos.len() as u64,
                 signers_seeds as *const _ as *const u8,
@@ -434,18 +430,17 @@ pub fn check_type_assumptions() {
             accounts: vec![account_meta1.clone(), account_meta2.clone()],
             data: data.clone(),
         };
-        let instruction = StableInstruction::from(instruction);
         let instruction_addr = &instruction as *const _ as u64;
 
         // program id
-        assert_eq!(offset_of!(StableInstruction, program_id), 48);
+        assert_eq!(offset_of!(Instruction, program_id), 48);
         let pubkey_ptr = (instruction_addr + 48) as *const Pubkey;
         unsafe {
             assert_eq!(*pubkey_ptr, pubkey1);
         }
 
         // accounts
-        assert_eq!(offset_of!(StableInstruction, accounts), 0);
+        assert_eq!(offset_of!(Instruction, accounts), 0);
         let accounts_ptr = (instruction_addr) as *const *const AccountMeta;
         let accounts_cap = (instruction_addr + 8) as *const usize;
         let accounts_len = (instruction_addr + 16) as *const usize;
@@ -458,7 +453,7 @@ pub fn check_type_assumptions() {
         }
 
         // data
-        assert_eq!(offset_of!(StableInstruction, data), 24);
+        assert_eq!(offset_of!(Instruction, data), 24);
         let data_ptr = (instruction_addr + 24) as *const *const [u8; 5];
         let data_cap = (instruction_addr + 24 + 8) as *const usize;
         let data_len = (instruction_addr + 24 + 16) as *const usize;
@@ -496,6 +491,20 @@ pub fn check_type_assumptions() {
             assert_eq!(**key_ptr, key);
         }
 
+        // is_signer
+        assert_eq!(offset_of!(AccountInfo, is_signer), 40);
+        let is_signer_ptr = (account_info_addr + 40) as *const bool;
+        unsafe {
+            assert!(*is_signer_ptr);
+        }
+
+        // is_writable
+        assert_eq!(offset_of!(AccountInfo, is_writable), 41);
+        let is_writable_ptr = (account_info_addr + 41) as *const bool;
+        unsafe {
+            assert!(!*is_writable_ptr);
+        }
+
         // lamports
         assert_eq!(offset_of!(AccountInfo, lamports), 8);
         let lamports_ptr = (account_info_addr + 8) as *const Rc<RefCell<&mut u64>>;
@@ -517,32 +526,18 @@ pub fn check_type_assumptions() {
             assert_eq!(**owner_ptr, owner);
         }
 
-        // rent_epoch
-        assert_eq!(offset_of!(AccountInfo, rent_epoch), 32);
-        let renbt_epoch_ptr = (account_info_addr + 32) as *const Epoch;
-        unsafe {
-            assert_eq!(*renbt_epoch_ptr, 42);
-        }
-
-        // is_signer
-        assert_eq!(offset_of!(AccountInfo, is_signer), 40);
-        let is_signer_ptr = (account_info_addr + 40) as *const bool;
-        unsafe {
-            assert!(*is_signer_ptr);
-        }
-
-        // is_writable
-        assert_eq!(offset_of!(AccountInfo, is_writable), 41);
-        let is_writable_ptr = (account_info_addr + 41) as *const bool;
-        unsafe {
-            assert!(!*is_writable_ptr);
-        }
-
         // executable
         assert_eq!(offset_of!(AccountInfo, executable), 42);
         let executable_ptr = (account_info_addr + 42) as *const bool;
         unsafe {
             assert!(*executable_ptr);
+        }
+
+        // rent_epoch
+        assert_eq!(offset_of!(AccountInfo, rent_epoch), 32);
+        let renbt_epoch_ptr = (account_info_addr + 32) as *const Epoch;
+        unsafe {
+            assert_eq!(*renbt_epoch_ptr, 42);
         }
     }
 }

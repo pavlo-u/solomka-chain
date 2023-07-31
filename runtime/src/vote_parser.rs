@@ -12,6 +12,32 @@ use {
 
 pub type ParsedVote = (Pubkey, VoteTransaction, Option<Hash>, Signature);
 
+// Used for filtering out votes from the transaction log collector
+pub(crate) fn is_simple_vote_transaction(transaction: &SanitizedTransaction) -> bool {
+    if transaction.message().instructions().len() == 1 {
+        let (program_pubkey, instruction) = transaction
+            .message()
+            .program_instructions_iter()
+            .next()
+            .unwrap();
+        if program_pubkey == &solana_vote_program::id() {
+            if let Ok(vote_instruction) = limited_deserialize::<VoteInstruction>(&instruction.data)
+            {
+                return matches!(
+                    vote_instruction,
+                    VoteInstruction::Vote(_)
+                        | VoteInstruction::VoteSwitch(_, _)
+                        | VoteInstruction::UpdateVoteState(_)
+                        | VoteInstruction::UpdateVoteStateSwitch(_, _)
+                        | VoteInstruction::CompactUpdateVoteState(_)
+                        | VoteInstruction::CompactUpdateVoteStateSwitch(..)
+                );
+            }
+        }
+    }
+    false
+}
+
 // Used for locally forwarding processed vote transactions to consensus
 pub fn parse_sanitized_vote_transaction(tx: &SanitizedTransaction) -> Option<ParsedVote> {
     // Check first instruction for a vote

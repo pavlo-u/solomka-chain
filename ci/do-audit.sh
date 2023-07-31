@@ -18,17 +18,32 @@ while [[ -n $1 ]]; do
 done
 
 cargo_audit_ignores=(
+  # `net2` crate has been deprecated; use `socket2` instead
+  #
+  # Blocked on https://github.com/paritytech/jsonrpc/issues/575
+  --ignore RUSTSEC-2020-0016
+
+  # stdweb is unmaintained
+  #
+  # Blocked on multiple upstream crates removing their `stdweb` dependency.
+  --ignore RUSTSEC-2020-0056
+
   # Potential segfault in the time crate
   #
-  # Blocked on chrono updating `time` to >= 0.2.23
+  # Blocked on multiple crates updating `time` to >= 0.2.23
   --ignore RUSTSEC-2020-0071
+
+  # chrono: Potential segfault in `localtime_r` invocations
+  #
+  # Blocked due to no safe upgrade
+  # https://github.com/chronotope/chrono/issues/499
+  --ignore RUSTSEC-2020-0159
 
   # tokio: vulnerability affecting named pipes on Windows
   #
-  # Exception is a stopgap to unblock CI
-  # https://github.com/solana-labs/solana/issues/29586
+  # Not worth upgrading tokio version on a stable branch
   --ignore RUSTSEC-2023-0001
 )
-scripts/cargo-for-all-lock-files.sh audit "${cargo_audit_ignores[@]}" | $dep_tree_filter
+scripts/cargo-for-all-lock-files.sh stable audit "${cargo_audit_ignores[@]}" | $dep_tree_filter
 # we want the `cargo audit` exit code, not `$dep_tree_filter`'s
 exit "${PIPESTATUS[0]}"

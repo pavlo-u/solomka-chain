@@ -4,9 +4,8 @@ use {
     },
     bincode::deserialize,
     serde_json::json,
-    solomka_sdk::{
-        instruction::CompiledInstruction, message::AccountKeys, vote::instruction::VoteInstruction,
-    },
+    solomka_sdk::{instruction::CompiledInstruction, message::AccountKeys},
+    solana_vote_program::vote_instruction::VoteInstruction,
 };
 
 pub fn parse_vote(
@@ -248,15 +247,10 @@ fn check_num_vote_accounts(accounts: &[u8], num: usize) -> Result<(), ParseInstr
 mod test {
     use {
         super::*,
-        solomka_sdk::{
-            hash::Hash,
-            message::Message,
-            pubkey::Pubkey,
-            sysvar,
-            vote::{
-                instruction as vote_instruction,
-                state::{Vote, VoteAuthorize, VoteInit, VoteStateUpdate, VoteStateVersions},
-            },
+        solomka_sdk::{hash::Hash, message::Message, pubkey::Pubkey, sysvar},
+        solana_vote_program::{
+            vote_instruction,
+            vote_state::{Vote, VoteAuthorize, VoteInit, VoteStateUpdate},
         },
     };
 
@@ -276,15 +270,11 @@ mod test {
             commission,
         };
 
-        let instructions = vote_instruction::create_account_with_config(
+        let instructions = vote_instruction::create_account(
             &Pubkey::new_unique(),
             &vote_pubkey,
             &vote_init,
             lamports,
-            vote_instruction::CreateVoteAccountConfig {
-                space: VoteStateVersions::vote_state_size_of(true) as u64,
-                ..vote_instruction::CreateVoteAccountConfig::default()
-            },
         );
         let mut message = Message::new(&instructions, None);
         assert_eq!(

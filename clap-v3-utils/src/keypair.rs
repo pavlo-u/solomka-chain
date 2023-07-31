@@ -29,12 +29,11 @@ use {
         message::Message,
         pubkey::Pubkey,
         signature::{
-            generate_seed_from_seed_phrase_and_passphrase, read_keypair, read_keypair_file,
-            EncodableKey, EncodableKeypair, Keypair, NullSigner, Presigner, SeedDerivable,
-            Signature, Signer,
+            generate_seed_from_seed_phrase_and_passphrase, keypair_from_seed,
+            keypair_from_seed_and_derivation_path, keypair_from_seed_phrase_and_passphrase,
+            read_keypair, read_keypair_file, Keypair, NullSigner, Presigner, Signature, Signer,
         },
     },
-    solana_zk_token_sdk::encryption::{auth_encryption::AeKey, elgamal::ElGamalKeypair},
     std::{
         cell::RefCell,
         convert::TryFrom,
@@ -136,8 +135,8 @@ impl DefaultSigner {
     ///
     /// ```no_run
     /// use clap::{Arg, Command};
-    /// use solana_clap_v3_utils::keypair::DefaultSigner;
-    /// use solana_clap_v3_utils::offline::OfflineArgs;
+    /// use solomka_clap_v3_utils::keypair::DefaultSigner;
+    /// use solomka_clap_v3_utils::offline::OfflineArgs;
     ///
     /// let clap_app = Command::new("my-program")
     ///     // The argument we'll parse as a signer "path"
@@ -178,7 +177,7 @@ impl DefaultSigner {
                     std::io::Error::new(
                         std::io::ErrorKind::Other,
                         format!(
-                        "No default signer found, run \"sonoma-keygen new -o {}\" to create a new one",
+                        "No default signer found, run \"solomka-keygen new -o {}\" to create a new one",
                         self.path
                     ),
                     )
@@ -206,8 +205,8 @@ impl DefaultSigner {
     ///
     /// ```no_run
     /// use clap::{Arg, Command};
-    /// use solana_clap_v3_utils::keypair::{DefaultSigner, signer_from_path};
-    /// use solana_clap_v3_utils::offline::OfflineArgs;
+    /// use solomka_clap_v3_utils::keypair::{DefaultSigner, signer_from_path};
+    /// use solomka_clap_v3_utils::offline::OfflineArgs;
     /// use solomka_sdk::signer::Signer;
     ///
     /// let clap_app = Command::new("my-program")
@@ -281,8 +280,8 @@ impl DefaultSigner {
     ///
     /// ```no_run
     /// use clap::{Arg, Command};
-    /// use solana_clap_v3_utils::keypair::DefaultSigner;
-    /// use solana_clap_v3_utils::offline::OfflineArgs;
+    /// use solomka_clap_v3_utils::keypair::DefaultSigner;
+    /// use solomka_clap_v3_utils::offline::OfflineArgs;
     ///
     /// let clap_app = Command::new("my-program")
     ///     // The argument we'll parse as a signer "path"
@@ -328,8 +327,8 @@ impl DefaultSigner {
     ///
     /// ```no_run
     /// use clap::{Arg, Command};
-    /// use solana_clap_v3_utils::keypair::{SignerFromPathConfig, DefaultSigner};
-    /// use solana_clap_v3_utils::offline::OfflineArgs;
+    /// use solomka_clap_v3_utils::keypair::{SignerFromPathConfig, DefaultSigner};
+    /// use solomka_clap_v3_utils::offline::OfflineArgs;
     ///
     /// let clap_app = Command::new("my-program")
     ///     // The argument we'll parse as a signer "path"
@@ -424,7 +423,7 @@ impl AsRef<str> for SignerSourceKind {
 impl std::fmt::Debug for SignerSourceKind {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s: &str = self.as_ref();
-        write!(f, "{s}")
+        write!(f, "{}", s)
     }
 }
 
@@ -456,7 +455,7 @@ pub(crate) fn parse_signer_source<S: AsRef<str>>(
                     break;
                 }
             }
-            source.replace('\\', "/")
+            source.replace("\\", "/")
         }
         #[cfg(not(target_family = "windows"))]
         {
@@ -662,8 +661,8 @@ pub struct SignerFromPathConfig {
 ///
 /// ```no_run
 /// use clap::{Arg, Command};
-/// use solana_clap_v3_utils::keypair::signer_from_path;
-/// use solana_clap_v3_utils::offline::OfflineArgs;
+/// use solomka_clap_v3_utils::keypair::signer_from_path;
+/// use solomka_clap_v3_utils::offline::OfflineArgs;
 ///
 /// let clap_app = Command::new("my-program")
 ///     // The argument we'll parse as a signer "path"
@@ -722,8 +721,8 @@ pub fn signer_from_path(
 ///
 /// ```no_run
 /// use clap::{Arg, Command};
-/// use solana_clap_v3_utils::keypair::{signer_from_path_with_config, SignerFromPathConfig};
-/// use solana_clap_v3_utils::offline::OfflineArgs;
+/// use solomka_clap_v3_utils::keypair::{signer_from_path_with_config, SignerFromPathConfig};
+/// use solomka_clap_v3_utils::offline::OfflineArgs;
 ///
 /// let clap_app = Command::new("my-program")
 ///     // The argument we'll parse as a signer "path"
@@ -776,7 +775,7 @@ pub fn signer_from_path_with_config(
         SignerSourceKind::Filepath(path) => match read_keypair_file(&path) {
             Err(e) => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                format!("could not read keypair file \"{path}\". Run \"sonoma-keygen new\" to create a keypair file: {e}"),
+                format!("could not read keypair file \"{}\". Run \"solomka-keygen new\" to create a keypair file: {}", path, e),
             )
             .into()),
             Ok(file) => Ok(Box::new(file)),
@@ -813,7 +812,7 @@ pub fn signer_from_path_with_config(
             } else {
                 Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    format!("missing signature for supplied pubkey: {pubkey}"),
+                    format!("missing signature for supplied pubkey: {}", pubkey),
                 )
                 .into())
             }
@@ -839,7 +838,7 @@ pub fn signer_from_path_with_config(
 ///
 /// ```no_run
 /// use clap::{Arg, Command};
-/// use solana_clap_v3_utils::keypair::pubkey_from_path;
+/// use solomka_clap_v3_utils::keypair::pubkey_from_path;
 ///
 /// let clap_app = Command::new("my-program")
 ///     // The argument we'll parse as a signer "path"
@@ -900,8 +899,9 @@ pub fn resolve_signer_from_path(
             Err(e) => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!(
-                    "could not read keypair file \"{path}\". \
-                    Run \"sonoma-keygen new\" to create a keypair file: {e}"
+                    "could not read keypair file \"{}\". \
+                    Run \"solomka-keygen new\" to create a keypair file: {}",
+                    path, e
                 ),
             )
             .into()),
@@ -978,7 +978,7 @@ pub fn prompt_passphrase(prompt: &str) -> Result<String, Box<dyn error::Error>> 
 ///
 /// ```no_run
 /// use clap::{Arg, Command};
-/// use solana_clap_v3_utils::keypair::keypair_from_path;
+/// use solomka_clap_v3_utils::keypair::keypair_from_path;
 ///
 /// let clap_app = Command::new("my-program")
 ///     // The argument we'll parse as a signer "path"
@@ -1003,115 +1003,6 @@ pub fn keypair_from_path(
     keypair_name: &str,
     confirm_pubkey: bool,
 ) -> Result<Keypair, Box<dyn error::Error>> {
-    let keypair = encodable_key_from_path(matches, path, keypair_name)?;
-    if confirm_pubkey {
-        confirm_encodable_keypair_pubkey(&keypair, "pubkey");
-    }
-    Ok(keypair)
-}
-
-/// Loads an [ElGamalKeypair] from one of several possible sources.
-///
-/// If `confirm_pubkey` is `true` then after deriving the keypair, the user will
-/// be prompted to confirm that the ElGamal pubkey is as expected.
-///
-/// The way this function interprets its arguments is analogous to that of
-/// [`signer_from_path`].
-///
-/// The bip32 hierarchical derivation of an ElGamal keypair is not currently
-/// supported.
-///
-/// # Examples
-///
-/// ```no_run`
-/// use clap::{Arg, Command};
-/// use solana_clap_v3_utils::keypair::elgamal_keypair_from_path;
-///
-/// let clap_app = Command::new("my-program")
-///     // The argument we'll parse as a signer "path"
-///     .arg(Arg::new("elgamal-keypair")
-///         .required(true)
-///         .help("The default signer"));
-///
-/// let clap_matches = clap_app.get_matches();
-/// let elgamal_keypair_str: String = clap_matches.value_of_t_or_exit("elgamal-keypair");
-///
-/// let elgamal_keypair = elgamal_keypair_from_path(
-///     &clap_matches,
-///     &elgamal_keypair_str,
-///     "elgamal-keypair",
-///     false,
-/// )?;
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-pub fn elgamal_keypair_from_path(
-    matches: &ArgMatches,
-    path: &str,
-    elgamal_keypair_name: &str,
-    confirm_pubkey: bool,
-) -> Result<ElGamalKeypair, Box<dyn error::Error>> {
-    let elgamal_keypair = encodable_key_from_path(matches, path, elgamal_keypair_name)?;
-    if confirm_pubkey {
-        confirm_encodable_keypair_pubkey(&elgamal_keypair, "ElGamal pubkey");
-    }
-    Ok(elgamal_keypair)
-}
-
-fn confirm_encodable_keypair_pubkey<K: EncodableKeypair>(keypair: &K, pubkey_label: &str) {
-    let pubkey = keypair.encodable_pubkey().to_string();
-    println!("Recovered {pubkey_label} `{pubkey:?}`. Continue? (y/n): ");
-    let _ignored = stdout().flush();
-    let mut input = String::new();
-    stdin().read_line(&mut input).expect("Unexpected input");
-    if input.to_lowercase().trim() != "y" {
-        println!("Exiting");
-        exit(1);
-    }
-}
-
-/// Loads an [AeKey] from one of several possible sources.
-///
-/// The way this function interprets its arguments is analogous to that of
-/// [`signer_from_path`].
-///
-/// The bip32 hierarchical derivation of an authenticated encryption key is not
-/// currently supported.
-///
-/// # Examples
-///
-/// ```no_run`
-/// use clap::{Arg, Command};
-/// use solana_clap_v3_utils::keypair::ae_key_from_path;
-///
-/// let clap_app = Command::new("my-program")
-///     // The argument we'll parse as a signer "path"
-///     .arg(Arg::new("ae-key")
-///         .required(true)
-///         .help("The default signer"));
-///
-/// let clap_matches = clap_app.get_matches();
-/// let ae_key_str: String = clap_matches.value_of_t_or_exit("ae-key");
-///
-/// let ae_key = ae_key_from_path(
-///     &clap_matches,
-///     &ae_key_str,
-///     "ae-key",
-/// )?;
-/// # Ok::<(), Box<dyn std::error::Error>>(())
-/// ```
-pub fn ae_key_from_path(
-    matches: &ArgMatches,
-    path: &str,
-    key_name: &str,
-) -> Result<AeKey, Box<dyn error::Error>> {
-    encodable_key_from_path(matches, path, key_name)
-}
-
-fn encodable_key_from_path<K: EncodableKey + SeedDerivable>(
-    matches: &ArgMatches,
-    path: &str,
-    keypair_name: &str,
-) -> Result<K, Box<dyn error::Error>> {
     let SignerSource {
         kind,
         derivation_path,
@@ -1120,19 +1011,21 @@ fn encodable_key_from_path<K: EncodableKey + SeedDerivable>(
     match kind {
         SignerSourceKind::Prompt => {
             let skip_validation = matches.is_present(SKIP_SEED_PHRASE_VALIDATION_ARG.name);
-            Ok(encodable_key_from_seed_phrase(
+            Ok(keypair_from_seed_phrase(
                 keypair_name,
                 skip_validation,
+                confirm_pubkey,
                 derivation_path,
                 legacy,
             )?)
         }
-        SignerSourceKind::Filepath(path) => match K::read_from_file(&path) {
+        SignerSourceKind::Filepath(path) => match read_keypair_file(&path) {
             Err(e) => Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
                 format!(
-                    "could not read keypair file \"{path}\". \
-                    Run \"sonoma-keygen new\" to create a keypair file: {e}"
+                    "could not read keypair file \"{}\". \
+                    Run \"solomka-keygen new\" to create a keypair file: {}",
+                    path, e
                 ),
             )
             .into()),
@@ -1140,11 +1033,14 @@ fn encodable_key_from_path<K: EncodableKey + SeedDerivable>(
         },
         SignerSourceKind::Stdin => {
             let mut stdin = std::io::stdin();
-            Ok(K::read(&mut stdin)?)
+            Ok(read_keypair(&mut stdin)?)
         }
         _ => Err(std::io::Error::new(
             std::io::ErrorKind::Other,
-            format!("signer of type `{kind:?}` does not support Keypair output"),
+            format!(
+                "signer of type `{:?}` does not support Keypair output",
+                kind
+            ),
         )
         .into()),
     }
@@ -1161,67 +1057,20 @@ pub fn keypair_from_seed_phrase(
     derivation_path: Option<DerivationPath>,
     legacy: bool,
 ) -> Result<Keypair, Box<dyn error::Error>> {
-    let keypair: Keypair =
-        encodable_key_from_seed_phrase(keypair_name, skip_validation, derivation_path, legacy)?;
-    if confirm_pubkey {
-        confirm_encodable_keypair_pubkey(&keypair, "pubkey");
-    }
-    Ok(keypair)
-}
-
-/// Reads user input from stdin to retrieve a seed phrase and passphrase for ElGamal keypair
-/// derivation.
-///
-/// Optionally skips validation of seed phrase. Optionally confirms recovered public key.
-pub fn elgamal_keypair_from_seed_phrase(
-    elgamal_keypair_name: &str,
-    skip_validation: bool,
-    confirm_pubkey: bool,
-    derivation_path: Option<DerivationPath>,
-    legacy: bool,
-) -> Result<ElGamalKeypair, Box<dyn error::Error>> {
-    let elgamal_keypair: ElGamalKeypair = encodable_key_from_seed_phrase(
-        elgamal_keypair_name,
-        skip_validation,
-        derivation_path,
-        legacy,
-    )?;
-    if confirm_pubkey {
-        confirm_encodable_keypair_pubkey(&elgamal_keypair, "ElGamal pubkey");
-    }
-    Ok(elgamal_keypair)
-}
-
-/// Reads user input from stdin to retrieve a seed phrase and passphrase for an authenticated
-/// encryption keypair derivation.
-pub fn ae_key_from_seed_phrase(
-    keypair_name: &str,
-    skip_validation: bool,
-    derivation_path: Option<DerivationPath>,
-    legacy: bool,
-) -> Result<AeKey, Box<dyn error::Error>> {
-    encodable_key_from_seed_phrase(keypair_name, skip_validation, derivation_path, legacy)
-}
-
-fn encodable_key_from_seed_phrase<K: EncodableKey + SeedDerivable>(
-    key_name: &str,
-    skip_validation: bool,
-    derivation_path: Option<DerivationPath>,
-    legacy: bool,
-) -> Result<K, Box<dyn error::Error>> {
-    let seed_phrase = prompt_password(format!("[{key_name}] seed phrase: "))?;
+    let seed_phrase = prompt_password(&format!("[{}] seed phrase: ", keypair_name))?;
     let seed_phrase = seed_phrase.trim();
     let passphrase_prompt = format!(
-        "[{key_name}] If this seed phrase has an associated passphrase, enter it now. Otherwise, press ENTER to continue: ",
+        "[{}] If this seed phrase has an associated passphrase, enter it now. Otherwise, press ENTER to continue: ",
+        keypair_name,
     );
 
-    let key = if skip_validation {
+    let keypair = if skip_validation {
         let passphrase = prompt_passphrase(&passphrase_prompt)?;
         if legacy {
-            K::from_seed_phrase_and_passphrase(seed_phrase, &passphrase)?
+            keypair_from_seed_phrase_and_passphrase(seed_phrase, &passphrase)?
         } else {
             let seed = generate_seed_from_seed_phrase_and_passphrase(seed_phrase, &passphrase);
-            K::from_seed_and_derivation_path(&seed, derivation_path)?
+            keypair_from_seed_and_derivation_path(&seed, derivation_path)?
         }
     } else {
         let sanitized = sanitize_seed_phrase(seed_phrase);
@@ -1246,12 +1095,25 @@ fn encodable_key_from_seed_phrase<K: EncodableKey + SeedDerivable>(
         let passphrase = prompt_passphrase(&passphrase_prompt)?;
         let seed = Seed::new(&mnemonic, &passphrase);
         if legacy {
-            K::from_seed(seed.as_bytes())?
+            keypair_from_seed(seed.as_bytes())?
         } else {
-            K::from_seed_and_derivation_path(seed.as_bytes(), derivation_path)?
+            keypair_from_seed_and_derivation_path(seed.as_bytes(), derivation_path)?
         }
     };
-    Ok(key)
+
+    if confirm_pubkey {
+        let pubkey = keypair.pubkey();
+        print!("Recovered pubkey `{:?}`. Continue? (y/n): ", pubkey);
+        let _ignored = stdout().flush();
+        let mut input = String::new();
+        stdin().read_line(&mut input).expect("Unexpected input");
+        if input.to_lowercase().trim() != "y" {
+            println!("Exiting");
+            exit(1);
+        }
+    }
+
+    Ok(keypair)
 }
 
 fn sanitize_seed_phrase(seed_phrase: &str) -> String {
@@ -1324,7 +1186,7 @@ mod tests {
         ));
         let stdin = "stdin:".to_string();
         assert!(matches!(
-            parse_signer_source(stdin).unwrap(),
+            parse_signer_source(&stdin).unwrap(),
             SignerSource {
                 kind: SignerSourceKind::Stdin,
                 derivation_path: None,
@@ -1341,7 +1203,7 @@ mod tests {
         ));
         let pubkey = Pubkey::new_unique();
         assert!(
-            matches!(parse_signer_source(pubkey.to_string()).unwrap(), SignerSource {
+            matches!(parse_signer_source(&pubkey.to_string()).unwrap(), SignerSource {
                 kind: SignerSourceKind::Pubkey(p),
                 derivation_path: None,
                 legacy: false,
@@ -1381,7 +1243,7 @@ mod tests {
             manufacturer: Manufacturer::Ledger,
             pubkey: None,
         };
-        assert!(matches!(parse_signer_source(usb).unwrap(), SignerSource {
+        assert!(matches!(parse_signer_source(&usb).unwrap(), SignerSource {
                 kind: SignerSourceKind::Usb(u),
                 derivation_path: None,
                 legacy: false,
@@ -1392,7 +1254,7 @@ mod tests {
             pubkey: None,
         };
         let expected_derivation_path = Some(DerivationPath::new_bip44(Some(0), Some(0)));
-        assert!(matches!(parse_signer_source(usb).unwrap(), SignerSource {
+        assert!(matches!(parse_signer_source(&usb).unwrap(), SignerSource {
                 kind: SignerSourceKind::Usb(u),
                 derivation_path: d,
                 legacy: false,
@@ -1407,7 +1269,7 @@ mod tests {
 
         let prompt = "prompt:".to_string();
         assert!(matches!(
-            parse_signer_source(prompt).unwrap(),
+            parse_signer_source(&prompt).unwrap(),
             SignerSource {
                 kind: SignerSourceKind::Prompt,
                 derivation_path: None,
@@ -1415,14 +1277,14 @@ mod tests {
             }
         ));
         assert!(
-            matches!(parse_signer_source(format!("file:{absolute_path_str}")).unwrap(), SignerSource {
+            matches!(parse_signer_source(&format!("file:{}", absolute_path_str)).unwrap(), SignerSource {
                 kind: SignerSourceKind::Filepath(p),
                 derivation_path: None,
                 legacy: false,
             } if p == absolute_path_str)
         );
         assert!(
-            matches!(parse_signer_source(format!("file:{relative_path_str}")).unwrap(), SignerSource {
+            matches!(parse_signer_source(&format!("file:{}", relative_path_str)).unwrap(), SignerSource {
                 kind: SignerSourceKind::Filepath(p),
                 derivation_path: None,
                 legacy: false,

@@ -12,7 +12,6 @@ use {
         thread_rng, Rng,
     },
     solana_core::{
-        banking_trace::BankingTracer,
         sigverify::TransactionSigVerifier,
         sigverify_stage::{SigVerifier, SigVerifyStage},
     },
@@ -23,7 +22,6 @@ use {
     },
     solomka_sdk::{
         hash::Hash,
-        packet::PacketFlags,
         signature::{Keypair, Signer},
         system_transaction,
         timing::duration_as_ms,
@@ -42,6 +40,7 @@ fn run_bench_packet_discard(num_ips: usize, bencher: &mut Bencher) {
     let mut total = 0;
 
     let ips: Vec<_> = (0..num_ips)
+        .into_iter()
         .map(|_| {
             let mut addr = [0u16; 8];
             thread_rng().fill(&mut addr);
@@ -53,7 +52,7 @@ fn run_bench_packet_discard(num_ips: usize, bencher: &mut Bencher) {
         total += batch.len();
         for p in batch.iter_mut() {
             let ip_index = thread_rng().gen_range(0, ips.len());
-            p.meta_mut().addr = ips[ip_index];
+            p.meta.addr = ips[ip_index];
         }
     }
     info!("total packets: {}", total);
@@ -63,10 +62,10 @@ fn run_bench_packet_discard(num_ips: usize, bencher: &mut Bencher) {
         let mut num_packets = 0;
         for batch in batches.iter_mut() {
             for p in batch.iter_mut() {
-                if !p.meta().discard() {
+                if !p.meta.discard() {
                     num_packets += 1;
                 }
-                p.meta_mut().set_discard(false);
+                p.meta.set_discard(false);
             }
         }
         assert_eq!(num_packets, 10_000);
@@ -98,7 +97,7 @@ fn bench_packet_discard_mixed_senders(bencher: &mut Bencher) {
     for batch in batches.iter_mut() {
         for packet in batch.iter_mut() {
             // One spam address, ~1000 unique addresses.
-            packet.meta_mut().addr = if rng.gen_ratio(1, 30) {
+            packet.meta.addr = if rng.gen_ratio(1, 30) {
                 new_rand_addr(&mut rng)
             } else {
                 spam_addr
@@ -110,10 +109,10 @@ fn bench_packet_discard_mixed_senders(bencher: &mut Bencher) {
         let mut num_packets = 0;
         for batch in batches.iter_mut() {
             for packet in batch.iter_mut() {
-                if !packet.meta().discard() {
+                if !packet.meta.discard() {
                     num_packets += 1;
                 }
-                packet.meta_mut().set_discard(false);
+                packet.meta.set_discard(false);
             }
         }
         assert_eq!(num_packets, 10_000);
@@ -145,26 +144,18 @@ fn gen_batches(use_same_tx: bool) -> Vec<PacketBatch> {
 }
 
 #[bench]
-fn bench_sigverify_stage_with_same_tx(bencher: &mut Bencher) {
-    bench_sigverify_stage(bencher, true)
-}
-
-#[bench]
-fn bench_sigverify_stage_without_same_tx(bencher: &mut Bencher) {
-    bench_sigverify_stage(bencher, false)
-}
-
-fn bench_sigverify_stage(bencher: &mut Bencher, use_same_tx: bool) {
+fn bench_sigverify_stage(bencher: &mut Bencher) {
     solana_logger::setup();
     trace!("start");
     let (packet_s, packet_r) = unbounded();
-    let (verified_s, verified_r) = BankingTracer::channel_for_test();
+    let (verified_s, verified_r) = unbounded();
     let verifier = TransactionSigVerifier::new(verified_s);
     let stage = SigVerifyStage::new(packet_r, verifier, "bench");
 
+    let use_same_tx = true;
     bencher.iter(move || {
         let now = Instant::now();
-        let batches = gen_batches(use_same_tx);
+        let mut batches = gen_batches(use_same_tx);
         trace!(
             "starting... generation took: {} ms batches: {}",
             duration_as_ms(&now.elapsed()),
@@ -172,24 +163,21 @@ fn bench_sigverify_stage(bencher: &mut Bencher, use_same_tx: bool) {
         );
 
         let mut sent_len = 0;
-        for mut batch in batches.into_iter() {
-            sent_len += batch.len();
-            batch
-                .iter_mut()
-                .for_each(|packet| packet.meta_mut().flags |= PacketFlags::TRACER_PACKET);
-            packet_s.send(batch).unwrap();
+        for _ in 0..batches.len() {
+            if let Some(batch) = batches.pop() {
+                sent_len += batch.len();
+                packet_s.send(vec![batch]).unwrap();
+            }
         }
         let mut received = 0;
-        let mut total_tracer_packets_received_in_sigverify_stage = 0;
         trace!("sent: {}", sent_len);
         loop {
-            if let Ok(message) = verified_r.recv_timeout(Duration::from_millis(10)) {
-                let (verifieds, tracer_packet_stats) = (&message.0, message.1.as_ref().unwrap());
-                received += verifieds.iter().map(|batch| batch.len()).sum::<usize>();
-                total_tracer_packets_received_in_sigverify_stage +=
-                    tracer_packet_stats.total_tracer_packets_received_in_sigverify_stage;
-                test::black_box(message);
-                if total_tracer_packets_received_in_sigverify_stage >= sent_len {
+            if let Ok((mut verifieds, _)) = verified_r.recv_timeout(Duration::from_millis(10)) {
+                while let Some(v) = verifieds.pop() {
+                    received += v.len();
+                    batches.push(v);
+                }
+                if use_same_tx || received >= sent_len {
                     break;
                 }
             }
@@ -227,7 +215,7 @@ fn prepare_batches(discard_factor: i32) -> (Vec<PacketBatch>, usize) {
         batch.iter_mut().for_each(|p| {
             let throw = die.sample(&mut rng);
             if throw < discard_factor {
-                p.meta_mut().set_discard(true);
+                p.meta.set_discard(true);
                 c += 1;
             }
         })
@@ -237,8 +225,8 @@ fn prepare_batches(discard_factor: i32) -> (Vec<PacketBatch>, usize) {
 
 fn bench_shrink_sigverify_stage_core(bencher: &mut Bencher, discard_factor: i32) {
     let (batches0, num_valid_packets) = prepare_batches(discard_factor);
-    let (verified_s, _verified_r) = BankingTracer::channel_for_test();
-    let verifier = TransactionSigVerifier::new(verified_s);
+    let (_verified_s, _verified_r) = unbounded();
+    let verifier = TransactionSigVerifier::new(_verified_s);
 
     let mut c = 0;
     let mut total_shrink_time = 0;

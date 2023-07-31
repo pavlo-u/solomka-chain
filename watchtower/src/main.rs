@@ -4,16 +4,14 @@
 use {
     clap::{crate_description, crate_name, value_t, value_t_or_exit, App, Arg},
     log::*,
-    solana_clap_utils::{
-        hidden_unless_forced,
+    solomka_clap_utils::{
         input_parsers::pubkeys_of,
-        input_validators::{is_parsable, is_pubkey_or_keypair, is_url, is_valid_percentage},
+        input_validators::{is_parsable, is_pubkey_or_keypair, is_url},
     },
-    sonoma_cli_output::display::format_labeled_address,
+    solomka_cli_output::display::format_labeled_address,
+    solomka_client::{client_error, rpc_client::RpcClient, rpc_response::RpcVoteAccountStatus},
     solana_metrics::{datapoint_error, datapoint_info},
-    solana_notifier::{NotificationType, Notifier},
-    solana_rpc_client::rpc_client::RpcClient,
-    solana_rpc_client_api::{client_error, response::RpcVoteAccountStatus},
+    solana_notifier::Notifier,
     solomka_sdk::{
         hash::Hash,
         native_token::{sol_to_lamports, Sol},
@@ -35,7 +33,6 @@ struct Config {
     rpc_timeout: Duration,
     minimum_validator_identity_balance: u64,
     monitor_active_stake: bool,
-    active_stake_alert_threshold: u8,
     unhealthy_threshold: usize,
     validator_identity_pubkeys: Vec<Pubkey>,
     name_suffix: String,
@@ -46,7 +43,7 @@ fn get_config() -> Config {
         .about(crate_description!())
         .version(solana_version::version!())
         .after_help("ADDITIONAL HELP:
-        To receive a Slack, Discord, PagerDuty and/or Telegram notification on sanity failure,
+        To receive a Slack, Discord and/or Telegram notification on sanity failure,
         define environment variables before running `solana-watchtower`:
 
         export SLACK_WEBHOOK=...
@@ -56,10 +53,6 @@ fn get_config() -> Config {
 
         export TELEGRAM_BOT_TOKEN=...
         export TELEGRAM_CHAT_ID=...
-
-        PagerDuty requires an Integration Key from the Events API v2 (Add this integration to your PagerDuty service to get this)
-
-        export PAGERDUTY_INTEGRATION_KEY=...
 
         To receive a Twilio SMS notification on failure, having a Twilio account,
         and a sending number owned by that account,
@@ -74,7 +67,7 @@ fn get_config() -> Config {
                 .takes_value(true)
                 .global(true)
                 .help("Configuration file to use");
-            if let Some(ref config_file) = *sonoma_cli_config::CONFIG_FILE {
+            if let Some(ref config_file) = *solomka_cli_config::CONFIG_FILE {
                 arg.default_value(config_file)
             } else {
                 arg
@@ -134,22 +127,13 @@ fn get_config() -> Config {
             // Deprecated parameter, now always enabled
             Arg::with_name("no_duplicate_notifications")
                 .long("no-duplicate-notifications")
-                .hidden(hidden_unless_forced())
+                .hidden(true)
         )
         .arg(
             Arg::with_name("monitor_active_stake")
                 .long("monitor-active-stake")
                 .takes_value(false)
-                .help("Alert when the current stake for the cluster drops below the amount specified by --active-stake-alert-threshold"),
-        )
-        .arg(
-            Arg::with_name("active_stake_alert_threshold")
-                .long("active-stake-alert-threshold")
-                .value_name("PERCENTAGE")
-                .takes_value(true)
-                .validator(is_valid_percentage)
-                .default_value("80")
-                .help("Alert when the current stake for the cluster drops below this value"),
+                .help("Alert when the current stake for the cluster drops below 80%"),
         )
         .arg(
             Arg::with_name("ignore_http_bad_gateway")
@@ -171,9 +155,9 @@ fn get_config() -> Config {
         .get_matches();
 
     let config = if let Some(config_file) = matches.value_of("config_file") {
-        sonoma_cli_config::Config::load(config_file).unwrap_or_default()
+        solomka_cli_config::Config::load(config_file).unwrap_or_default()
     } else {
-        sonoma_cli_config::Config::default()
+        solomka_cli_config::Config::default()
     };
 
     let interval = Duration::from_secs(value_t_or_exit!(matches, "interval", u64));
@@ -193,8 +177,6 @@ fn get_config() -> Config {
         .collect();
 
     let monitor_active_stake = matches.is_present("monitor_active_stake");
-    let active_stake_alert_threshold =
-        value_t_or_exit!(matches, "active_stake_alert_threshold", u8);
     let ignore_http_bad_gateway = matches.is_present("ignore_http_bad_gateway");
 
     let name_suffix = value_t_or_exit!(matches, "name_suffix", String);
@@ -207,7 +189,6 @@ fn get_config() -> Config {
         rpc_timeout,
         minimum_validator_identity_balance,
         monitor_active_stake,
-        active_stake_alert_threshold,
         unhealthy_threshold,
         validator_identity_pubkeys,
         name_suffix,
@@ -258,7 +239,6 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let mut last_notification_msg = "".into();
     let mut num_consecutive_failures = 0;
     let mut last_success = Instant::now();
-    let mut incident = Hash::new_unique();
 
     loop {
         let failure = match get_cluster_info(&config, &rpc_client) {
@@ -300,7 +280,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                     failures.push((
                         "transaction-count",
                         format!(
-                            "Transaction count is not advancing: {transaction_count} <= {last_transaction_count}"
+                            "Transaction count is not advancing: {} <= {}",
+                            transaction_count, last_transaction_count
                         ),
                     ));
                 }
@@ -310,16 +291,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                 } else {
                     failures.push((
                         "recent-blockhash",
-                        format!("Unable to get new blockhash: {recent_blockhash}"),
+                        format!("Unable to get new blockhash: {}", recent_blockhash),
                     ));
                 }
 
-                if config.monitor_active_stake
-                    && current_stake_percent < config.active_stake_alert_threshold as f64
-                {
+                if config.monitor_active_stake && current_stake_percent < 80. {
                     failures.push((
                         "current-stake",
-                        format!("Current stake is {current_stake_percent:.2}%"),
+                        format!("Current stake is {:.2}%", current_stake_percent),
                     ));
                 }
 
@@ -334,13 +313,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                         .iter()
                         .any(|vai| vai.node_pubkey == *validator_identity.to_string())
                     {
-                        validator_errors.push(format!("{formatted_validator_identity} delinquent"));
+                        validator_errors
+                            .push(format!("{} delinquent", formatted_validator_identity));
                     } else if !vote_accounts
                         .current
                         .iter()
                         .any(|vai| vai.node_pubkey == *validator_identity.to_string())
                     {
-                        validator_errors.push(format!("{formatted_validator_identity} missing"));
+                        validator_errors.push(format!("{} missing", formatted_validator_identity));
                     }
 
                     if let Some(balance) = validator_balances.get(validator_identity) {
@@ -365,7 +345,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             Err(err) => {
                 let mut failure = Some(("rpc-error", err.to_string()));
 
-                if let client_error::ErrorKind::Reqwest(reqwest_err) = err.kind() {
+                if let client_error::ClientErrorKind::Reqwest(reqwest_err) = err.kind() {
                     if let Some(client_error::reqwest::StatusCode::BAD_GATEWAY) =
                         reqwest_err.status()
                     {
@@ -388,7 +368,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             if num_consecutive_failures > config.unhealthy_threshold {
                 datapoint_info!("watchtower-sanity", ("ok", false, bool));
                 if last_notification_msg != notification_msg {
-                    notifier.send(&notification_msg, &NotificationType::Trigger { incident });
+                    notifier.send(&notification_msg);
                 }
                 datapoint_error!(
                     "watchtower-sanity-failure",
@@ -414,15 +394,14 @@ fn main() -> Result<(), Box<dyn error::Error>> {
                     humantime::format_duration(alarm_duration)
                 );
                 info!("{}", all_clear_msg);
-                notifier.send(
-                    &format!("solana-watchtower{}: {}", config.name_suffix, all_clear_msg),
-                    &NotificationType::Resolve { incident },
-                );
+                notifier.send(&format!(
+                    "solana-watchtower{}: {}",
+                    config.name_suffix, all_clear_msg
+                ));
             }
             last_notification_msg = "".into();
             last_success = Instant::now();
             num_consecutive_failures = 0;
-            incident = Hash::new_unique();
         }
         sleep(config.interval);
     }

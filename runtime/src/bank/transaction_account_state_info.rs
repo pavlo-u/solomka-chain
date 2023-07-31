@@ -4,11 +4,8 @@ use {
         bank::Bank,
     },
     solomka_sdk::{
-        account::ReadableAccount,
-        message::SanitizedMessage,
-        native_loader,
-        transaction::Result,
-        transaction_context::{IndexOfAccount, TransactionContext},
+        account::ReadableAccount, feature_set, message::SanitizedMessage, native_loader,
+        transaction::Result, transaction_context::TransactionContext,
     },
 };
 
@@ -25,9 +22,7 @@ impl Bank {
         (0..message.account_keys().len())
             .map(|i| {
                 let rent_state = if message.is_writable(i) {
-                    let state = if let Ok(account) =
-                        transaction_context.get_account_at_index(i as IndexOfAccount)
-                    {
+                    let state = if let Ok(account) = transaction_context.get_account_at_index(i) {
                         let account = account.borrow();
 
                         // Native programs appear to be RentPaying because they carry low lamport
@@ -60,6 +55,12 @@ impl Bank {
         post_state_infos: &[TransactionAccountStateInfo],
         transaction_context: &TransactionContext,
     ) -> Result<()> {
+        let include_account_index_in_err = self
+            .feature_set
+            .is_active(&feature_set::include_account_index_in_rent_error::id());
+        let prevent_crediting_accounts_that_end_rent_paying = self
+            .feature_set
+            .is_active(&feature_set::prevent_crediting_accounts_that_end_rent_paying::id());
         for (i, (pre_state_info, post_state_info)) in
             pre_state_infos.iter().zip(post_state_infos).enumerate()
         {
@@ -67,7 +68,9 @@ impl Bank {
                 pre_state_info.rent_state.as_ref(),
                 post_state_info.rent_state.as_ref(),
                 transaction_context,
-                i as IndexOfAccount,
+                i,
+                include_account_index_in_err,
+                prevent_crediting_accounts_that_end_rent_paying,
             )?;
         }
         Ok(())

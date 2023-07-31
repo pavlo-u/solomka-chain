@@ -97,6 +97,9 @@ while [[ -n $1 ]]; do
     elif [[ $1 == --no-snapshot-fetch ]]; then
       args+=("$1")
       shift
+    elif [[ $1 == --allow-private-addr ]]; then
+      args+=("$1")
+      shift
     elif [[ $1 == --accounts-db-skip-shrink ]]; then
       args+=("$1")
       shift
@@ -146,7 +149,8 @@ args+=(
   --no-os-network-limits-test
   --no-wait-for-vote-to-start-leader
   --full-rpc-api
-  --allow-private-addr
+  --gossip-host 3.74.241.65
+  --gossip-port 8001
 )
 default_arg --gossip-port 8001
 default_arg --log -

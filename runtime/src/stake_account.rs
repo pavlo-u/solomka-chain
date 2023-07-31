@@ -53,7 +53,7 @@ impl<T> StakeAccount<T> {
 impl StakeAccount<Delegation> {
     #[inline]
     pub(crate) fn delegation(&self) -> Delegation {
-        // Safe to unwrap here because StakeAccount<Delegation> will always
+        // Safe to unwrap here becasue StakeAccount<Delegation> will always
         // only wrap a stake-state which is a delegation.
         self.stake_state.delegation().unwrap()
     }
@@ -69,7 +69,7 @@ impl TryFrom<AccountSharedData> for StakeAccount<()> {
         Ok(Self {
             account,
             stake_state,
-            _phantom: PhantomData,
+            _phantom: PhantomData::default(),
         })
     }
 }
@@ -86,7 +86,7 @@ impl TryFrom<AccountSharedData> for StakeAccount<Delegation> {
         Ok(Self {
             account: stake_account.account,
             stake_state: stake_account.stake_state,
-            _phantom: PhantomData,
+            _phantom: PhantomData::default(),
         })
     }
 }
@@ -97,7 +97,7 @@ impl From<StakeAccount<Delegation>> for StakeAccount<()> {
         Self {
             account: stake_account.account,
             stake_state: stake_account.stake_state,
-            _phantom: PhantomData,
+            _phantom: PhantomData::default(),
         }
     }
 }

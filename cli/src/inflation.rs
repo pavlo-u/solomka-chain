@@ -1,16 +1,16 @@
 use {
     crate::cli::{CliCommand, CliCommandInfo, CliConfig, CliError, ProcessResult},
     clap::{App, Arg, ArgMatches, SubCommand},
-    solana_clap_utils::{
+    solomka_clap_utils::{
         input_parsers::{pubkeys_of, value_of},
         input_validators::is_valid_pubkey,
         keypair::*,
     },
-    sonoma_cli_output::{
+    solomka_cli_output::{
         CliEpochRewardshMetadata, CliInflation, CliKeyedEpochReward, CliKeyedEpochRewards,
     },
+    solomka_client::rpc_client::RpcClient,
     solana_remote_wallet::remote_wallet::RemoteWalletManager,
-    solana_rpc_client::rpc_client::RpcClient,
     solomka_sdk::{clock::Epoch, pubkey::Pubkey},
     std::sync::Arc,
 };
@@ -107,9 +107,9 @@ fn process_rewards(
         .get_inflation_reward(addresses, rewards_epoch)
         .map_err(|err| {
             if let Some(epoch) = rewards_epoch {
-                format!("Rewards not available for epoch {epoch}")
+                format!("Rewards not available for epoch {}", epoch)
             } else {
-                format!("Rewards not available {err}")
+                format!("Rewards not available {}", err)
             }
         })?;
     let epoch_schedule = rpc_client.get_epoch_schedule()?;

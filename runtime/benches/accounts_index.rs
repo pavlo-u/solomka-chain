@@ -12,7 +12,6 @@ use {
         },
     },
     solomka_sdk::{account::AccountSharedData, pubkey},
-    std::sync::Arc,
     test::Bencher,
 };
 
@@ -24,10 +23,7 @@ fn bench_accounts_index(bencher: &mut Bencher) {
     const NUM_FORKS: u64 = 16;
 
     let mut reclaims = vec![];
-    let index = AccountsIndex::<AccountInfo, AccountInfo>::new(
-        Some(ACCOUNTS_INDEX_CONFIG_FOR_BENCHMARKS),
-        &Arc::default(),
-    );
+    let index = AccountsIndex::<AccountInfo>::new(Some(ACCOUNTS_INDEX_CONFIG_FOR_BENCHMARKS));
     for f in 0..NUM_FORKS {
         for pubkey in pubkeys.iter().take(NUM_PUBKEYS) {
             index.upsert(
@@ -60,7 +56,7 @@ fn bench_accounts_index(bencher: &mut Bencher) {
             );
             reclaims.clear();
         }
-        index.add_root(root);
+        index.add_root(root, false);
         root += 1;
         fork += 1;
     });

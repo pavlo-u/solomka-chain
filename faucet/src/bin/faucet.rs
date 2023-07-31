@@ -1,7 +1,7 @@
 use {
     clap::{crate_description, crate_name, values_t, App, Arg},
     log::*,
-    solana_clap_utils::input_parsers::{lamports_of_sol, value_of},
+    solomka_clap_utils::input_parsers::{lamports_of_sol, value_of},
     solana_faucet::{
         faucet::{run_faucet, Faucet, FAUCET_PORT},
         socketaddr,
@@ -17,9 +17,9 @@ use {
 
 #[tokio::main]
 async fn main() {
-    let default_keypair = sonoma_cli_config::Config::default().keypair_path;
+    let default_keypair = solomka_cli_config::Config::default().keypair_path;
 
-    solana_logger::setup_with_default("sonoma=info");
+    solana_logger::setup_with_default("solana=info");
     solana_metrics::set_panic_hook("faucet", /*version:*/ None);
     let matches = App::new(crate_name!())
         .about(crate_description!())
@@ -81,7 +81,7 @@ async fn main() {
         .into_iter()
         .collect();
 
-    let faucet_addr = socketaddr!(Ipv4Addr::UNSPECIFIED, FAUCET_PORT);
+    let faucet_addr = socketaddr!(0, FAUCET_PORT);
 
     let faucet = Arc::new(Mutex::new(Faucet::new_with_allowed_ips(
         faucet_keypair,

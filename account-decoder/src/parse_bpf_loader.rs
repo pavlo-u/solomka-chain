@@ -3,7 +3,6 @@ use {
         parse_account_data::{ParsableAccount, ParseAccountError},
         UiAccountData, UiAccountEncoding,
     },
-    base64::{prelude::BASE64_STANDARD, Engine},
     bincode::{deserialize, serialized_size},
     solomka_sdk::{bpf_loader_upgradeable::UpgradeableLoaderState, pubkey::Pubkey},
 };
@@ -28,7 +27,7 @@ pub fn parse_bpf_upgradeable_loader(
             BpfUpgradeableLoaderAccountType::Buffer(UiBuffer {
                 authority: authority_address.map(|pubkey| pubkey.to_string()),
                 data: UiAccountData::Binary(
-                    BASE64_STANDARD.encode(&data[offset..]),
+                    base64::encode(&data[offset as usize..]),
                     UiAccountEncoding::Base64,
                 ),
             })
@@ -52,7 +51,7 @@ pub fn parse_bpf_upgradeable_loader(
                 slot,
                 authority: upgrade_authority_address.map(|pubkey| pubkey.to_string()),
                 data: UiAccountData::Binary(
-                    BASE64_STANDARD.encode(&data[offset..]),
+                    base64::encode(&data[offset as usize..]),
                     UiAccountEncoding::Base64,
                 ),
             })
@@ -116,10 +115,7 @@ mod test {
             parse_bpf_upgradeable_loader(&account_data).unwrap(),
             BpfUpgradeableLoaderAccountType::Buffer(UiBuffer {
                 authority: Some(authority.to_string()),
-                data: UiAccountData::Binary(
-                    BASE64_STANDARD.encode(&program),
-                    UiAccountEncoding::Base64
-                ),
+                data: UiAccountData::Binary(base64::encode(&program), UiAccountEncoding::Base64),
             })
         );
 
@@ -134,10 +130,7 @@ mod test {
             parse_bpf_upgradeable_loader(&account_data).unwrap(),
             BpfUpgradeableLoaderAccountType::Buffer(UiBuffer {
                 authority: None,
-                data: UiAccountData::Binary(
-                    BASE64_STANDARD.encode(&program),
-                    UiAccountEncoding::Base64
-                ),
+                data: UiAccountData::Binary(base64::encode(&program), UiAccountEncoding::Base64),
             })
         );
 
@@ -166,10 +159,7 @@ mod test {
             BpfUpgradeableLoaderAccountType::ProgramData(UiProgramData {
                 slot,
                 authority: Some(authority.to_string()),
-                data: UiAccountData::Binary(
-                    BASE64_STANDARD.encode(&program),
-                    UiAccountEncoding::Base64
-                ),
+                data: UiAccountData::Binary(base64::encode(&program), UiAccountEncoding::Base64),
             })
         );
 
@@ -184,10 +174,7 @@ mod test {
             BpfUpgradeableLoaderAccountType::ProgramData(UiProgramData {
                 slot,
                 authority: None,
-                data: UiAccountData::Binary(
-                    BASE64_STANDARD.encode(&program),
-                    UiAccountEncoding::Base64
-                ),
+                data: UiAccountData::Binary(base64::encode(&program), UiAccountEncoding::Base64),
             })
         );
     }

@@ -1,6 +1,6 @@
 use {
     crate::{
-        accounts_index::{AccountsIndexConfig, DiskIndexValue, IndexValue},
+        accounts_index::{AccountsIndexConfig, IndexValue},
         bucket_map_holder::BucketMapHolder,
         in_mem_accounts_index::InMemAccountsIndex,
         waitable_condvar::WaitableCondvar,
@@ -16,18 +16,17 @@ use {
 };
 
 /// Manages the lifetime of the background processing threads.
-pub struct AccountsIndexStorage<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> {
+pub struct AccountsIndexStorage<T: IndexValue> {
     _bg_threads: BgThreads,
 
-    pub storage: Arc<BucketMapHolder<T, U>>,
-    pub in_mem: Vec<Arc<InMemAccountsIndex<T, U>>>,
-    exit: Arc<AtomicBool>,
+    pub storage: Arc<BucketMapHolder<T>>,
+    pub in_mem: Vec<Arc<InMemAccountsIndex<T>>>,
 
     /// set_startup(true) creates bg threads which are kept alive until set_startup(false)
     startup_worker_threads: Mutex<Option<BgThreads>>,
 }
 
-impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> Debug for AccountsIndexStorage<T, U> {
+impl<T: IndexValue> Debug for AccountsIndexStorage<T> {
     fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Ok(())
     }
@@ -53,34 +52,29 @@ impl Drop for BgThreads {
 }
 
 impl BgThreads {
-    fn new<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>>(
-        storage: &Arc<BucketMapHolder<T, U>>,
-        in_mem: &[Arc<InMemAccountsIndex<T, U>>],
+    fn new<T: IndexValue>(
+        storage: &Arc<BucketMapHolder<T>>,
+        in_mem: &[Arc<InMemAccountsIndex<T>>],
         threads: usize,
         can_advance_age: bool,
-        exit: &Arc<AtomicBool>,
     ) -> Self {
         // stop signal used for THIS batch of bg threads
-        let local_exit = Arc::new(AtomicBool::default());
+        let exit = Arc::new(AtomicBool::default());
         let handles = Some(
             (0..threads)
+                .into_iter()
                 .map(|idx| {
                     // the first thread we start is special
                     let can_advance_age = can_advance_age && idx == 0;
                     let storage_ = Arc::clone(storage);
-                    let local_exit_ = Arc::clone(&local_exit);
-                    let system_exit_ = Arc::clone(exit);
+                    let exit_ = Arc::clone(&exit);
                     let in_mem_ = in_mem.to_vec();
 
                     // note that using rayon here causes us to exhaust # rayon threads and many tests running in parallel deadlock
                     Builder::new()
-                        .name(format!("solIdxFlusher{idx:02}"))
+                        .name(format!("solIdxFlusher{:02}", idx))
                         .spawn(move || {
-                            storage_.background(
-                                vec![local_exit_, system_exit_],
-                                in_mem_,
-                                can_advance_age,
-                            );
+                            storage_.background(exit_, in_mem_, can_advance_age);
                         })
                         .unwrap()
                 })
@@ -88,7 +82,7 @@ impl BgThreads {
         );
 
         BgThreads {
-            exit: local_exit,
+            exit,
             handles,
             wait: Arc::clone(&storage.wait_dirty_or_aged),
         }
@@ -109,7 +103,7 @@ pub enum Startup {
     StartupWithExtraThreads,
 }
 
-impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> AccountsIndexStorage<T, U> {
+impl<T: IndexValue> AccountsIndexStorage<T> {
     /// startup=true causes:
     ///      in mem to act in a way that flushes to disk asap
     ///      also creates some additional bg threads to facilitate flushing to disk asap
@@ -123,7 +117,6 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> AccountsIndexStorage<
                 &self.in_mem,
                 Self::num_threads(),
                 false, // cannot advance age from any of these threads
-                &self.exit,
             ));
         }
         self.storage.set_startup(value);
@@ -154,7 +147,7 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> AccountsIndexStorage<
     }
 
     /// allocate BucketMapHolder and InMemAccountsIndex[]
-    pub fn new(bins: usize, config: &Option<AccountsIndexConfig>, exit: &Arc<AtomicBool>) -> Self {
+    pub fn new(bins: usize, config: &Option<AccountsIndexConfig>) -> Self {
         let threads = config
             .as_ref()
             .and_then(|config| config.flush_threads)
@@ -163,15 +156,15 @@ impl<T: IndexValue, U: DiskIndexValue + From<T> + Into<T>> AccountsIndexStorage<
         let storage = Arc::new(BucketMapHolder::new(bins, config, threads));
 
         let in_mem = (0..bins)
+            .into_iter()
             .map(|bin| Arc::new(InMemAccountsIndex::new(&storage, bin)))
             .collect::<Vec<_>>();
 
         Self {
-            _bg_threads: BgThreads::new(&storage, &in_mem, threads, true, exit),
+            _bg_threads: BgThreads::new(&storage, &in_mem, threads, true),
             storage,
             in_mem,
             startup_worker_threads: Mutex::default(),
-            exit: Arc::clone(exit),
         }
     }
 }

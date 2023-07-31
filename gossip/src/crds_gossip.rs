@@ -10,19 +10,17 @@ use {
         cluster_info_metrics::GossipStats,
         crds::{Crds, GossipRoute},
         crds_gossip_error::CrdsGossipError,
-        crds_gossip_pull::{CrdsFilter, CrdsGossipPull, CrdsTimeouts, ProcessPullStats},
-        crds_gossip_push::CrdsGossipPush,
+        crds_gossip_pull::{CrdsFilter, CrdsGossipPull, ProcessPullStats},
+        crds_gossip_push::{CrdsGossipPush, CRDS_GOSSIP_NUM_ACTIVE},
         crds_value::{CrdsData, CrdsValue},
-        duplicate_shred::{self, DuplicateShredIndex, MAX_DUPLICATE_SHREDS},
+        duplicate_shred::{self, DuplicateShredIndex, LeaderScheduleFn, MAX_DUPLICATE_SHREDS},
         legacy_contact_info::LegacyContactInfo as ContactInfo,
         ping_pong::PingCache,
     },
     itertools::Itertools,
-    rand::{CryptoRng, Rng},
     rayon::ThreadPool,
     solana_ledger::shred::Shred,
     solomka_sdk::{
-        clock::Slot,
         hash::Hash,
         pubkey::Pubkey,
         signature::{Keypair, Signer},
@@ -33,7 +31,7 @@ use {
         collections::{HashMap, HashSet},
         net::SocketAddr,
         sync::{Mutex, RwLock},
-        time::{Duration, Instant},
+        time::Duration,
     },
 };
 
@@ -66,15 +64,14 @@ impl CrdsGossip {
     where
         I: IntoIterator<Item = Pubkey>,
     {
-        self.push.prune_received_cache(self_pubkey, origins, stakes)
+        self.push
+            .prune_received_cache_many(self_pubkey, origins, stakes)
     }
 
     pub fn new_push_messages(
         &self,
-        pubkey: &Pubkey, // This node.
         pending_push_messages: Vec<CrdsValue>,
         now: u64,
-        stakes: &HashMap<Pubkey, u64>,
     ) -> (
         HashMap<Pubkey, Vec<CrdsValue>>,
         usize, // number of values
@@ -86,21 +83,18 @@ impl CrdsGossip {
                 let _ = crds.insert(entry, now, GossipRoute::LocalMessage);
             }
         }
-        self.push.new_push_messages(pubkey, &self.crds, now, stakes)
+        self.push.new_push_messages(&self.crds, now)
     }
 
-    pub(crate) fn push_duplicate_shred<F>(
+    pub(crate) fn push_duplicate_shred(
         &self,
         keypair: &Keypair,
         shred: &Shred,
         other_payload: &[u8],
-        leader_schedule: Option<F>,
+        leader_schedule: Option<impl LeaderScheduleFn>,
         // Maximum serialized size of each DuplicateShred chunk payload.
         max_payload_size: usize,
-    ) -> Result<(), duplicate_shred::Error>
-    where
-        F: FnOnce(Slot) -> Option<Pubkey>,
-    {
+    ) -> Result<(), duplicate_shred::Error> {
         let pubkey = keypair.pubkey();
         // Skip if there are already records of duplicate shreds for this slot.
         let shred_slot = shred.slot();
@@ -164,13 +158,11 @@ impl CrdsGossip {
         origin: &[Pubkey],
         wallclock: u64,
         now: u64,
-        stakes: &HashMap<Pubkey, u64>,
     ) -> Result<(), CrdsGossipError> {
         if now > wallclock.saturating_add(self.push.prune_timeout) {
             Err(CrdsGossipError::PruneMessageTimeout)
         } else if self_pubkey == destination {
-            self.push
-                .process_prune_msg(self_pubkey, peer, origin, stakes);
+            self.push.process_prune_msg(self_pubkey, peer, origin);
             Ok(())
         } else {
             Err(CrdsGossipError::BadPruneDestination)
@@ -188,12 +180,15 @@ impl CrdsGossip {
         pings: &mut Vec<(SocketAddr, Ping)>,
         socket_addr_space: &SocketAddrSpace,
     ) {
+        let network_size = self.crds.read().unwrap().num_nodes();
         self.push.refresh_push_active_set(
             &self.crds,
             stakes,
             gossip_validators,
             self_keypair,
             self_shred_version,
+            network_size,
+            CRDS_GOSSIP_NUM_ACTIVE,
             ping_cache,
             pings,
             socket_addr_space,
@@ -230,6 +225,14 @@ impl CrdsGossip {
         )
     }
 
+    /// Time when a request to `from` was initiated.
+    ///
+    /// This is used for weighted random selection during `new_pull_request`
+    /// It's important to use the local nodes request creation time as the weight
+    /// instead of the response received time otherwise failed nodes will increase their weight.
+    pub fn mark_pull_request_creation_time(&self, from: Pubkey, now: u64) {
+        self.pull.mark_pull_request_creation_time(from, now)
+    }
     /// Process a pull request and create a response.
     pub fn process_pull_requests<I>(&self, callers: I, now: u64)
     where
@@ -258,7 +261,7 @@ impl CrdsGossip {
 
     pub fn filter_pull_responses(
         &self,
-        timeouts: &CrdsTimeouts,
+        timeouts: &HashMap<Pubkey, u64>,
         response: Vec<CrdsValue>,
         now: u64,
         process_pull_stats: &mut ProcessPullStats,
@@ -292,12 +295,12 @@ impl CrdsGossip {
         );
     }
 
-    pub fn make_timeouts<'a>(
+    pub fn make_timeouts(
         &self,
         self_pubkey: Pubkey,
-        stakes: &'a HashMap<Pubkey, u64>,
+        stakes: &HashMap<Pubkey, u64>,
         epoch_duration: Duration,
-    ) -> CrdsTimeouts<'a> {
+    ) -> HashMap<Pubkey, u64> {
         self.pull.make_timeouts(self_pubkey, stakes, epoch_duration)
     }
 
@@ -306,12 +309,17 @@ impl CrdsGossip {
         self_pubkey: &Pubkey,
         thread_pool: &ThreadPool,
         now: u64,
-        timeouts: &CrdsTimeouts,
+        timeouts: &HashMap<Pubkey, u64>,
     ) -> usize {
         let mut rv = 0;
+        if now > 5 * self.push.msg_timeout {
+            let min = now - 5 * self.push.msg_timeout;
+            self.push.purge_old_received_cache(min);
+        }
         if now > self.pull.crds_timeout {
-            debug_assert_eq!(timeouts[self_pubkey], u64::MAX);
-            debug_assert_ne!(timeouts[&Pubkey::default()], 0u64);
+            //sanity check
+            assert_eq!(timeouts[self_pubkey], std::u64::MAX);
+            assert!(timeouts.contains_key(&Pubkey::default()));
             rv = CrdsGossipPull::purge_active(thread_pool, &self.crds, now, timeouts);
         }
         self.crds
@@ -321,104 +329,50 @@ impl CrdsGossip {
         self.pull.purge_failed_inserts(now);
         rv
     }
+
+    // Only for tests and simulations.
+    pub(crate) fn mock_clone(&self) -> Self {
+        let crds = self.crds.read().unwrap().mock_clone();
+        Self {
+            crds: RwLock::new(crds),
+            push: self.push.mock_clone(),
+            pull: self.pull.mock_clone(),
+        }
+    }
 }
 
-// Returns active and valid cluster nodes to gossip with.
-pub(crate) fn get_gossip_nodes<R: Rng>(
-    rng: &mut R,
-    now: u64,
-    pubkey: &Pubkey, // This node.
-    // By default, should only push to or pull from gossip nodes with the same
-    // shred-version. Except for spy nodes (shred_version == 0u16) which can
-    // pull from any node.
-    verify_shred_version: impl Fn(/*shred_version:*/ u16) -> bool,
-    crds: &RwLock<Crds>,
-    gossip_validators: Option<&HashSet<Pubkey>>,
-    stakes: &HashMap<Pubkey, u64>,
-    socket_addr_space: &SocketAddrSpace,
-) -> Vec<ContactInfo> {
-    // Exclude nodes which have not been active for this long.
-    const ACTIVE_TIMEOUT: Duration = Duration::from_secs(60);
-    let active_cutoff = now.saturating_sub(ACTIVE_TIMEOUT.as_millis() as u64);
-    let crds = crds.read().unwrap();
-    crds.get_nodes()
-        .filter_map(|value| {
-            let node = value.value.contact_info().unwrap();
-            // Exclude nodes which have not been active recently.
-            if value.local_timestamp < active_cutoff {
-                // In order to mitigate eclipse attack, for staked nodes
-                // continue retrying periodically.
-                let stake = stakes.get(node.pubkey()).copied().unwrap_or_default();
-                if stake == 0u64 || !rng.gen_ratio(1, 16) {
-                    return None;
-                }
-            }
-            Some(node)
-        })
-        .filter(|node| {
-            node.pubkey() != pubkey
-                && verify_shred_version(node.shred_version())
-                && node
-                    .gossip()
-                    .map(|addr| socket_addr_space.check(&addr))
-                    .unwrap_or_default()
-                && match gossip_validators {
-                    Some(nodes) => nodes.contains(node.pubkey()),
-                    None => true,
-                }
-        })
-        .cloned()
-        .collect()
+/// Computes a normalized (log of actual stake) stake.
+pub fn get_stake<S: std::hash::BuildHasher>(id: &Pubkey, stakes: &HashMap<Pubkey, u64, S>) -> f32 {
+    // cap the max balance to u32 max (it should be plenty)
+    let bal = f64::from(u32::max_value()).min(*stakes.get(id).unwrap_or(&0) as f64);
+    1_f32.max((bal as f32).ln())
 }
 
-// Dedups gossip addresses, keeping only the one with the highest stake.
-pub(crate) fn dedup_gossip_addresses(
-    nodes: impl IntoIterator<Item = ContactInfo>,
-    stakes: &HashMap<Pubkey, u64>,
-) -> HashMap</*gossip:*/ SocketAddr, (/*stake:*/ u64, ContactInfo)> {
+/// Computes bounded weight given some max, a time since last selected, and a stake value.
+///
+/// The minimum stake is 1 and not 0 to allow 'time since last' picked to factor in.
+pub fn get_weight(max_weight: f32, time_since_last_selected: u32, stake: f32) -> f32 {
+    let mut weight = time_since_last_selected as f32 * stake;
+    if weight.is_infinite() {
+        weight = max_weight;
+    }
+    1.0_f32.max(weight.min(max_weight))
+}
+
+// Dedups gossip addresses, keeping only the one with the highest weight.
+pub(crate) fn dedup_gossip_addresses<I, T: PartialOrd>(
+    nodes: I,
+) -> HashMap</*gossip:*/ SocketAddr, (/*weight:*/ T, ContactInfo)>
+where
+    I: IntoIterator<Item = (/*weight:*/ T, ContactInfo)>,
+{
     nodes
         .into_iter()
-        .filter_map(|node| Some((node.gossip().ok()?, node)))
-        .into_grouping_map()
-        .aggregate(|acc, _node_gossip, node| {
-            let stake = stakes.get(node.pubkey()).copied().unwrap_or_default();
-            match acc {
-                Some((ref s, _)) if s >= &stake => acc,
-                Some(_) | None => Some((stake, node)),
-            }
+        .into_grouping_map_by(|(_weight, node)| node.gossip)
+        .aggregate(|acc, _node_gossip, (weight, node)| match acc {
+            Some((ref w, _)) if w >= &weight => acc,
+            Some(_) | None => Some((weight, node)),
         })
-}
-
-// Pings gossip addresses if needed.
-// Returns nodes which have recently responded to a ping message.
-#[must_use]
-pub(crate) fn maybe_ping_gossip_addresses<R: Rng + CryptoRng>(
-    rng: &mut R,
-    nodes: impl IntoIterator<Item = ContactInfo>,
-    keypair: &Keypair,
-    ping_cache: &Mutex<PingCache>,
-    pings: &mut Vec<(SocketAddr, Ping)>,
-) -> Vec<ContactInfo> {
-    let mut ping_cache = ping_cache.lock().unwrap();
-    let mut pingf = move || Ping::new_rand(rng, keypair).ok();
-    let now = Instant::now();
-    nodes
-        .into_iter()
-        .filter(|node| {
-            let node_gossip = match node.gossip() {
-                Err(_) => return false,
-                Ok(addr) => addr,
-            };
-            let (check, ping) = {
-                let node = (*node.pubkey(), node_gossip);
-                ping_cache.check(now, node, &mut pingf)
-            };
-            if let Some(ping) = ping {
-                pings.push((node_gossip, ping));
-            }
-            check
-        })
-        .collect()
 }
 
 #[cfg(test)]
@@ -465,35 +419,32 @@ mod test {
         //incorrect dest
         let mut res = crds_gossip.process_prune_msg(
             &id,
-            ci.pubkey(),
+            &ci.id,
             &Pubkey::from(hash(&[1; 32]).to_bytes()),
             &[prune_pubkey],
             now,
             now,
-            &HashMap::<Pubkey, u64>::default(), // stakes
         );
         assert_eq!(res.err(), Some(CrdsGossipError::BadPruneDestination));
         //correct dest
         res = crds_gossip.process_prune_msg(
             &id,             // self_pubkey
-            ci.pubkey(),     // peer
+            &ci.id,          // peer
             &id,             // destination
             &[prune_pubkey], // origins
             now,
             now,
-            &HashMap::<Pubkey, u64>::default(), // stakes
         );
         res.unwrap();
         //test timeout
         let timeout = now + crds_gossip.push.prune_timeout * 2;
         res = crds_gossip.process_prune_msg(
             &id,             // self_pubkey
-            ci.pubkey(),     // peer
+            &ci.id,          // peer
             &id,             // destination
             &[prune_pubkey], // origins
             now,
             timeout,
-            &HashMap::<Pubkey, u64>::default(), // stakes
         );
         assert_eq!(res.err(), Some(CrdsGossipError::PruneMessageTimeout));
     }

@@ -3,20 +3,18 @@ use {
         Args, AuthorizeArgs, Command, CountArgs, MoveArgs, NewArgs, QueryArgs, RebaseArgs,
         SetLockupArgs,
     },
-    clap::{
-        crate_description, crate_name, value_t, value_t_or_exit, App, Arg, ArgMatches, SubCommand,
-    },
-    solana_clap_utils::{
+    clap::{value_t, value_t_or_exit, App, Arg, ArgMatches, SubCommand},
+    solomka_clap_utils::{
         input_parsers::unix_timestamp_from_rfc3339_datetime,
         input_validators::{is_amount, is_rfc3339_datetime, is_valid_pubkey, is_valid_signer},
     },
-    sonoma_cli_config::CONFIG_FILE,
+    solomka_cli_config::CONFIG_FILE,
     solomka_sdk::native_token::sol_to_lamports,
     std::{ffi::OsString, process::exit},
 };
 
 fn fee_payer_arg<'a, 'b>() -> Arg<'a, 'b> {
-    solana_clap_utils::fee_payer::fee_payer_arg().required(true)
+    solomka_clap_utils::fee_payer::fee_payer_arg().required(true)
 }
 
 fn funding_keypair_arg<'a, 'b>() -> Arg<'a, 'b> {
@@ -108,7 +106,7 @@ fn lockup_epoch_arg<'a, 'b>() -> Arg<'a, 'b> {
         .long("lockup-epoch")
         .takes_value(true)
         .value_name("NUMBER")
-        .help("The epoch height at which each account will be available for withdrawal")
+        .help("The epoch height at which each account will be available for withdrawl")
 }
 
 fn lockup_date_arg<'a, 'b>() -> Arg<'a, 'b> {
@@ -117,7 +115,7 @@ fn lockup_date_arg<'a, 'b>() -> Arg<'a, 'b> {
         .value_name("RFC3339 DATETIME")
         .validator(is_rfc3339_datetime)
         .takes_value(true)
-        .help("The date and time at which each account will be available for withdrawal")
+        .help("The date and time at which each account will be available for withdrawl")
 }
 
 fn num_accounts_arg<'a, 'b>() -> Arg<'a, 'b> {
@@ -135,9 +133,9 @@ where
     T: Into<OsString> + Clone,
 {
     let default_config_file = CONFIG_FILE.as_ref().unwrap();
-    App::new(crate_name!())
-        .about(crate_description!())
-        .version(solana_version::version!())
+    App::new("solana-stake-accounts")
+        .about("about")
+        .version("version")
         .arg(
             Arg::with_name("config_file")
                 .long("config")

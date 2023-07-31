@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# solana-cli integration sanity test
+# solomka-cli integration sanity test
 #
 set -e
 

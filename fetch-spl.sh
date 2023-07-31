@@ -6,8 +6,6 @@
 
 set -e
 
-upgradeableLoader=BPFLoaderUpgradeab1e11111111111111111111111
-
 fetch_program() {
   declare name=$1
   declare version=$2
@@ -16,11 +14,7 @@ fetch_program() {
 
   declare so=spl_$name-$version.so
 
-  if [[ $loader == "$upgradeableLoader" ]]; then
-    genesis_args+=(--upgradeable-program "$address" "$loader" "$so" none)
-  else
-    genesis_args+=(--bpf-program "$address" "$loader" "$so")
-  fi
+  genesis_args+=(--bpf-program "$address" "$loader" "$so")
 
   if [[ -r $so ]]; then
     return

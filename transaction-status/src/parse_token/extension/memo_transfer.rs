@@ -31,7 +31,7 @@ pub(in crate::parse_token) fn parse_memo_transfer_instruction(
         "multisigOwner",
     );
     Ok(ParsedInstructionEnum {
-        instruction_type: format!("{instruction_type_str}RequiredMemoTransfers"),
+        instruction_type: format!("{}RequiredMemoTransfers", instruction_type_str),
         info: value,
     })
 }
@@ -68,7 +68,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&message.account_keys, None)
+                &AccountKeys::new(&convert_account_keys(&message), None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -99,7 +99,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&message.account_keys, None)
+                &AccountKeys::new(&convert_account_keys(&message), None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -128,7 +128,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&message.account_keys, None)
+                &AccountKeys::new(&convert_account_keys(&message), None)
             )
             .unwrap(),
             ParsedInstructionEnum {
@@ -159,7 +159,7 @@ mod test {
         assert_eq!(
             parse_token(
                 &compiled_instruction,
-                &AccountKeys::new(&message.account_keys, None)
+                &AccountKeys::new(&convert_account_keys(&message), None)
             )
             .unwrap(),
             ParsedInstructionEnum {

@@ -55,7 +55,8 @@ fn checked_total_size_sum(total_size: u64, entry_size: u64, limit_size: u64) -> 
     let total_size = total_size.saturating_add(entry_size);
     if total_size > limit_size {
         return Err(UnpackError::Archive(format!(
-            "too large archive: {total_size} than limit: {limit_size}",
+            "too large archive: {} than limit: {}",
+            total_size, limit_size,
         )));
     }
     Ok(total_size)
@@ -65,7 +66,8 @@ fn checked_total_count_increment(total_count: u64, limit_count: u64) -> Result<u
     let total_count = total_count + 1;
     if total_count > limit_count {
         return Err(UnpackError::Archive(format!(
-            "too many files in snapshot: {total_count:?}"
+            "too many files in snapshot: {:?}",
+            total_count
         )));
     }
     Ok(total_count)
@@ -73,7 +75,10 @@ fn checked_total_count_increment(total_count: u64, limit_count: u64) -> Result<u
 
 fn check_unpack_result(unpack_result: bool, path: String) -> Result<()> {
     if !unpack_result {
-        return Err(UnpackError::Archive(format!("failed to unpack: {path:?}")));
+        return Err(UnpackError::Archive(format!(
+            "failed to unpack: {:?}",
+            path
+        )));
     }
     Ok(())
 }
@@ -127,13 +132,12 @@ where
 
         if parts.clone().any(|p| p.is_none()) || reject_legacy_dir_entry {
             return Err(UnpackError::Archive(format!(
-                "invalid path found: {path_str:?}"
+                "invalid path found: {:?}",
+                path_str
             )));
         }
 
         let parts: Vec<_> = parts.map(|p| p.unwrap()).collect();
-        let account_filename =
-            (parts.len() == 2 && parts[0] == "accounts").then(|| PathBuf::from(parts[1]));
         let unpack_dir = match entry_checker(parts.as_slice(), kind) {
             UnpackPath::Invalid => {
                 return Err(UnpackError::Archive(format!(
@@ -177,16 +181,8 @@ where
         let entry_path_buf = unpack_dir.join(entry.path()?);
         set_perms(&entry_path_buf, mode)?;
 
-        let entry_path = if let Some(account_filename) = account_filename {
-            let stripped_path = unpack_dir.join(account_filename); // strip away "accounts"
-            fs::rename(&entry_path_buf, &stripped_path)?;
-            stripped_path
-        } else {
-            entry_path_buf
-        };
-
         // Process entry after setting permissions
-        entry_processor(entry_path);
+        entry_processor(entry_path_buf);
 
         total_entries += 1;
         let now = Instant::now();
@@ -388,7 +384,7 @@ where
                         .map(|path_buf| path_buf.as_path())
                     {
                         Some(path) => {
-                            accounts_path_processor(file, path);
+                            accounts_path_processor(*file, path);
                             UnpackPath::Valid(path)
                         }
                         None => UnpackPath::Invalid,
@@ -986,7 +982,7 @@ mod tests {
             result,
             Err(UnpackError::Archive(ref message))
                 if message == &format!(
-                    "too large archive: 1125899906842624 than limit: {MAX_SNAPSHOT_ARCHIVE_UNPACKED_APPARENT_SIZE}"
+                    "too large archive: 1125899906842624 than limit: {}", MAX_SNAPSHOT_ARCHIVE_UNPACKED_APPARENT_SIZE
                 )
         );
     }
@@ -1011,7 +1007,7 @@ mod tests {
             result,
             Err(UnpackError::Archive(ref message))
                 if message == &format!(
-                    "too large archive: 18446744073709551615 than limit: {MAX_SNAPSHOT_ARCHIVE_UNPACKED_ACTUAL_SIZE}"
+                    "too large archive: 18446744073709551615 than limit: {}", MAX_SNAPSHOT_ARCHIVE_UNPACKED_ACTUAL_SIZE
                 )
         );
     }

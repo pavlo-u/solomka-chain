@@ -38,6 +38,8 @@ mod tests {
     const DEFAULT_STOP_SIZE_CF_DATA_BYTES: u64 = 0;
     const DEFAULT_SHRED_DATA_CF_SIZE_BYTES: u64 = 125 * 1024 * 1024 * 1024;
 
+    const ROCKSDB_FLUSH_GRACE_PERIOD_SECS: u64 = 20;
+
     #[derive(Debug)]
     struct BenchmarkConfig {
         benchmark_slots: u64,
@@ -49,6 +51,9 @@ mod tests {
         stop_size_cf_data_bytes: u64,
         pre_generate_data: bool,
         cleanup_blockstore: bool,
+        assert_compaction: bool,
+        compaction_interval: Option<u64>,
+        no_compaction: bool,
         num_writers: u64,
         cleanup_service: bool,
         fifo_compaction: bool,
@@ -182,10 +187,19 @@ mod tests {
     ///   under the storage limitation.
     /// - `CLEANUP_BLOCKSTORE`: if true, the ledger store created in the current
     ///   benchmark run will be deleted.  Default: true.
+    /// - `NO_COMPACTION`: whether to stop rocksdb's background compaction
+    ///   completely.  Default: false.
     ///
     /// Cleanup-service related settings:
     /// - `MAX_LEDGER_SHREDS`: when the clean-up service is on, the service will
     ///   clean up the ledger store when the number of shreds exceeds this value.
+    /// - `COMPACTION_INTERVAL`: if set, the clean-up service will compact all
+    ///   slots that are older than the specified interval.  The interval is
+    ///   measured by slots.
+    ///   Default: the number of slots per day (`TICKS_PER_DAY` / `DEFAULT_TICKS_PER_SLOT`)
+    /// - `ASSERT_COMPACTION`: if true, then the benchmark will perform a sanity check
+    ///   on whether clean-up service triggers the expected compaction at the end of
+    ///   the benchmark run.  Default: false.
     /// - `CLEANUP_SERVICE`: whether to enable the background cleanup service.
     ///   If set to false, the ledger store in the benchmark will be purely relied
     ///   on RocksDB's compaction.  Default: true.
@@ -206,6 +220,13 @@ mod tests {
             read_env("STOP_SIZE_CF_DATA_BYTES", DEFAULT_STOP_SIZE_CF_DATA_BYTES);
         let pre_generate_data = read_env("PRE_GENERATE_DATA", false);
         let cleanup_blockstore = read_env("CLEANUP_BLOCKSTORE", true);
+        // set default to `true` once compaction is merged
+        let assert_compaction = read_env("ASSERT_COMPACTION", false);
+        let compaction_interval = match read_env("COMPACTION_INTERVAL", 0) {
+            maybe_zero if maybe_zero == 0 => None,
+            non_zero => Some(non_zero),
+        };
+        let no_compaction = read_env("NO_COMPACTION", false);
         let num_writers = read_env("NUM_WRITERS", 1);
         // A flag indicating whether to have a background clean-up service.
         // If set to false, the ledger store will purely rely on RocksDB's
@@ -225,6 +246,9 @@ mod tests {
             stop_size_cf_data_bytes,
             pre_generate_data,
             cleanup_blockstore,
+            assert_compaction,
+            compaction_interval,
+            no_compaction,
             num_writers,
             cleanup_service,
             fifo_compaction,
@@ -265,7 +289,7 @@ mod tests {
             storage_now,
             storage_now as i64 - *storage_previous as i64,
             data_shred_storage_now,
-            data_shred_storage_now - *data_shred_storage_previous as i64,
+            data_shred_storage_now as i64 - *data_shred_storage_previous as i64,
             cpu_user,
             cpu_system,
             cpu_idle,
@@ -307,7 +331,7 @@ mod tests {
         false
     }
 
-    /// The ledger cleanup  test which can also be used as a benchmark
+    /// The ledger cleanup compaction test which can also be used as a benchmark
     /// measuring shred insertion performance of the blockstore.
     ///
     /// The benchmark is controlled by several environmental arguments.
@@ -315,15 +339,15 @@ mod tests {
     ///
     /// Example command:
     /// BENCHMARK_SLOTS=1000000 BATCH_SIZE=1 SHREDS_PER_SLOT=25 NUM_WRITERS=8 \
-    /// PRE_GENERATE_DATA=false cargo test --release tests::test_ledger_cleanup \
+    /// PRE_GENERATE_DATA=false cargo test --release tests::test_ledger_cleanup_compaction \
     /// -- --exact --nocapture
     #[test]
-    fn test_ledger_cleanup() {
+    fn test_ledger_cleanup_compaction() {
         solana_logger::setup_with("error,ledger_cleanup::tests=info");
 
         let ledger_path = get_tmp_ledger_path!();
         let config = get_benchmark_config();
-        let blockstore = Blockstore::open_with_options(
+        let mut blockstore = Blockstore::open_with_options(
             &ledger_path,
             if config.fifo_compaction {
                 BlockstoreOptions {
@@ -331,7 +355,7 @@ mod tests {
                         shred_storage_type: ShredStorageType::RocksFifo(
                             BlockstoreRocksFifoOptions {
                                 shred_data_cf_size: config.shred_data_cf_size,
-                                shred_code_cf_size: config.shred_data_cf_size,
+                                ..BlockstoreRocksFifoOptions::default()
                             },
                         ),
                         ..LedgerColumnOptions::default()
@@ -343,6 +367,9 @@ mod tests {
             },
         )
         .unwrap();
+        if config.no_compaction {
+            blockstore.set_no_compaction(true);
+        }
         let blockstore = Arc::new(blockstore);
 
         info!("Benchmark configuration: {:#?}", config);
@@ -356,6 +383,7 @@ mod tests {
         let stop_size_iterations = config.stop_size_iterations;
         let stop_size_cf_data_bytes = config.stop_size_cf_data_bytes;
         let pre_generate_data = config.pre_generate_data;
+        let compaction_interval = config.compaction_interval;
         let num_writers = config.num_writers;
         let cleanup_service = config.cleanup_service;
 
@@ -371,6 +399,8 @@ mod tests {
                 blockstore.clone(),
                 max_ledger_shreds,
                 &exit,
+                compaction_interval,
+                None,
             ))
         } else {
             None
@@ -439,7 +469,7 @@ mod tests {
             let shared_batch_id = current_batch_id.clone();
             let shared_finished_count = finished_batch_count.clone();
             let insert_thread = Builder::new()
-                .name(format!("insert_shreds-{i}"))
+                .name(format!("insert_shreds-{}", i))
                 .spawn(move || {
                     let start = Instant::now();
                     let mut now = Instant::now();
@@ -459,16 +489,12 @@ mod tests {
                         }
                         let len = batch_id;
 
-                        // No duplicates being generated, so all shreds
-                        // being passed to insert() are getting inserted
-                        let num_shred_inserted = if pre_generate_data {
+                        let br = if pre_generate_data {
                             let mut sl = cloned_shreds.lock().unwrap();
                             if let Some(shreds_from_queue) = sl.pop_front() {
-                                let num_shreds = shreds_from_queue.len();
-                                total += num_shreds;
+                                total += shreds_from_queue.len();
                                 cloned_blockstore.insert_shreds(
-                                    shreds_from_queue, None, false).unwrap();
-                                num_shreds
+                                    shreds_from_queue, None, false).unwrap()
                             } else {
                                 // If the queue is empty, we're done!
                                 break;
@@ -478,23 +504,19 @@ mod tests {
                             if slot_id > 0 {
                                 let (shreds_with_parent, _) = make_many_slot_shreds(
                                     slot_id, batch_size_slots, shreds_per_slot);
-                                let num_shreds = shreds_with_parent.len();
-                                total += num_shreds;
+                                total += shreds_with_parent.len();
                                 cloned_blockstore.insert_shreds(
-                                    shreds_with_parent.clone(), None, false).unwrap();
-                                num_shreds
+                                    shreds_with_parent.clone(), None, false).unwrap()
                             } else {
-                                let num_shreds = first_shreds.len();
-                                total += num_shreds;
+                                total += first_shreds.len();
                                 cloned_blockstore.insert_shreds(
-                                    first_shreds.clone(), None, false).unwrap();
-                                num_shreds
+                                    first_shreds.clone(), None, false).unwrap()
                             }
                         };
 
                         total_batches += 1;
-                        total_inserted_shreds += num_shred_inserted;
-                        num_shreds += num_shred_inserted;
+                        total_inserted_shreds += br.1.len();
+                        num_shreds += br.1.len();
                         shared_finished_count.fetch_add(1, Ordering::Relaxed);
 
                         // as_secs() returns whole number of seconds, so this runs every second
@@ -597,6 +619,23 @@ mod tests {
             insert_timer,
             num_shreds_total as f32 / insert_timer.as_s(),
         );
+        let u1 = storage_previous;
+
+        // Poll on some compaction happening
+        info!("Begin polling for compaction ...");
+        let start_poll = Instant::now();
+        while blockstore.storage_size().unwrap_or(0) >= u1 {
+            if start_poll.elapsed().as_secs() > ROCKSDB_FLUSH_GRACE_PERIOD_SECS {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(200));
+        }
+        info!(
+            "Done polling for compaction after {}s",
+            start_poll.elapsed().as_secs_f32()
+        );
+
+        let u2 = storage_previous;
 
         exit.store(true, Ordering::SeqCst);
         if cleanup_service {
@@ -606,9 +645,74 @@ mod tests {
         exit_cpu.store(true, Ordering::SeqCst);
         sys.join().unwrap();
 
+        if config.assert_compaction {
+            assert!(u2 < u1, "expected compaction! pre={},post={}", u1, u2);
+        }
+
         if config.cleanup_blockstore {
             drop(blockstore);
             Blockstore::destroy(&ledger_path).expect("Expected successful database destruction");
         }
+    }
+
+    #[test]
+    fn test_compaction() {
+        let blockstore_path = get_tmp_ledger_path!();
+        let blockstore = Arc::new(Blockstore::open(&blockstore_path).unwrap());
+
+        let n = 10_000;
+        let batch_size_slots = 100;
+        let num_batches = n / batch_size_slots;
+        let max_ledger_shreds = 100;
+
+        for i in 0..num_batches {
+            let start_slot = i * batch_size_slots;
+            let (shreds, _) = make_many_slot_shreds(start_slot, batch_size_slots, 1);
+            blockstore.insert_shreds(shreds, None, false).unwrap();
+        }
+
+        let u1 = blockstore.storage_size().unwrap() as f64;
+
+        // send signal to cleanup slots
+        let (sender, receiver) = unbounded();
+        sender.send(n).unwrap();
+        let mut last_purge_slot = 0;
+        let highest_compact_slot = Arc::new(AtomicU64::new(0));
+        LedgerCleanupService::cleanup_ledger(
+            &receiver,
+            &blockstore,
+            max_ledger_shreds,
+            &mut last_purge_slot,
+            10,
+            &highest_compact_slot,
+        )
+        .unwrap();
+
+        let mut compaction_jitter = 0;
+        let mut last_compaction_slot = 0;
+        LedgerCleanupService::compact_ledger(
+            &blockstore,
+            &mut last_compaction_slot,
+            10,
+            &highest_compact_slot,
+            &mut compaction_jitter,
+            None,
+        );
+
+        thread::sleep(Duration::from_secs(2));
+
+        let u2 = blockstore.storage_size().unwrap() as f64;
+
+        assert!(u2 < u1, "insufficient compaction! pre={},post={}", u1, u2,);
+
+        // check that early slots don't exist
+        let max_slot = n - max_ledger_shreds - 1;
+        blockstore
+            .slot_meta_iterator(0)
+            .unwrap()
+            .for_each(|(slot, _)| assert!(slot > max_slot));
+
+        drop(blockstore);
+        Blockstore::destroy(&blockstore_path).expect("Expected successful database destruction");
     }
 }

@@ -2,7 +2,10 @@
 set -e
 cd "$(dirname "$0")/.."
 source ci/semver_bash/semver.sh
+export RUST_STABLE_VERSION=1.65.0
 source ci/rust-version.sh stable
+
+cargo="$(readlink -f ./cargo)"
 
 # shellcheck disable=SC2086
 is_crate_version_uploaded() {
@@ -66,11 +69,11 @@ for Cargo_toml in $Cargo_tomls; do
       (
         set -x
         rm -rf crate-test
-        cargo init crate-test
+        "$cargo" stable init crate-test
         cd crate-test/
         echo "${crate_name} = \"=${expectedCrateVersion}\"" >> Cargo.toml
         echo "[workspace]" >> Cargo.toml
-        cargo check
+        "$cargo" stable check
       ) && really_uploaded=1
       if ((really_uploaded)); then
         break;

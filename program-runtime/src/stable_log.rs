@@ -4,9 +4,8 @@
 //! of program logging
 use {
     crate::{ic_logger_msg, log_collector::LogCollector},
-    base64::{prelude::BASE64_STANDARD, Engine},
     itertools::Itertools,
-    solomka_sdk::pubkey::Pubkey,
+    solomka_sdk::{instruction::InstructionError, pubkey::Pubkey},
     std::{cell::RefCell, rc::Rc},
 };
 
@@ -56,7 +55,7 @@ pub fn program_data(log_collector: &Option<Rc<RefCell<LogCollector>>>, data: &[&
     ic_logger_msg!(
         log_collector,
         "Program data: {}",
-        data.iter().map(|v| BASE64_STANDARD.encode(v)).join(" ")
+        data.iter().map(base64::encode).join(" ")
     );
 }
 
@@ -79,7 +78,7 @@ pub fn program_return(
         log_collector,
         "Program return: {} {}",
         program_id,
-        BASE64_STANDARD.encode(data)
+        base64::encode(data)
     );
 }
 
@@ -104,7 +103,7 @@ pub fn program_success(log_collector: &Option<Rc<RefCell<LogCollector>>>, progra
 pub fn program_failure(
     log_collector: &Option<Rc<RefCell<LogCollector>>>,
     program_id: &Pubkey,
-    err: &dyn std::error::Error,
+    err: &InstructionError,
 ) {
     ic_logger_msg!(log_collector, "Program {} failed: {}", program_id, err);
 }

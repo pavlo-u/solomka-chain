@@ -9,13 +9,7 @@ cd "$(dirname "$0")"/..
 output_file=${1:-/dev/stderr}
 
 if [[ -n $CI_PULL_REQUEST ]]; then
-  # filter pr number from ci branch.
-  [[ $CI_BRANCH =~ pull/([0-9]+)/head ]]
-  pr_number=${BASH_REMATCH[1]}
-  echo "get affected files from PR: $pr_number"
-
-  # get affected files
-  readarray -t affected_files < <(gh pr diff --name-only "$pr_number")
+  IFS=':' read -ra affected_files <<< "$(buildkite-agent meta-data get affected_files)"
   if [[ ${#affected_files[*]} -eq 0 ]]; then
     echo "Unable to determine the files affected by this PR"
     exit 1
@@ -116,8 +110,7 @@ EOF
 
 # trigger_secondary_step() {
 #   cat  >> "$output_file" <<"EOF"
-#   - name: "Trigger Build on solana-secondary"
-#     trigger: "solana-secondary"
+#   - trigger: "solana-secondary"
 #     branches: "!pull/*"
 #     async: true
 #     build:
@@ -137,8 +130,24 @@ all_test_steps() {
   command_step checks ". ci/rust-version.sh; ci/docker-run.sh \$\$rust_nightly_docker_image ci/test-checks.sh" 20
   wait_step
 
+  # Coverage...
+  if affects \
+             .rs$ \
+             Cargo.lock$ \
+             Cargo.toml$ \
+             ^ci/rust-version.sh \
+             ^ci/test-coverage.sh \
+             ^scripts/coverage.sh \
+      ; then
+    command_step coverage ". ci/rust-version.sh; ci/docker-run.sh \$\$rust_nightly_docker_image ci/test-coverage.sh" 80
+    wait_step
+  else
+    annotate --style info --context test-coverage \
+      "Coverage skipped as no .rs files were modified"
+  fi
+
   # Full test suite
-  .buildkite/scripts/build-stable.sh sol-private >> "$output_file"
+  command_step stable ". ci/rust-version.sh; ci/docker-run.sh \$\$rust_stable_docker_image ci/test-stable.sh" 70
 
   # Docs tests
   if affects \
@@ -153,13 +162,13 @@ all_test_steps() {
   fi
   wait_step
 
-  # SBF test suite
+  # BPF test suite
   if affects \
              .rs$ \
              Cargo.lock$ \
              Cargo.toml$ \
              ^ci/rust-version.sh \
-             ^ci/test-stable-sbf.sh \
+             ^ci/test-stable-bpf.sh \
              ^ci/test-stable.sh \
              ^ci/test-local-cluster.sh \
              ^core/build.rs \
@@ -168,16 +177,16 @@ all_test_steps() {
              ^sdk/ \
       ; then
     cat >> "$output_file" <<"EOF"
-  - command: "ci/test-stable-sbf.sh"
-    name: "stable-sbf"
+  - command: "ci/test-stable-bpf.sh"
+    name: "stable-bpf"
     timeout_in_minutes: 35
-    artifact_paths: "sbf-dumps.tar.bz2"
+    artifact_paths: "bpf-dumps.tar.bz2"
     agents:
       queue: "sol-private"
 EOF
   else
     annotate --style info \
-      "Stable-SBF skipped as no relevant files were modified"
+      "Stable-BPF skipped as no relevant files were modified"
   fi
 
   # Perf test suite
@@ -220,10 +229,15 @@ EOF
              ^fetch-perf-libs.sh \
              ^programs/ \
              ^sdk/ \
-             ^ci/downstream-projects \
-             .buildkite/scripts/build-downstream-projects.sh \
+             ^scripts/build-downstream-projects.sh \
       ; then
-    .buildkite/scripts/build-downstream-projects.sh sol-private >> "$output_file"
+    cat >> "$output_file" <<"EOF"
+  - command: "scripts/build-downstream-projects.sh"
+    name: "downstream-projects"
+    timeout_in_minutes: 40
+    agents:
+      queue: "sol-private"
+EOF
   else
     annotate --style info \
       "downstream-projects skipped as no relevant files were modified"
@@ -250,26 +264,27 @@ EOF
              ^ci/test-coverage.sh \
              ^ci/test-bench.sh \
       ; then
-    .buildkite/scripts/build-bench.sh sol-private >> "$output_file"
+    command_step bench "ci/test-bench.sh" 40
   else
     annotate --style info --context test-bench \
       "Bench skipped as no .rs files were modified"
   fi
 
-  # Coverage...
-  if affects \
-             .rs$ \
-             Cargo.lock$ \
-             Cargo.toml$ \
-             ^ci/rust-version.sh \
-             ^ci/test-coverage.sh \
-             ^scripts/coverage.sh \
-      ; then
-    command_step coverage ". ci/rust-version.sh; ci/docker-run.sh \$\$rust_nightly_docker_image ci/test-coverage.sh" 80
-  else
-    annotate --style info --context test-coverage \
-      "Coverage skipped as no .rs files were modified"
-  fi
+  command_step "local-cluster" \
+    ". ci/rust-version.sh; ci/docker-run.sh \$\$rust_stable_docker_image ci/test-local-cluster.sh" \
+    40
+
+  command_step "local-cluster-flakey" \
+    ". ci/rust-version.sh; ci/docker-run.sh \$\$rust_stable_docker_image ci/test-local-cluster-flakey.sh" \
+    10
+
+  command_step "local-cluster-slow-1" \
+    ". ci/rust-version.sh; ci/docker-run.sh \$\$rust_stable_docker_image ci/test-local-cluster-slow-1.sh" \
+    40
+
+  command_step "local-cluster-slow-2" \
+    ". ci/rust-version.sh; ci/docker-run.sh \$\$rust_stable_docker_image ci/test-local-cluster-slow-2.sh" \
+    40
 }
 
 pull_or_push_steps() {
@@ -284,11 +299,11 @@ pull_or_push_steps() {
 
   # Run the full test suite by default, skipping only if modifications are local
   # to some particular areas of the tree
-  if affects_other_than ^.buildkite ^.mergify .md$ ^docs/ ^.gitbook; then
+  if affects_other_than ^.buildkite ^.mergify .md$ ^docs/ ^web3.js/ ^explorer/ ^.gitbook; then
     all_test_steps
   fi
 
-  # docs changes run on Travis or Github actions...
+  # web3.js, explorer and docs changes run on Travis or Github actions...
 }
 
 

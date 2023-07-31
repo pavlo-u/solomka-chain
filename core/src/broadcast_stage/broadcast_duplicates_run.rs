@@ -3,6 +3,7 @@ use {
     crate::cluster_nodes::ClusterNodesCache,
     itertools::Itertools,
     solana_entry::entry::Entry,
+    solana_gossip::legacy_contact_info::LegacyContactInfo as ContactInfo,
     solana_ledger::shred::{ProcessShredsStats, ReedSolomonCache, Shredder},
     solomka_sdk::{
         hash::Hash,
@@ -304,7 +305,7 @@ impl BroadcastRun for BroadcastDuplicatesRun {
             .iter()
             .filter_map(|shred| {
                 let node = cluster_nodes.get_broadcast_peer(&shred.id())?;
-                if !socket_addr_space.check(&node.tvu(Protocol::UDP).ok()?) {
+                if !ContactInfo::is_valid_address(&node.tvu, socket_addr_space) {
                     return None;
                 }
                 if self
@@ -313,10 +314,10 @@ impl BroadcastRun for BroadcastDuplicatesRun {
                     .unwrap()
                     .remove(shred.signature())
                 {
-                    if cluster_partition.contains(node.pubkey()) {
+                    if cluster_partition.contains(&node.id) {
                         info!(
                             "skipping node {} for original shred index {}, slot {}",
-                            node.pubkey(),
+                            node.id,
                             shred.index(),
                             shred.slot()
                         );
@@ -337,15 +338,14 @@ impl BroadcastRun for BroadcastDuplicatesRun {
                             .iter()
                             .filter_map(|pubkey| {
                                 let tvu = cluster_info
-                                    .lookup_contact_info(pubkey, |node| node.tvu(Protocol::UDP))?
-                                    .ok()?;
+                                    .lookup_contact_info(pubkey, |contact_info| contact_info.tvu)?;
                                 Some((shred.payload(), tvu))
                             })
                             .collect(),
                     );
                 }
 
-                Some(vec![(shred.payload(), node.tvu(Protocol::UDP).ok()?)])
+                Some(vec![(shred.payload(), node.tvu)])
             })
             .flatten()
             .collect();

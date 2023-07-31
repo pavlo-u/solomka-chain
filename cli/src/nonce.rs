@@ -2,15 +2,16 @@ use {
     crate::{
         checks::{check_account_for_fee_with_commitment, check_unique_pubkeys},
         cli::{
-            log_instruction_custom_error, CliCommand, CliCommandInfo, CliConfig, CliError,
-            ProcessResult,
+            log_instruction_custom_error, log_instruction_custom_error_ex, CliCommand,
+            CliCommandInfo, CliConfig, CliError, ProcessResult,
         },
         compute_unit_price::WithComputeUnitPrice,
+        feature::get_feature_is_active,
         memo::WithMemo,
         spend_utils::{resolve_spend_tx_and_check_account_balance, SpendAmount},
     },
     clap::{App, Arg, ArgMatches, SubCommand},
-    solana_clap_utils::{
+    solomka_clap_utils::{
         compute_unit_price::{compute_unit_price_arg, COMPUTE_UNIT_PRICE_ARG},
         input_parsers::*,
         input_validators::*,
@@ -18,23 +19,24 @@ use {
         memo::{memo_arg, MEMO_ARG},
         nonce::*,
     },
-    sonoma_cli_output::CliNonceAccount,
+    solomka_cli_output::CliNonceAccount,
+    solomka_client::{nonce_utils::*, rpc_client::RpcClient},
     solana_remote_wallet::remote_wallet::RemoteWalletManager,
-    solana_rpc_client::rpc_client::RpcClient,
-    solana_rpc_client_nonce_utils::*,
     solomka_sdk::{
         account::Account,
+        feature_set::merge_nonce_error_into_system_error,
         hash::Hash,
+        instruction::InstructionError,
         message::Message,
         nonce::{self, State},
         pubkey::Pubkey,
         system_instruction::{
             advance_nonce_account, authorize_nonce_account, create_nonce_account,
-            create_nonce_account_with_seed, upgrade_nonce_account, withdraw_nonce_account,
-            SystemError,
+            create_nonce_account_with_seed, instruction_to_nonce_error, upgrade_nonce_account,
+            withdraw_nonce_account, NonceError, SystemError,
         },
         system_program,
-        transaction::Transaction,
+        transaction::{Transaction, TransactionError},
     },
     std::sync::Arc,
 };
@@ -424,9 +426,21 @@ pub fn process_authorize_nonce_account(
         &tx.message,
         config.commitment,
     )?;
+    let merge_errors =
+        get_feature_is_active(rpc_client, &merge_nonce_error_into_system_error::id())?;
     let result = rpc_client.send_and_confirm_transaction_with_spinner(&tx);
 
-    log_instruction_custom_error::<SystemError>(result, config)
+    if merge_errors {
+        log_instruction_custom_error::<SystemError>(result, config)
+    } else {
+        log_instruction_custom_error_ex::<NonceError, _>(result, config, |ix_error| {
+            if let InstructionError::Custom(_) = ix_error {
+                instruction_to_nonce_error(ix_error, merge_errors)
+            } else {
+                None
+            }
+        })
+    }
 }
 
 pub fn process_create_nonce_account(
@@ -492,9 +506,12 @@ pub fn process_create_nonce_account(
 
     if let Ok(nonce_account) = get_account(rpc_client, &nonce_account_address) {
         let err_msg = if state_from_account(&nonce_account).is_ok() {
-            format!("Nonce account {nonce_account_address} already exists")
+            format!("Nonce account {} already exists", nonce_account_address)
         } else {
-            format!("Account {nonce_account_address} already exists and is not a nonce account")
+            format!(
+                "Account {} already exists and is not a nonce account",
+                nonce_account_address
+            )
         };
         return Err(CliError::BadParameter(err_msg).into());
     }
@@ -502,16 +519,48 @@ pub fn process_create_nonce_account(
     let minimum_balance = rpc_client.get_minimum_balance_for_rent_exemption(State::size())?;
     if lamports < minimum_balance {
         return Err(CliError::BadParameter(format!(
-            "need at least {minimum_balance} lamports for nonce account to be rent exempt, provided lamports: {lamports}"
+            "need at least {} lamports for nonce account to be rent exempt, provided lamports: {}",
+            minimum_balance, lamports
         ))
         .into());
     }
 
     let mut tx = Transaction::new_unsigned(message);
     tx.try_sign(&config.signers, latest_blockhash)?;
+    let merge_errors =
+        get_feature_is_active(rpc_client, &merge_nonce_error_into_system_error::id())?;
     let result = rpc_client.send_and_confirm_transaction_with_spinner(&tx);
 
-    log_instruction_custom_error::<SystemError>(result, config)
+    let err_ix_index = if let Err(err) = &result {
+        err.get_transaction_error().and_then(|tx_err| {
+            if let TransactionError::InstructionError(ix_index, _) = tx_err {
+                Some(ix_index)
+            } else {
+                None
+            }
+        })
+    } else {
+        None
+    };
+
+    match err_ix_index {
+        // SystemInstruction::InitializeNonceAccount failed
+        Some(1) => {
+            if merge_errors {
+                log_instruction_custom_error::<SystemError>(result, config)
+            } else {
+                log_instruction_custom_error_ex::<NonceError, _>(result, config, |ix_error| {
+                    if let InstructionError::Custom(_) = ix_error {
+                        instruction_to_nonce_error(ix_error, merge_errors)
+                    } else {
+                        None
+                    }
+                })
+            }
+        }
+        // SystemInstruction::CreateAccount{,WithSeed} failed
+        _ => log_instruction_custom_error::<SystemError>(result, config),
+    }
 }
 
 pub fn process_get_nonce(
@@ -543,7 +592,8 @@ pub fn process_new_nonce(
 
     if let Err(err) = rpc_client.get_account(nonce_account) {
         return Err(CliError::BadParameter(format!(
-            "Unable to advance nonce account {nonce_account}. error: {err}"
+            "Unable to advance nonce account {}. error: {}",
+            nonce_account, err
         ))
         .into());
     }
@@ -565,9 +615,21 @@ pub fn process_new_nonce(
         &tx.message,
         config.commitment,
     )?;
+    let merge_errors =
+        get_feature_is_active(rpc_client, &merge_nonce_error_into_system_error::id())?;
     let result = rpc_client.send_and_confirm_transaction_with_spinner(&tx);
 
-    log_instruction_custom_error::<SystemError>(result, config)
+    if merge_errors {
+        log_instruction_custom_error::<SystemError>(result, config)
+    } else {
+        log_instruction_custom_error_ex::<NonceError, _>(result, config, |ix_error| {
+            if let InstructionError::Custom(_) = ix_error {
+                instruction_to_nonce_error(ix_error, merge_errors)
+            } else {
+                None
+            }
+        })
+    }
 }
 
 pub fn process_show_nonce_account(
@@ -630,9 +692,21 @@ pub fn process_withdraw_from_nonce_account(
         &tx.message,
         config.commitment,
     )?;
+    let merge_errors =
+        get_feature_is_active(rpc_client, &merge_nonce_error_into_system_error::id())?;
     let result = rpc_client.send_and_confirm_transaction_with_spinner(&tx);
 
-    log_instruction_custom_error::<SystemError>(result, config)
+    if merge_errors {
+        log_instruction_custom_error::<SystemError>(result, config)
+    } else {
+        log_instruction_custom_error_ex::<NonceError, _>(result, config, |ix_error| {
+            if let InstructionError::Custom(_) = ix_error {
+                instruction_to_nonce_error(ix_error, merge_errors)
+            } else {
+                None
+            }
+        })
+    }
 }
 
 pub(crate) fn process_upgrade_nonce_account(
@@ -655,8 +729,20 @@ pub(crate) fn process_upgrade_nonce_account(
         &tx.message,
         config.commitment,
     )?;
+    let merge_errors =
+        get_feature_is_active(rpc_client, &merge_nonce_error_into_system_error::id())?;
     let result = rpc_client.send_and_confirm_transaction_with_spinner(&tx);
-    log_instruction_custom_error::<SystemError>(result, config)
+    if merge_errors {
+        log_instruction_custom_error::<SystemError>(result, config)
+    } else {
+        log_instruction_custom_error_ex::<NonceError, _>(result, config, |ix_error| {
+            if let InstructionError::Custom(_) = ix_error {
+                instruction_to_nonce_error(ix_error, merge_errors)
+            } else {
+                None
+            }
+        })
+    }
 }
 
 #[cfg(test)]

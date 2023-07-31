@@ -17,8 +17,8 @@ use {
         clock::{Epoch, Slot},
         pubkey::Pubkey,
         stake::state::{Delegation, StakeActivationStatus},
-        vote::state::VoteStateVersions,
     },
+    solana_vote_program::vote_state::VoteState,
     std::{
         collections::{HashMap, HashSet},
         ops::Add,
@@ -84,7 +84,7 @@ impl StakesCache {
         }
         debug_assert_ne!(account.lamports(), 0u64);
         if solana_vote_program::check_id(owner) {
-            if VoteStateVersions::is_correct_size_and_initialized(account.data()) {
+            if VoteState::is_correct_size_and_initialized(account.data()) {
                 match VoteAccount::try_from(account.to_account_shared_data()) {
                     Ok(vote_account) => {
                         {
@@ -141,7 +141,7 @@ impl StakesCache {
             datapoint_warn!(
                 "bank-stake_delegation_accounts-invalid-account",
                 ("slot", current_slot as i64, i64),
-                ("stake-address", format!("{stake_pubkey:?}"), String),
+                ("stake-address", format!("{:?}", stake_pubkey), String),
                 ("reason", reason.to_i64().unwrap_or_default(), i64),
             );
         }
@@ -151,7 +151,7 @@ impl StakesCache {
             datapoint_warn!(
                 "bank-stake_delegation_accounts-invalid-account",
                 ("slot", current_slot as i64, i64),
-                ("vote-address", format!("{vote_pubkey:?}"), String),
+                ("vote-address", format!("{:?}", vote_pubkey), String),
                 ("reason", reason.to_i64().unwrap_or_default(), i64),
             );
         }
@@ -159,9 +159,9 @@ impl StakesCache {
 }
 
 /// The generic type T is either Delegation or StakeAccount.
-/// [`Stakes<Delegation>`] is equivalent to the old code and is used for backward
-/// compatibility in [`crate::bank::BankFieldsToDeserialize`].
-/// But banks cache [`Stakes<StakeAccount>`] which includes the entire stake
+/// Stake<Delegation> is equivalent to the old code and is used for backward
+/// compatibility in BankFieldsToDeserialize.
+/// But banks cache Stakes<StakeAccount> which includes the entire stake
 /// account and StakeState deserialized from the account. Doing so, will remove
 /// the need to load the stake account from accounts-db when working with
 /// stake-delegations.
@@ -254,7 +254,7 @@ impl Stakes<StakeAccount> {
                 None => continue,
                 Some(account) => account,
             };
-            if VoteStateVersions::is_correct_size_and_initialized(account.data())
+            if VoteState::is_correct_size_and_initialized(account.data())
                 && VoteAccount::try_from(account.clone()).is_ok()
             {
                 error!("vote account not cached: {pubkey}, {account:?}");
@@ -521,13 +521,9 @@ pub(crate) mod tests {
         let vote_pubkey = solomka_sdk::pubkey::new_rand();
         let vote_account =
             vote_state::create_account(&vote_pubkey, &solomka_sdk::pubkey::new_rand(), 0, 1);
-        let stake_pubkey = solomka_sdk::pubkey::new_rand();
         (
             (vote_pubkey, vote_account),
-            (
-                stake_pubkey,
-                create_stake_account(stake, &vote_pubkey, &stake_pubkey),
-            ),
+            create_stake_account(stake, &vote_pubkey),
         )
     }
 
@@ -535,14 +531,17 @@ pub(crate) mod tests {
     pub(crate) fn create_stake_account(
         stake: u64,
         vote_pubkey: &Pubkey,
-        stake_pubkey: &Pubkey,
-    ) -> AccountSharedData {
-        stake_state::create_account(
+    ) -> (Pubkey, AccountSharedData) {
+        let stake_pubkey = solomka_sdk::pubkey::new_rand();
+        (
             stake_pubkey,
-            vote_pubkey,
-            &vote_state::create_account(vote_pubkey, &solomka_sdk::pubkey::new_rand(), 0, 1),
-            &Rent::free(),
-            stake,
+            stake_state::create_account(
+                &stake_pubkey,
+                vote_pubkey,
+                &vote_state::create_account(vote_pubkey, &solomka_sdk::pubkey::new_rand(), 0, 1),
+                &Rent::free(),
+                stake,
+            ),
         )
     }
 
@@ -616,8 +615,7 @@ pub(crate) mod tests {
             }
 
             // activate more
-            let mut stake_account =
-                create_stake_account(42, &vote_pubkey, &solomka_sdk::pubkey::new_rand());
+            let (_stake_pubkey, mut stake_account) = create_stake_account(42, &vote_pubkey);
             stakes_cache.check_and_store(&stake_pubkey, &stake_account);
             let stake = stake_state::stake_from(&stake_account).unwrap();
             {
@@ -659,7 +657,7 @@ pub(crate) mod tests {
         stakes_cache.check_and_store(&vote11_pubkey, &vote11_account);
         stakes_cache.check_and_store(&stake11_pubkey, &stake11_account);
 
-        let vote11_node_pubkey = vote_state::from(&vote11_account).unwrap().node_pubkey;
+        let vote11_node_pubkey = VoteState::from(&vote11_account).unwrap().node_pubkey;
 
         let highest_staked_node = stakes_cache.stakes().highest_staked_node();
         assert_eq!(highest_staked_node, Some(vote11_node_pubkey));
@@ -722,7 +720,7 @@ pub(crate) mod tests {
         // Vote account uninitialized
         let default_vote_state = VoteState::default();
         let versioned = VoteStateVersions::new_current(default_vote_state);
-        vote_state::to(&versioned, &mut vote_account).unwrap();
+        VoteState::to(&versioned, &mut vote_account).unwrap();
         stakes_cache.check_and_store(&vote_pubkey, &vote_account);
 
         {
@@ -801,8 +799,7 @@ pub(crate) mod tests {
         let ((vote_pubkey, vote_account), (stake_pubkey, stake_account)) =
             create_staked_node_accounts(10);
 
-        let stake_pubkey2 = solomka_sdk::pubkey::new_rand();
-        let stake_account2 = create_stake_account(10, &vote_pubkey, &stake_pubkey2);
+        let (stake_pubkey2, stake_account2) = create_stake_account(10, &vote_pubkey);
 
         stakes_cache.check_and_store(&vote_pubkey, &vote_account);
 

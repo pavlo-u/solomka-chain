@@ -1,6 +1,5 @@
 use {
     crate::{cluster_info_vote_listener::VerifiedLabelVotePacketsReceiver, result::Result},
-    itertools::Itertools,
     solana_perf::packet::PacketBatch,
     solana_runtime::{
         bank::Bank,
@@ -8,7 +7,7 @@ use {
     },
     solomka_sdk::{
         account::from_account,
-        clock::Slot,
+        clock::{Slot, UnixTimestamp},
         feature_set::{allow_votes_to_directly_update_vote_state, FeatureSet},
         hash::Hash,
         pubkey::Pubkey,
@@ -60,14 +59,9 @@ impl<'a> ValidatorGossipVotesIterator<'a> {
 
         // TODO: my_leader_bank.vote_accounts() may not contain zero-staked validators
         // in this epoch, but those validators may have stake warming up in the next epoch
-        // Sort by stake weight so heavier validators' votes are sent first
-        let vote_account_keys: Vec<Pubkey> = my_leader_bank
-            .vote_accounts()
-            .iter()
-            .map(|(pubkey, &(stake, _))| (pubkey, stake))
-            .sorted_unstable_by_key(|&(_, stake)| std::cmp::Reverse(stake))
-            .map(|(&pubkey, _)| pubkey)
-            .collect();
+        let vote_account_keys: Vec<Pubkey> =
+            my_leader_bank.vote_accounts().keys().copied().collect();
+
         Self {
             my_leader_bank,
             slot_hashes,
@@ -113,6 +107,7 @@ impl<'a> Iterator for ValidatorGossipVotesIterator<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         use SingleValidatorVotes::*;
+        // TODO: Maybe prioritize by stake weight
         while !self.vote_account_keys.is_empty() {
             let vote_account_key = self.vote_account_keys.pop().unwrap();
             // Get all the gossip votes we've queued up for this validator
@@ -138,6 +133,7 @@ impl<'a> Iterator for ValidatorGossipVotesIterator<'a> {
                                         hash,
                                         packet_batch,
                                         signature,
+                                        ..
                                     }) => self
                                         .filter_vote(slot, hash, packet_batch, signature)
                                         .map(|packet| vec![packet])
@@ -170,6 +166,7 @@ pub struct GossipVote {
     hash: Hash,
     packet_batch: PacketBatch,
     signature: Signature,
+    timestamp: Option<UnixTimestamp>,
 }
 
 pub enum SingleValidatorVotes {
@@ -182,6 +179,13 @@ impl SingleValidatorVotes {
         match self {
             Self::FullTowerVote(vote) => vote.slot,
             _ => 0,
+        }
+    }
+
+    fn get_latest_timestamp(&self) -> Option<UnixTimestamp> {
+        match self {
+            Self::FullTowerVote(vote) => vote.timestamp,
+            _ => None,
         }
     }
 
@@ -229,15 +233,24 @@ impl VerifiedVotePackets {
                     }
                     let slot = vote.last_voted_slot().unwrap();
                     let hash = vote.hash();
+                    let timestamp = vote.timestamp();
 
                     match (vote, is_full_tower_vote_enabled) {
                         (VoteStateUpdate(_), true) => {
-                            let latest_gossip_slot = match self.0.get(&vote_account_key) {
-                                Some(vote) => vote.get_latest_gossip_slot(),
-                                _ => 0,
-                            };
+                            let (latest_gossip_slot, latest_timestamp) =
+                                self.0.get(&vote_account_key).map_or((0, None), |vote| {
+                                    (vote.get_latest_gossip_slot(), vote.get_latest_timestamp())
+                                });
                             // Since votes are not incremental, we keep only the latest vote
-                            if slot > latest_gossip_slot {
+                            // If the vote is for the same slot we will only allow it if
+                            // it has a later timestamp (refreshed vote)
+                            //
+                            // Timestamp can be None if something was wrong with the senders clock.
+                            // We directly compare as Options to ensure that votes with proper
+                            // timestamps have precedence (Some is > None).
+                            if slot > latest_gossip_slot
+                                || ((slot == latest_gossip_slot) && (timestamp > latest_timestamp))
+                            {
                                 self.0.insert(
                                     vote_account_key,
                                     FullTowerVote(GossipVote {
@@ -245,6 +258,7 @@ impl VerifiedVotePackets {
                                         hash,
                                         packet_batch,
                                         signature,
+                                        timestamp,
                                     }),
                                 );
                             }
@@ -264,6 +278,7 @@ impl VerifiedVotePackets {
                                         hash,
                                         packet_batch,
                                         signature,
+                                        ..
                                     } = std::mem::take(gossip_vote);
                                     votes.insert((slot, hash), (packet_batch, signature));
                                     self.0.insert(vote_account_key, IncrementalVotes(votes));
@@ -301,7 +316,7 @@ mod tests {
     use {
         super::{SingleValidatorVotes::*, *},
         crate::{result::Error, vote_simulator::VoteSimulator},
-        crossbeam_channel::unbounded,
+        crossbeam_channel::{unbounded, Receiver, Sender},
         solana_perf::packet::Packet,
         solomka_sdk::slot_hashes::MAX_ENTRIES,
         solana_vote_program::vote_state::{Lockout, Vote, VoteStateUpdate},
@@ -492,7 +507,7 @@ mod tests {
     fn test_verified_vote_packets_validator_gossip_votes_iterator_correct_fork() {
         let (s, r) = unbounded();
         let num_validators = 2;
-        let vote_simulator = VoteSimulator::new(num_validators);
+        let vote_simulator = VoteSimulator::new(2);
         let mut my_leader_bank = vote_simulator.bank_forks.read().unwrap().root_bank();
 
         // Create a set of valid ancestor hashes for this fork
@@ -531,9 +546,11 @@ mod tests {
             .receive_and_process_vote_packets(&r, true, None)
             .unwrap();
 
-        // One batch of vote packets per validator
-        assert_eq!(verified_vote_packets.0.len(), num_validators);
-        // Each validator should have one vote per slot
+        // Check we get two batches, one for each validator. Each batch
+        // should only contain a packets structure with the specific number
+        // of packets associated with that batch
+        assert_eq!(verified_vote_packets.0.len(), 2);
+        // Every validator should have `slot_hashes.slot_hashes().len()` votes
         assert!(verified_vote_packets
             .0
             .values()
@@ -547,7 +564,8 @@ mod tests {
         );
 
         // Get and verify batches
-        for _ in 0..num_validators {
+        let num_expected_batches = 2;
+        for _ in 0..num_expected_batches {
             let validator_batch: Vec<PacketBatch> = gossip_votes_iterator.next().unwrap();
             assert_eq!(validator_batch.len(), slot_hashes.slot_hashes().len());
             let expected_len = validator_batch[0].len();
@@ -680,6 +698,110 @@ mod tests {
         );
     }
 
+    fn send_vote_state_update_and_process(
+        s: &Sender<Vec<VerifiedVoteMetadata>>,
+        r: &Receiver<Vec<VerifiedVoteMetadata>>,
+        vote: VoteStateUpdate,
+        vote_account_key: Pubkey,
+        feature_set: Option<Arc<FeatureSet>>,
+        verified_vote_packets: &mut VerifiedVotePackets,
+    ) -> GossipVote {
+        s.send(vec![VerifiedVoteMetadata {
+            vote_account_key,
+            vote: VoteTransaction::from(vote),
+            packet_batch: PacketBatch::default(),
+            signature: Signature::new(&[1u8; 64]),
+        }])
+        .unwrap();
+        verified_vote_packets
+            .receive_and_process_vote_packets(r, true, feature_set)
+            .unwrap();
+        match verified_vote_packets.0.get(&vote_account_key).unwrap() {
+            SingleValidatorVotes::FullTowerVote(gossip_vote) => gossip_vote.clone(),
+            _ => panic!("Received incremental vote"),
+        }
+    }
+
+    #[test]
+    fn test_latest_vote_tie_break_with_feature() {
+        let (s, r) = unbounded();
+        let vote_account_key = solomka_sdk::pubkey::new_rand();
+
+        // Send identical vote state updates with different timestamps
+        let mut vote = VoteStateUpdate::from(vec![(2, 4), (4, 3), (6, 2), (7, 1)]);
+        vote.timestamp = Some(5);
+
+        let mut vote_later_ts = vote.clone();
+        vote_later_ts.timestamp = Some(6);
+
+        let mut vote_earlier_ts = vote.clone();
+        vote_earlier_ts.timestamp = Some(4);
+
+        let mut vote_no_ts = vote.clone();
+        vote_no_ts.timestamp = None;
+
+        let mut verified_vote_packets = VerifiedVotePackets(HashMap::new());
+        let mut feature_set = FeatureSet::default();
+        feature_set.activate(&allow_votes_to_directly_update_vote_state::id(), 0);
+        let feature_set = Some(Arc::new(feature_set));
+
+        // Original vote
+        let GossipVote {
+            slot, timestamp, ..
+        } = send_vote_state_update_and_process(
+            &s,
+            &r,
+            vote.clone(),
+            vote_account_key,
+            feature_set.clone(),
+            &mut verified_vote_packets,
+        );
+        assert_eq!(slot, vote.last_voted_slot().unwrap());
+        assert_eq!(timestamp, vote.timestamp);
+
+        // Same vote with later timestamp should override
+        let GossipVote {
+            slot, timestamp, ..
+        } = send_vote_state_update_and_process(
+            &s,
+            &r,
+            vote_later_ts.clone(),
+            vote_account_key,
+            feature_set.clone(),
+            &mut verified_vote_packets,
+        );
+        assert_eq!(slot, vote_later_ts.last_voted_slot().unwrap());
+        assert_eq!(timestamp, vote_later_ts.timestamp);
+
+        // Same vote with earlier timestamp should not override
+        let GossipVote {
+            slot, timestamp, ..
+        } = send_vote_state_update_and_process(
+            &s,
+            &r,
+            vote_earlier_ts,
+            vote_account_key,
+            feature_set.clone(),
+            &mut verified_vote_packets,
+        );
+        assert_eq!(slot, vote_later_ts.last_voted_slot().unwrap());
+        assert_eq!(timestamp, vote_later_ts.timestamp);
+
+        // Same vote with no timestamp should not override
+        let GossipVote {
+            slot, timestamp, ..
+        } = send_vote_state_update_and_process(
+            &s,
+            &r,
+            vote_no_ts,
+            vote_account_key,
+            feature_set,
+            &mut verified_vote_packets,
+        );
+        assert_eq!(slot, vote_later_ts.last_voted_slot().unwrap());
+        assert_eq!(timestamp, vote_later_ts.timestamp);
+    }
+
     #[test]
     fn test_latest_vote_feature_upgrade() {
         let (s, r) = unbounded();
@@ -715,9 +837,11 @@ mod tests {
         // Now send some new votes
         for i in 101..201 {
             let slots = std::iter::zip((i - 30)..(i + 1), (1..32).rev())
-                .map(|(slot, confirmation_count)| {
-                    Lockout::new_with_confirmation_count(slot, confirmation_count)
+                .map(|(slot, confirmation_count)| Lockout {
+                    slot,
+                    confirmation_count,
                 })
+                .into_iter()
                 .collect::<VecDeque<Lockout>>();
             let vote = VoteTransaction::from(VoteStateUpdate::new(
                 slots,

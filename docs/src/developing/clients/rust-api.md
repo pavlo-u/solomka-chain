@@ -11,26 +11,26 @@ Solana's Rust crates are [published to crates.io][crates.io] and can be found
 Some important crates:
 
 - [`solana-program`] &mdash; Imported by programs running on Solana, compiled
-  to SBF. This crate contains many fundamental data types and is re-exported from
-  [`solomka-sdk`], which cannot be imported from a Solana program.
+  to BPF. This crate contains many fundamental data types and is re-exported from
+  [`solana-sdk`], which cannot be imported from a Solana program.
 
-- [`solomka-sdk`] &mdash; The basic off-chain SDK, it re-exports
+- [`solana-sdk`] &mdash; The basic off-chain SDK, it re-exports
   [`solana-program`] and adds more APIs on top of that. Most Solana programs
   that do not run on-chain will import this.
 
 - [`solana-client`] &mdash; For interacting with a Solana node via the
   [JSON RPC API](/api).
 
-- [`solana-cli-config`] &mdash; Loading and saving the Solana CLI configuration
+- [`solomka-cli-config`] &mdash; Loading and saving the Solana CLI configuration
   file.
 
-- [`solana-clap-utils`] &mdash; Routines for setting up a CLI, using [`clap`],
+- [`solomka-clap-utils`] &mdash; Routines for setting up a CLI, using [`clap`],
   as used by the main Solana CLI. Includes functions for loading all types of
   signers supported by the CLI.
 
 [`solana-program`]: https://docs.rs/solana-program
-[`solomka-sdk`]: https://docs.rs/solomka-sdk
+[`solana-sdk`]: https://docs.rs/solana-sdk
 [`solana-client`]: https://docs.rs/solana-client
-[`solana-cli-config`]: https://docs.rs/solana-cli-config
-[`solana-clap-utils`]: https://docs.rs/solana-clap-utils
+[`solomka-cli-config`]: https://docs.rs/solomka-cli-config
+[`solomka-clap-utils`]: https://docs.rs/solana-clap-utils
 [`clap`]: https://docs.rs/clap

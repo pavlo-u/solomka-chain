@@ -15,36 +15,36 @@ if ! command -v curl &> /dev/null; then
 fi
 
 # Archive name
-archName="sonoma-cli-x86_64-unknown-linux-gnu.tar.bz2"
+archName="solomka-cli-x86_64-unknown-linux-gnu.tar.bz2"
 
 # Creating a temporary directory
 tempDir="$(mktemp -d)"
 echo $temp_dir
 cd "$tempDir"
 
-# Downloading the Sonoma CLI Binary Archive
+# Downloading the Solomka CLI Binary Archive
 # As long as the repository is private, you need to pass 
 # a token to download files from the repository
 if [ $# -eq 1 ]; then
 # Get token
   token="$1"
-# Custom link to download the Sonoma CLI binary archive
-  sonomaURL="https://$token@raw.githubusercontent.com/convowork1/loop-chain-fork/main/bin/$archName"
+# Custom link to download the Solomka CLI binary archive
+  solomkaURL="https://$token@raw.githubusercontent.com/convowork1/solomka-mainnet/main/bin/$archName"
   
-# Downloading the Sonoma CLI Binary
-  curl -LJO $sonomaURL
+# Downloading the Solomka CLI Binary
+  curl -LJO $solomkaURL
 else
   echo "Invalid number of arguments. Please provide either a token"
   exit 1
 fi
 
-# Unpacking the Sonoma CLI Binary
-tar jxf sonoma-cli-x86_64-unknown-linux-gnu.tar.bz2
+# Unpacking the Solomka CLI Binary
+tar jxf solomka-cli-x86_64-unknown-linux-gnu.tar.bz2
 
 # Defining the installation directory
-installDir="$HOME/bin/sonoma"  
+installDir="$HOME/bin/solomka"  
 
-# Copying the Sonoma CLI binary to the installation directory
+# Copying the Solomka CLI binary to the installation directory
 mkdir -p "$installDir"
 cp -R ./* "$installDir"
 rm $installDir/$archName
@@ -69,10 +69,10 @@ elif [ -f "$HOME/.profile" ]; then
     fi
 else
     echo "Neither .profile nor .bash_profile found"
-    # Exporting a path to use the Sonoma CLI
+    # Exporting a path to use the Solomka CLI
     echo "Please update your PATH environment variable to include the solana programs:"
     echo "Use "export PATH="$installDir:\$PATH"""
 fi
 
-echo "Sonoma CLI has been installed successfully"
-echo "You can now use 'sonoma' command in your terminal after restart"
+echo "Solomka CLI has been installed successfully"
+echo "You can now use 'solomka' command in your terminal after restart"

@@ -32,6 +32,7 @@ ignores=(
   .cache
   .cargo
   target
+  web3.js/test
   node_modules
 )
 

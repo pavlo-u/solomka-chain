@@ -22,7 +22,7 @@ mod sanitized;
 pub use sanitized::*;
 use {
     crate::program_utils::limited_deserialize,
-    solana_program::{
+    solomka_program::{
         nonce::NONCED_TX_MARKER_IX_INDEX, system_instruction::SystemInstruction, system_program,
     },
 };
@@ -68,7 +68,7 @@ impl From<Transaction> for VersionedTransaction {
 impl VersionedTransaction {
     /// Signs a versioned message and if successful, returns a signed
     /// transaction.
-    pub fn try_new<T: Signers + ?Sized>(
+    pub fn try_new<T: Signers>(
         message: VersionedMessage,
         keypairs: &T,
     ) -> std::result::Result<Self, SignerError> {
@@ -227,7 +227,7 @@ mod tests {
             signer::{keypair::Keypair, Signer},
             system_instruction, sysvar,
         },
-        solana_program::{
+        solomka_program::{
             instruction::{AccountMeta, Instruction},
             pubkey::Pubkey,
         },

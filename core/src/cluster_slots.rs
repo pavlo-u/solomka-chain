@@ -179,7 +179,7 @@ impl ClusterSlots {
                 .iter()
                 .map(|peer| {
                     validator_stakes
-                        .get(peer.pubkey())
+                        .get(&peer.id)
                         .map(|node| node.total_stake)
                         .unwrap_or(0)
                         + 1
@@ -193,9 +193,9 @@ impl ClusterSlots {
         let slot_peers = slot_peers.read().unwrap();
         repair_peers
             .iter()
-            .map(|peer| slot_peers.get(peer.pubkey()).cloned().unwrap_or(0))
+            .map(|peer| slot_peers.get(&peer.id).cloned().unwrap_or(0))
             .zip(stakes)
-            .map(|(a, b)| (a / 2 + b / 2).max(1u64))
+            .map(|(a, b)| a + b)
             .collect()
     }
 
@@ -204,16 +204,16 @@ impl ClusterSlots {
         slot: Slot,
         repair_peers: &[ContactInfo],
     ) -> Vec<(u64, usize)> {
-        self.lookup(slot)
-            .map(|slot_peers| {
-                let slot_peers = slot_peers.read().unwrap();
-                repair_peers
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(i, ci)| Some((slot_peers.get(ci.pubkey())? + 1, i)))
-                    .collect()
+        let slot_peers = self.lookup(slot);
+        repair_peers
+            .iter()
+            .enumerate()
+            .filter_map(|(i, x)| {
+                slot_peers
+                    .as_ref()
+                    .and_then(|v| v.read().unwrap().get(&x.id).map(|stake| (*stake + 1, i)))
             })
-            .unwrap_or_default()
+            .collect()
     }
 }
 
@@ -291,9 +291,12 @@ mod tests {
             .write()
             .unwrap()
             .insert(0, Arc::new(RwLock::new(map)));
-        c1.set_pubkey(k1);
-        c2.set_pubkey(k2);
-        assert_eq!(cs.compute_weights(0, &[c1, c2]), vec![std::u64::MAX / 4, 1]);
+        c1.id = k1;
+        c2.id = k2;
+        assert_eq!(
+            cs.compute_weights(0, &[c1, c2]),
+            vec![std::u64::MAX / 2 + 1, 1]
+        );
     }
 
     #[test]
@@ -320,11 +323,11 @@ mod tests {
         .into_iter()
         .collect();
         *cs.validator_stakes.write().unwrap() = Arc::new(validator_stakes);
-        c1.set_pubkey(k1);
-        c2.set_pubkey(k2);
+        c1.id = k1;
+        c2.id = k2;
         assert_eq!(
             cs.compute_weights(0, &[c1, c2]),
-            vec![std::u64::MAX / 4 + 1, 1]
+            vec![std::u64::MAX / 2 + 1, 1]
         );
     }
 
@@ -333,7 +336,7 @@ mod tests {
         let cs = ClusterSlots::default();
         let mut contact_infos = vec![ContactInfo::default(); 2];
         for ci in contact_infos.iter_mut() {
-            ci.set_pubkey(solomka_sdk::pubkey::new_rand());
+            ci.id = solomka_sdk::pubkey::new_rand();
         }
         let slot = 9;
 
@@ -345,7 +348,7 @@ mod tests {
 
         // Give second validator max stake
         let validator_stakes: HashMap<_, _> = vec![(
-            *contact_infos[1].pubkey(),
+            *Arc::new(contact_infos[1].id),
             NodeVoteAccounts {
                 total_stake: std::u64::MAX / 2,
                 vote_accounts: vec![Pubkey::default()],
@@ -358,7 +361,7 @@ mod tests {
         // Mark the first validator as completed slot 9, should pick that validator,
         // even though it only has default stake, while the other validator has
         // max stake
-        cs.insert_node_id(slot, *contact_infos[0].pubkey());
+        cs.insert_node_id(slot, contact_infos[0].id);
         assert_eq!(
             cs.compute_weights_exclude_nonfrozen(slot, &contact_infos),
             vec![(1, 0)]

@@ -12,7 +12,6 @@ use {
     },
     rand::{seq::SliceRandom, Rng},
     rayon::prelude::*,
-    serde::{Deserialize, Serialize},
     std::{
         ops::{Index, IndexMut},
         os::raw::c_int,
@@ -23,30 +22,35 @@ use {
 
 const CUDA_SUCCESS: c_int = 0;
 
-fn pin<T>(mem: &mut Vec<T>) {
+fn pin<T>(_mem: &mut Vec<T>) {
     if let Some(api) = perf_libs::api() {
         use std::{ffi::c_void, mem::size_of};
 
-        let ptr = mem.as_mut_ptr();
-        let size = mem.capacity().saturating_mul(size_of::<T>());
+        let ptr = _mem.as_mut_ptr();
+        let size = _mem.capacity().saturating_mul(size_of::<T>());
         let err = unsafe {
             (api.cuda_host_register)(ptr as *mut c_void, size, /*flags=*/ 0)
         };
         assert!(
             err == CUDA_SUCCESS,
-            "cudaHostRegister error: {err} ptr: {ptr:?} bytes: {size}"
+            "cudaHostRegister error: {} ptr: {:?} bytes: {}",
+            err,
+            ptr,
+            size
         );
     }
 }
 
-fn unpin<T>(mem: *mut T) {
+fn unpin<T>(_mem: *mut T) {
     if let Some(api) = perf_libs::api() {
         use std::ffi::c_void;
 
-        let err = unsafe { (api.cuda_host_unregister)(mem as *mut c_void) };
+        let err = unsafe { (api.cuda_host_unregister)(_mem as *mut c_void) };
         assert!(
             err == CUDA_SUCCESS,
-            "cudaHostUnregister returned: {err} ptr: {mem:?}"
+            "cudaHostUnregister returned: {} ptr: {:?}",
+            err,
+            _mem
         );
     }
 }
@@ -54,12 +58,11 @@ fn unpin<T>(mem: *mut T) {
 // A vector wrapper where the underlying memory can be
 // page-pinned. Controlled by flags in case user only wants
 // to pin in certain circumstances.
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Default)]
 pub struct PinnedVec<T: Default + Clone + Sized> {
     x: Vec<T>,
     pinned: bool,
     pinnable: bool,
-    #[serde(skip)]
     recycler: Weak<RecyclerX<PinnedVec<T>>>,
 }
 
@@ -277,21 +280,21 @@ impl<T: Clone + Default + Sized> PinnedVec<T> {
         self.x.shuffle(rng)
     }
 
-    fn check_ptr(&mut self, old_ptr: *mut T, old_capacity: usize, from: &'static str) {
+    fn check_ptr(&mut self, _old_ptr: *mut T, _old_capacity: usize, _from: &'static str) {
         let api = perf_libs::api();
         if api.is_some()
             && self.pinnable
-            && (self.x.as_ptr() != old_ptr || self.x.capacity() != old_capacity)
+            && (self.x.as_ptr() != _old_ptr || self.x.capacity() != _old_capacity)
         {
             if self.pinned {
-                unpin(old_ptr);
+                unpin(_old_ptr);
             }
 
             trace!(
                 "pinning from check_ptr old: {} size: {} from: {}",
-                old_capacity,
+                _old_capacity,
                 self.x.capacity(),
-                from
+                _from
             );
             pin(&mut self.x);
             self.pinned = true;

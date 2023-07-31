@@ -77,7 +77,7 @@ Below is an example of how to create a Versioned Transaction, using the `@solana
 
 Firstly, import the web3.js library and create a `connection` to your desired cluster.
 
-We then define the recent `blockhash` and `minRent` we will need for our transaction and the account:
+We then define the recent `blockhash` and `minRent` we will need for our transaction and the account.
 
 ```js
 const web3 = require("@solana/web3.js");
@@ -131,7 +131,7 @@ You can sign the transaction by either:
 > NOTE:
 > After calling the `transaction.sign()` method, all the previous transaction `signatures` will be fully replaced by new signatures created from the provided in `Signers`.
 
-After your `VersionedTransaction` has been signed by all required accounts, you can send it to the cluster and `await` the response:
+After your `VersionedTransaction` has been signed by all required accounts, you can send it to the cluster and `await` the response.
 
 ```js
 // send our v0 transaction to the cluster
@@ -146,4 +146,4 @@ console.log(`https://explorer.solana.com/tx/${txid}?cluster=devnet`);
 
 - using [Versioned Transactions for Address Lookup Tables](./lookup-tables.md#how-to-create-an-address-lookup-table)
 - view an [example of a v0 transaction](https://explorer.solana.com/tx/3jpoANiFeVGisWRY5UP648xRXs3iQasCHABPWRWnoEjeA93nc79WrnGgpgazjq4K9m8g2NJoyKoWBV1Kx5VmtwHQ/?cluster=devnet) on Solana Explorer
-- read the [accepted proposal](./../proposals/versioned-transactions.md) for Versioned Transaction and Address Lookup Tables
+- read the [accepted proposal](./../proposals/transactions-v2.md) for Versioned Transaction and Address Lookup Tables

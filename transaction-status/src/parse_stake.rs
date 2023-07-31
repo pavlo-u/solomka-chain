@@ -318,7 +318,6 @@ mod test {
             },
             sysvar,
         },
-        std::iter::repeat_with,
     };
 
     #[test]
@@ -761,8 +760,12 @@ mod test {
     }
 
     #[test]
+    #[allow(clippy::same_item_push)]
     fn test_parse_stake_set_lockup() {
-        let keys: Vec<Pubkey> = repeat_with(Pubkey::new_unique).take(3).collect();
+        let mut keys: Vec<Pubkey> = vec![];
+        for _ in 0..3 {
+            keys.push(Pubkey::new_unique());
+        }
         let unix_timestamp = 1_234_567_890;
         let epoch = 11;
         let custodian = Pubkey::new_unique();

@@ -34,7 +34,7 @@ pub trait Client: SyncClient + AsyncClient {
 pub trait SyncClient {
     /// Create a transaction from the given message, and send it to the
     /// server, retrying as-needed.
-    fn send_and_confirm_message<T: Signers + ?Sized>(
+    fn send_and_confirm_message<T: Signers>(
         &self,
         keypairs: &T,
         message: Message,
@@ -204,7 +204,7 @@ pub trait AsyncClient {
 
     /// Create a transaction from the given message, and send it to the
     /// server, but don't wait for to see if the server accepted it.
-    fn async_send_message<T: Signers + ?Sized>(
+    fn async_send_message<T: Signers>(
         &self,
         keypairs: &T,
         message: Message,

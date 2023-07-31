@@ -1,14 +1,3 @@
-//! [BIP-44] derivation paths.
-//!
-//! [BIP-44]: https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki
-//!
-//! Includes definitions and helpers for Solana derivation paths.
-//! The standard Solana BIP-44 derivation path prefix is
-//!
-//! > `m/44'/501'`
-//!
-//! with 501 being the Solana coin type.
-
 use {
     core::{iter::IntoIterator, slice::Iter},
     derivation_path::{ChildIndex, DerivationPath as DerivationPathInner},
@@ -74,7 +63,7 @@ impl DerivationPath {
         let master_path = if path == "m" {
             path.to_string()
         } else {
-            format!("m/{path}")
+            format!("m/{}", path)
         };
         let extend = DerivationPathInner::from_str(&master_path)
             .map_err(|err| DerivationPathError::InvalidDerivationPath(err.to_string()))?;
@@ -83,13 +72,14 @@ impl DerivationPath {
         let change = extend.next().map(|index| index.to_u32());
         if extend.next().is_some() {
             return Err(DerivationPathError::InvalidDerivationPath(format!(
-                "key path `{path}` too deep, only <account>/<change> supported"
+                "key path `{}` too deep, only <account>/<change> supported",
+                path
             )));
         }
         Ok(Self::new_bip44_with_coin(coin, account, change))
     }
 
-    pub fn from_absolute_path_str(path: &str) -> Result<Self, DerivationPathError> {
+    fn from_absolute_path_str(path: &str) -> Result<Self, DerivationPathError> {
         let inner = DerivationPath::_from_absolute_path_insecure_str(path)?
             .into_iter()
             .map(|c| ChildIndex::Hardened(c.to_u32()))
@@ -134,9 +124,9 @@ impl DerivationPath {
     pub fn get_query(&self) -> String {
         if let Some(account) = &self.account() {
             if let Some(change) = &self.change() {
-                format!("?key={account}/{change}")
+                format!("?key={}/{}", account, change)
             } else {
-                format!("?key={account}")
+                format!("?key={}", account)
             }
         } else {
             "".to_string()
@@ -174,7 +164,8 @@ impl DerivationPath {
             }
             if key_only {
                 return Err(DerivationPathError::InvalidDerivationPath(format!(
-                    "invalid query string `{query_str}`, only `key` supported",
+                    "invalid query string `{}`, only `key` supported",
+                    query_str,
                 )));
             }
             let full_path = query.get(QueryKey::FullPath.as_ref());
@@ -182,7 +173,8 @@ impl DerivationPath {
                 return Self::from_absolute_path_str(full_path).map(Some);
             }
             Err(DerivationPathError::InvalidDerivationPath(format!(
-                "invalid query string `{query_str}`, only `key` and `full-path` supported",
+                "invalid query string `{}`, only `key` and `full-path` supported",
+                query_str,
             )))
         } else {
             Ok(None)
@@ -194,7 +186,7 @@ impl fmt::Debug for DerivationPath {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "m")?;
         for index in self.0.path() {
-            write!(f, "/{index}")?;
+            write!(f, "/{}", index)?;
         }
         Ok(())
     }
@@ -244,7 +236,7 @@ impl AsRef<str> for QueryKey {
 impl std::fmt::Display for QueryKey {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let s: &str = self.as_ref();
-        write!(f, "{s}")
+        write!(f, "{}", s)
     }
 }
 
@@ -760,12 +752,12 @@ mod tests {
     #[test]
     fn test_derivation_path_debug() {
         let path = DerivationPath::default();
-        assert_eq!(format!("{path:?}"), "m/44'/501'".to_string());
+        assert_eq!(format!("{:?}", path), "m/44'/501'".to_string());
 
         let path = DerivationPath::new_bip44(Some(1), None);
-        assert_eq!(format!("{path:?}"), "m/44'/501'/1'".to_string());
+        assert_eq!(format!("{:?}", path), "m/44'/501'/1'".to_string());
 
         let path = DerivationPath::new_bip44(Some(1), Some(2));
-        assert_eq!(format!("{path:?}"), "m/44'/501'/1'/2'".to_string());
+        assert_eq!(format!("{:?}", path), "m/44'/501'/1'/2'".to_string());
     }
 }

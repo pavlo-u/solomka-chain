@@ -1,15 +1,15 @@
 use {
     pkcs8::{der::Document, AlgorithmIdentifier, ObjectIdentifier},
-    rcgen::{CertificateParams, DistinguishedName, DnType, RcgenError, SanType},
+    rcgen::{CertificateParams, DistinguishedName, DnType, SanType},
     solomka_sdk::{pubkey::Pubkey, signature::Keypair},
-    std::net::IpAddr,
+    std::{error::Error, net::IpAddr},
     x509_parser::{prelude::*, public_key::PublicKey},
 };
 
-pub fn new_self_signed_tls_certificate(
+pub fn new_self_signed_tls_certificate_chain(
     keypair: &Keypair,
     san: IpAddr,
-) -> Result<(rustls::Certificate, rustls::PrivateKey), RcgenError> {
+) -> Result<(Vec<rustls::Certificate>, rustls::PrivateKey), Box<dyn Error>> {
     // TODO(terorie): Is it safe to sign the TLS cert with the identity private key?
 
     // Unfortunately, rcgen does not accept a "raw" Ed25519 key.
@@ -52,14 +52,20 @@ pub fn new_self_signed_tls_certificate(
     let cert_der = cert.serialize_der().unwrap();
     let priv_key = cert.serialize_private_key_der();
     let priv_key = rustls::PrivateKey(priv_key);
-    Ok((rustls::Certificate(cert_der), priv_key))
+    let cert_chain = vec![rustls::Certificate(cert_der)];
+    Ok((cert_chain, priv_key))
 }
 
-pub fn get_pubkey_from_tls_certificate(der_cert: &rustls::Certificate) -> Option<Pubkey> {
-    let (_, cert) = X509Certificate::from_der(der_cert.as_ref()).ok()?;
-    match cert.public_key().parsed().ok()? {
-        PublicKey::Unknown(key) => Pubkey::try_from(key).ok(),
-        _ => None,
+pub fn get_pubkey_from_tls_certificate(certificates: &[rustls::Certificate]) -> Option<Pubkey> {
+    if certificates.len() == 1 {
+        let der_cert = &certificates[0];
+        let (_, cert) = X509Certificate::from_der(der_cert.as_ref()).ok()?;
+        match cert.public_key().parsed().ok()? {
+            PublicKey::Unknown(key) => Pubkey::try_from(key).ok(),
+            _ => None,
+        }
+    } else {
+        None
     }
 }
 
@@ -71,10 +77,10 @@ mod tests {
     fn test_generate_tls_certificate() {
         let keypair = Keypair::new();
 
-        if let Ok((cert, _)) =
-            new_self_signed_tls_certificate(&keypair, IpAddr::V4(Ipv4Addr::LOCALHOST))
+        if let Ok((certs, _)) =
+            new_self_signed_tls_certificate_chain(&keypair, IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)))
         {
-            if let Some(pubkey) = get_pubkey_from_tls_certificate(&cert) {
+            if let Some(pubkey) = get_pubkey_from_tls_certificate(&certs) {
                 assert_eq!(pubkey, keypair.pubkey());
             } else {
                 panic!("Failed to get certificate pubkey");

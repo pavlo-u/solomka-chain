@@ -2,7 +2,7 @@
 //!  carries variables that the stake program cares about
 #[deprecated(
     since = "1.8.0",
-    note = "Please use `solomka_sdk::stake::config` or `solana_program::stake::config` instead"
+    note = "Please use `solomka_sdk::stake::config` or `solomka_program::stake::config` instead"
 )]
 pub use solomka_sdk::stake::config::*;
 use {

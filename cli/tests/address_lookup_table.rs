@@ -1,12 +1,12 @@
 use {
-    sonoma::{
+    solomka_cli::{
         address_lookup_table::{
             AddressLookupTableCliCommand, DEACTIVATE_LOOKUP_TABLE_WARNING,
             FREEZE_LOOKUP_TABLE_WARNING,
         },
         cli::{process_command, CliCommand, CliConfig},
     },
-    sonoma_cli_output::{CliAddressLookupTable, CliAddressLookupTableCreated, OutputFormat},
+    solomka_cli_output::{CliAddressLookupTable, CliAddressLookupTableCreated, OutputFormat},
     solana_faucet::faucet::run_local_faucet,
     solomka_sdk::{
         native_token::LAMPORTS_PER_SOL,
@@ -42,8 +42,7 @@ fn test_cli_create_extend_and_freeze_address_lookup_table() {
     // Create lookup table
     config.command =
         CliCommand::AddressLookupTable(AddressLookupTableCliCommand::CreateLookupTable {
-            authority_pubkey: keypair.pubkey(),
-            authority_signer_index: None,
+            authority_signer_index: 0,
             payer_signer_index: 0,
         });
     let response: CliAddressLookupTableCreated =
@@ -157,8 +156,7 @@ fn test_cli_create_and_deactivate_address_lookup_table() {
     // Create lookup table
     config.command =
         CliCommand::AddressLookupTable(AddressLookupTableCliCommand::CreateLookupTable {
-            authority_pubkey: keypair.pubkey(),
-            authority_signer_index: Some(0),
+            authority_signer_index: 0,
             payer_signer_index: 0,
         });
     let response: CliAddressLookupTableCreated =

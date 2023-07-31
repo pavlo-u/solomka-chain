@@ -18,18 +18,13 @@
 if [[ -n $RUST_STABLE_VERSION ]]; then
   stable_version="$RUST_STABLE_VERSION"
 else
-  # read rust version from rust-toolchain.toml file
-  base="$(dirname "${BASH_SOURCE[0]}")"
-  # pacify shellcheck: cannot follow dynamic path
-  # shellcheck disable=SC1090,SC1091
-  source "$base/../scripts/read-cargo-variable.sh"
-  stable_version=$(readCargoVariable channel "$base/../rust-toolchain.toml")
+  stable_version=1.66.0
 fi
 
 if [[ -n $RUST_NIGHTLY_VERSION ]]; then
   nightly_version="$RUST_NIGHTLY_VERSION"
 else
-  nightly_version=2023-04-19
+  nightly_version=2022-04-01
 fi
 
 

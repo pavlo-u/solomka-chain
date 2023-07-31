@@ -17,6 +17,7 @@
 #![cfg(not(target_os = "solana"))]
 
 use {
+    crate::encryption::errors::DiscreteLogError,
     curve25519_dalek::{
         constants::RISTRETTO_BASEPOINT_POINT as G,
         ristretto::RistrettoPoint,
@@ -26,19 +27,10 @@ use {
     itertools::Itertools,
     serde::{Deserialize, Serialize},
     std::{collections::HashMap, thread},
-    thiserror::Error,
 };
 
 const TWO16: u64 = 65536; // 2^16
 const TWO17: u64 = 131072; // 2^17
-
-#[derive(Error, Clone, Debug, Eq, PartialEq)]
-pub enum DiscreteLogError {
-    #[error("discrete log number of threads not power-of-two")]
-    DiscreteLogThreads,
-    #[error("discrete log batch size too large")]
-    DiscreteLogBatchSize,
-}
 
 /// Type that captures a discrete log challenge.
 ///
@@ -139,6 +131,7 @@ impl DiscreteLog {
     pub fn decode_u32(self) -> Option<u64> {
         let mut starting_point = self.target;
         let handles = (0..self.num_threads)
+            .into_iter()
             .map(|i| {
                 let ristretto_iterator = RistrettoIterator::new(
                     (starting_point, i as u64),
@@ -267,7 +260,10 @@ mod tests {
 
         assert_eq!(amount, decoded.unwrap());
 
-        println!("single thread discrete log computation secs: {computation_secs:?} sec");
+        println!(
+            "single thread discrete log computation secs: {:?} sec",
+            computation_secs
+        );
     }
 
     #[test]
@@ -285,7 +281,10 @@ mod tests {
 
         assert_eq!(amount, decoded.unwrap());
 
-        println!("4 thread discrete log computation: {computation_secs:?} sec");
+        println!(
+            "4 thread discrete log computation: {:?} sec",
+            computation_secs
+        );
 
         // amount 0
         let amount: u64 = 0;
@@ -320,7 +319,7 @@ mod tests {
         assert_eq!(amount, decoded.unwrap());
 
         // max amount
-        let amount: u64 = (1_u64 << 32) - 1;
+        let amount: u64 = ((1_u64 << 32) - 1) as u64;
 
         let instance = DiscreteLog::new(G, Scalar::from(amount) * G);
 

@@ -1,2 +1,2 @@
 #pragma once
-#include <solomka_sdk.h>
+#include <solana_sdk.h>

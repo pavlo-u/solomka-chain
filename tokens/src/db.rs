@@ -142,7 +142,8 @@ pub fn update_finalized_transaction(
     if opt_transaction_status.is_none() {
         if finalized_block_height > last_valid_block_height {
             eprintln!(
-                "Signature not found {signature} and blockhash expired. Transaction either dropped or the validator purged the transaction status."
+                "Signature not found {} and blockhash expired. Transaction either dropped or the validator purged the transaction status.",
+                signature
             );
             eprintln!();
 
@@ -164,7 +165,7 @@ pub fn update_finalized_transaction(
 
     if let Some(e) = &transaction_status.err {
         // The transaction was finalized, but execution failed. Drop it.
-        eprintln!("Error in transaction with signature {signature}: {e}");
+        eprintln!("Error in transaction with signature {}: {}", signature, e);
         eprintln!("Discarding transaction record");
         eprintln!();
         db.rem(&signature.to_string())?;
@@ -218,11 +219,11 @@ mod tests {
     #[test]
     fn test_sort_transaction_infos_finalized_first() {
         let info0 = TransactionInfo {
-            finalized_date: Some(Utc.with_ymd_and_hms(2014, 7, 8, 9, 10, 11).unwrap()),
+            finalized_date: Some(Utc.ymd(2014, 7, 8).and_hms(9, 10, 11)),
             ..TransactionInfo::default()
         };
         let info1 = TransactionInfo {
-            finalized_date: Some(Utc.with_ymd_and_hms(2014, 7, 8, 9, 10, 42).unwrap()),
+            finalized_date: Some(Utc.ymd(2014, 7, 8).and_hms(9, 10, 42)),
             ..TransactionInfo::default()
         };
         let info2 = TransactionInfo::default();

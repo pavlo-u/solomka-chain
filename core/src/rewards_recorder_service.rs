@@ -28,6 +28,7 @@ pub struct RewardsRecorderService {
 }
 
 impl RewardsRecorderService {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new(
         rewards_receiver: RewardsRecorderReceiver,
         max_complete_rewards_slot: Arc<AtomicU64>,

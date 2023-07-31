@@ -5,7 +5,7 @@
 //! In Solana, programs execute instructions, and clients submit sequences
 //! of instructions to the network to be atomically executed as [`Transaction`]s.
 //!
-//! [`Transaction`]: https://docs.rs/solomka-sdk/latest/solomka-sdk/transaction/struct.Transaction.html
+//! [`Transaction`]: https://docs.rs/solana-sdk/latest/solana-sdk/transaction/struct.Transaction.html
 //!
 //! A [`Message`] is the compact internal encoding of a transaction, as
 //! transmitted across the network and stored in, and operated on, by the
@@ -30,7 +30,7 @@
 //! more account keys into a transaction than the legacy format. The
 //! [`VersionedMessage`] type is a thin wrapper around either message version.
 //!
-//! [future message format]: https://docs.solana.com/proposals/versioned-transactions
+//! [future message format]: https://docs.solana.com/proposals/transactions-v2
 //!
 //! Despite living in the `solana-program` crate, there is no way to access the
 //! runtime's messages from within a Solana program, and only the legacy message

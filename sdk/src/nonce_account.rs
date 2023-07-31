@@ -1,5 +1,3 @@
-//! Functions related to nonce accounts.
-
 use {
     crate::{
         account::{AccountSharedData, ReadableAccount},

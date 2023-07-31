@@ -2,7 +2,7 @@
 #![allow(clippy::integer_arithmetic)]
 #[deprecated(
     since = "1.8.0",
-    note = "Please use `solomka_sdk::stake::program::id` or `solana_program::stake::program::id` instead"
+    note = "Please use `solomka_sdk::stake::program::id` or `solomka_program::stake::program::id` instead"
 )]
 pub use solomka_sdk::stake::program::{check_id, id};
 use solomka_sdk::{

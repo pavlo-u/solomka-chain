@@ -3,15 +3,18 @@
 use {
     crate::ConfigKeys,
     bincode::deserialize,
-    solana_program_runtime::{declare_process_instruction, ic_msg},
+    solana_program_runtime::{ic_msg, invoke_context::InvokeContext},
     solomka_sdk::{
         feature_set, instruction::InstructionError, program_utils::limited_deserialize,
-        pubkey::Pubkey, transaction_context::IndexOfAccount,
+        pubkey::Pubkey,
     },
     std::collections::BTreeSet,
 };
 
-declare_process_instruction!(process_instruction, 450, |invoke_context| {
+pub fn process_instruction(
+    _first_instruction_account: usize,
+    invoke_context: &mut InvokeContext,
+) -> Result<(), InstructionError> {
     let transaction_context = &invoke_context.transaction_context;
     let instruction_context = transaction_context.get_current_instruction_context()?;
     let data = instruction_context.get_instruction_data();
@@ -58,7 +61,7 @@ declare_process_instruction!(process_instruction, 450, |invoke_context| {
         counter += 1;
         if signer != config_account_key {
             let signer_account = instruction_context
-                .try_borrow_instruction_account(transaction_context, counter as IndexOfAccount)
+                .try_borrow_instruction_account(transaction_context, counter)
                 .map_err(|_| {
                     ic_msg!(
                         invoke_context,
@@ -131,7 +134,7 @@ declare_process_instruction!(process_instruction, 450, |invoke_context| {
     }
     config_account.get_data_mut()?[..data.len()].copy_from_slice(data);
     Ok(())
-});
+}
 
 #[cfg(test)]
 mod tests {
@@ -162,10 +165,10 @@ mod tests {
             instruction_data,
             transaction_accounts,
             instruction_accounts,
+            None,
+            None,
             expected_result,
             super::process_instruction,
-            |_invoke_context| {},
-            |_invoke_context| {},
         )
     }
 

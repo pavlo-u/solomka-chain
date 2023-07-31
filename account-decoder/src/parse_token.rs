@@ -16,43 +16,45 @@ use {
     std::str::FromStr,
 };
 
+// A helper function to convert spl_token::id() as spl_sdk::pubkey::Pubkey to
+// solomka_sdk::pubkey::Pubkey
+pub(crate) fn spl_token_id() -> Pubkey {
+    Pubkey::new_from_array(spl_token::id().to_bytes())
+}
+
+// A helper function to convert spl_token_2022::id() as spl_sdk::pubkey::Pubkey to
+// solomka_sdk::pubkey::Pubkey
+pub(crate) fn spl_token_2022_id() -> Pubkey {
+    Pubkey::new_from_array(spl_token_2022::id().to_bytes())
+}
+
 // Returns all known SPL Token program ids
 pub fn spl_token_ids() -> Vec<Pubkey> {
-    vec![spl_token::id(), spl_token_2022::id()]
+    vec![spl_token_id(), spl_token_2022_id()]
 }
 
 // Check if the provided program id as a known SPL Token program id
 pub fn is_known_spl_token_id(program_id: &Pubkey) -> bool {
-    *program_id == spl_token::id() || *program_id == spl_token_2022::id()
+    *program_id == spl_token_id() || *program_id == spl_token_2022_id()
 }
 
 // A helper function to convert spl_token::native_mint::id() as spl_sdk::pubkey::Pubkey to
 // solomka_sdk::pubkey::Pubkey
-#[deprecated(
-    since = "1.16.0",
-    note = "Pubkey conversions no longer needed. Please use spl_token::native_mint::id() directly"
-)]
 pub fn spl_token_native_mint() -> Pubkey {
     Pubkey::new_from_array(spl_token::native_mint::id().to_bytes())
 }
 
 // The program id of the `spl_token_native_mint` account
-#[deprecated(
-    since = "1.16.0",
-    note = "Pubkey conversions no longer needed. Please use spl_token::id() directly"
-)]
 pub fn spl_token_native_mint_program_id() -> Pubkey {
-    spl_token::id()
+    spl_token_id()
 }
 
 // A helper function to convert a solomka_sdk::pubkey::Pubkey to spl_sdk::pubkey::Pubkey
-#[deprecated(since = "1.16.0", note = "Pubkey conversions no longer needed")]
 pub fn spl_token_pubkey(pubkey: &Pubkey) -> SplTokenPubkey {
     SplTokenPubkey::new_from_array(pubkey.to_bytes())
 }
 
 // A helper function to convert a spl_sdk::pubkey::Pubkey to solomka_sdk::pubkey::Pubkey
-#[deprecated(since = "1.16.0", note = "Pubkey conversions no longer needed")]
 pub fn pubkey_from_spl_token(pubkey: &SplTokenPubkey) -> Pubkey {
     Pubkey::new_from_array(pubkey.to_bytes())
 }
@@ -230,7 +232,7 @@ impl UiTokenAmount {
     pub fn real_number_string(&self) -> String {
         real_number_string(
             u64::from_str(&self.amount).unwrap_or_default(),
-            self.decimals,
+            self.decimals as u8,
         )
     }
 
@@ -240,7 +242,7 @@ impl UiTokenAmount {
         } else {
             real_number_string_trimmed(
                 u64::from_str(&self.amount).unwrap_or_default(),
-                self.decimals,
+                self.decimals as u8,
             )
         }
     }

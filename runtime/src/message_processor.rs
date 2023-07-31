@@ -3,15 +3,15 @@ use {
     solana_measure::measure::Measure,
     solana_program_runtime::{
         compute_budget::ComputeBudget,
-        invoke_context::InvokeContext,
-        loaded_programs::LoadedProgramsForTxBatch,
+        executor_cache::Executors,
+        invoke_context::{BuiltinProgram, InvokeContext},
         log_collector::LogCollector,
         sysvar_cache::SysvarCache,
         timings::{ExecuteDetailsTimings, ExecuteTimings},
     },
     solomka_sdk::{
         account::WritableAccount,
-        feature_set::FeatureSet,
+        feature_set::{prevent_calling_precompiles_as_programs, FeatureSet},
         hash::Hash,
         message::SanitizedMessage,
         precompiles::is_precompile,
@@ -19,9 +19,9 @@ use {
         saturating_add_assign,
         sysvar::instructions,
         transaction::TransactionError,
-        transaction_context::{IndexOfAccount, InstructionAccount, TransactionContext},
+        transaction_context::{InstructionAccount, TransactionContext},
     },
-    std::{cell::RefCell, rc::Rc, sync::Arc},
+    std::{borrow::Cow, cell::RefCell, rc::Rc, sync::Arc},
 };
 
 #[derive(Debug, Default, Clone, Deserialize, Serialize)]
@@ -51,14 +51,13 @@ impl MessageProcessor {
     /// The accounts are committed back to the bank only if every instruction succeeds.
     #[allow(clippy::too_many_arguments)]
     pub fn process_message(
+        builtin_programs: &[BuiltinProgram],
         message: &SanitizedMessage,
-        program_indices: &[Vec<IndexOfAccount>],
+        program_indices: &[Vec<usize>],
         transaction_context: &mut TransactionContext,
         rent: Rent,
         log_collector: Option<Rc<RefCell<LogCollector>>>,
-        programs_loaded_for_tx_batch: &LoadedProgramsForTxBatch,
-        programs_modified_by_tx: &mut LoadedProgramsForTxBatch,
-        programs_updated_only_for_global_cache: &mut LoadedProgramsForTxBatch,
+        executors: Rc<RefCell<Executors>>,
         feature_set: Arc<FeatureSet>,
         compute_budget: ComputeBudget,
         timings: &mut ExecuteTimings,
@@ -71,12 +70,11 @@ impl MessageProcessor {
         let mut invoke_context = InvokeContext::new(
             transaction_context,
             rent,
-            sysvar_cache,
+            builtin_programs,
+            Cow::Borrowed(sysvar_cache),
             log_collector,
             compute_budget,
-            programs_loaded_for_tx_batch,
-            programs_modified_by_tx,
-            programs_updated_only_for_global_cache,
+            executors,
             feature_set,
             blockhash,
             lamports_per_signature,
@@ -89,8 +87,10 @@ impl MessageProcessor {
             .zip(program_indices.iter())
             .enumerate()
         {
-            let is_precompile =
-                is_precompile(program_id, |id| invoke_context.feature_set.is_active(id));
+            let is_precompile = invoke_context
+                .feature_set
+                .is_active(&prevent_calling_precompiles_as_programs::id())
+                && is_precompile(program_id, |id| invoke_context.feature_set.is_active(id));
 
             // Fixup the special instructions key if present
             // before the account pre-values are taken care of
@@ -119,12 +119,11 @@ impl MessageProcessor {
                     .ok_or(TransactionError::InvalidAccountIndex)?
                     .iter()
                     .position(|account_index| account_index == index_in_transaction)
-                    .unwrap_or(instruction_account_index)
-                    as IndexOfAccount;
+                    .unwrap_or(instruction_account_index);
                 let index_in_transaction = *index_in_transaction as usize;
                 instruction_accounts.push(InstructionAccount {
-                    index_in_transaction: index_in_transaction as IndexOfAccount,
-                    index_in_caller: index_in_transaction as IndexOfAccount,
+                    index_in_transaction,
+                    index_in_caller: index_in_transaction,
                     index_in_callee,
                     is_signer: message.is_signer(index_in_transaction),
                     is_writable: message.is_writable(index_in_transaction),
@@ -134,18 +133,8 @@ impl MessageProcessor {
             let result = if is_precompile {
                 invoke_context
                     .transaction_context
-                    .get_next_instruction_context()
-                    .map(|instruction_context| {
-                        instruction_context.configure(
-                            program_indices,
-                            &instruction_accounts,
-                            &instruction.data,
-                        );
-                    })
-                    .and_then(|_| {
-                        invoke_context.transaction_context.push()?;
-                        invoke_context.transaction_context.pop()
-                    })
+                    .push(program_indices, &instruction_accounts, &instruction.data)
+                    .and_then(|_| invoke_context.transaction_context.pop())
             } else {
                 let mut time = Measure::start("execute_instruction");
                 let mut compute_units_consumed = 0;
@@ -190,7 +179,6 @@ mod tests {
     use {
         super::*,
         crate::rent_collector::RentCollector,
-        solana_program_runtime::{declare_process_instruction, loaded_programs::LoadedProgram},
         solomka_sdk::{
             account::{AccountSharedData, ReadableAccount},
             instruction::{AccountMeta, Instruction, InstructionError},
@@ -220,7 +208,10 @@ mod tests {
             ChangeData { data: u8 },
         }
 
-        declare_process_instruction!(process_instruction, 1, |invoke_context| {
+        fn mock_system_process_instruction(
+            _first_instruction_account: usize,
+            invoke_context: &mut InvokeContext,
+        ) -> Result<(), InstructionError> {
             let transaction_context = &invoke_context.transaction_context;
             let instruction_context = transaction_context.get_current_instruction_context()?;
             let instruction_data = instruction_context.get_instruction_data();
@@ -239,19 +230,24 @@ mod tests {
                     MockSystemInstruction::ChangeData { data } => {
                         instruction_context
                             .try_borrow_instruction_account(transaction_context, 1)?
-                            .set_data(vec![data])?;
+                            .set_data(&[data])?;
                         Ok(())
                     }
                 }
             } else {
                 Err(InstructionError::InvalidInstructionData)
             }
-        });
+        }
 
         let writable_pubkey = Pubkey::new_unique();
         let readonly_pubkey = Pubkey::new_unique();
         let mock_system_program_id = Pubkey::new_unique();
+
         let rent_collector = RentCollector::default();
+        let builtin_programs = &[BuiltinProgram {
+            program_id: mock_system_program_id,
+            process_instruction: mock_system_process_instruction,
+        }];
 
         let accounts = vec![
             (
@@ -270,18 +266,8 @@ mod tests {
         let mut transaction_context =
             TransactionContext::new(accounts, Some(Rent::default()), 1, 3);
         let program_indices = vec![vec![2]];
-        let mut programs_loaded_for_tx_batch = LoadedProgramsForTxBatch::default();
-        programs_loaded_for_tx_batch.replenish(
-            mock_system_program_id,
-            Arc::new(LoadedProgram::new_builtin(0, 0, process_instruction)),
-        );
-        let account_keys = (0..transaction_context.get_number_of_accounts())
-            .map(|index| {
-                *transaction_context
-                    .get_key_of_account_at_index(index)
-                    .unwrap()
-            })
-            .collect::<Vec<_>>();
+        let executors = Rc::new(RefCell::new(Executors::default()));
+        let account_keys = transaction_context.get_keys_of_accounts().to_vec();
         let account_metas = vec![
             AccountMeta::new(writable_pubkey, true),
             AccountMeta::new_readonly(readonly_pubkey, false),
@@ -303,17 +289,14 @@ mod tests {
                 ]),
             )));
         let sysvar_cache = SysvarCache::default();
-        let mut programs_modified_by_tx = LoadedProgramsForTxBatch::default();
-        let mut programs_updated_only_for_global_cache = LoadedProgramsForTxBatch::default();
         let result = MessageProcessor::process_message(
+            builtin_programs,
             &message,
             &program_indices,
             &mut transaction_context,
             rent_collector.rent,
             None,
-            &programs_loaded_for_tx_batch,
-            &mut programs_modified_by_tx,
-            &mut programs_updated_only_for_global_cache,
+            executors.clone(),
             Arc::new(FeatureSet::all_enabled()),
             ComputeBudget::default(),
             &mut ExecuteTimings::default(),
@@ -356,17 +339,14 @@ mod tests {
                     ),
                 ]),
             )));
-        let mut programs_modified_by_tx = LoadedProgramsForTxBatch::default();
-        let mut programs_updated_only_for_global_cache = LoadedProgramsForTxBatch::default();
         let result = MessageProcessor::process_message(
+            builtin_programs,
             &message,
             &program_indices,
             &mut transaction_context,
             rent_collector.rent,
             None,
-            &programs_loaded_for_tx_batch,
-            &mut programs_modified_by_tx,
-            &mut programs_updated_only_for_global_cache,
+            executors.clone(),
             Arc::new(FeatureSet::all_enabled()),
             ComputeBudget::default(),
             &mut ExecuteTimings::default(),
@@ -399,17 +379,14 @@ mod tests {
                     ),
                 ]),
             )));
-        let mut programs_modified_by_tx = LoadedProgramsForTxBatch::default();
-        let mut programs_updated_only_for_global_cache = LoadedProgramsForTxBatch::default();
         let result = MessageProcessor::process_message(
+            builtin_programs,
             &message,
             &program_indices,
             &mut transaction_context,
             rent_collector.rent,
             None,
-            &programs_loaded_for_tx_batch,
-            &mut programs_modified_by_tx,
-            &mut programs_updated_only_for_global_cache,
+            executors,
             Arc::new(FeatureSet::all_enabled()),
             ComputeBudget::default(),
             &mut ExecuteTimings::default(),
@@ -437,7 +414,10 @@ mod tests {
             DoWork { lamports: u64, data: u8 },
         }
 
-        declare_process_instruction!(process_instruction, 1, |invoke_context| {
+        fn mock_system_process_instruction(
+            _first_instruction_account: usize,
+            invoke_context: &mut InvokeContext,
+        ) -> Result<(), InstructionError> {
             let transaction_context = &invoke_context.transaction_context;
             let instruction_context = transaction_context.get_current_instruction_context()?;
             let instruction_data = instruction_context.get_instruction_data();
@@ -472,7 +452,7 @@ mod tests {
                             .try_borrow_instruction_account(transaction_context, 2)?;
                         dup_account.checked_sub_lamports(lamports)?;
                         to_account.checked_add_lamports(lamports)?;
-                        dup_account.set_data(vec![data])?;
+                        dup_account.set_data(&[data])?;
                         drop(dup_account);
                         let mut from_account = instruction_context
                             .try_borrow_instruction_account(transaction_context, 0)?;
@@ -484,9 +464,15 @@ mod tests {
             } else {
                 Err(InstructionError::InvalidInstructionData)
             }
-        });
+        }
+
         let mock_program_id = Pubkey::from([2u8; 32]);
         let rent_collector = RentCollector::default();
+        let builtin_programs = &[BuiltinProgram {
+            program_id: mock_program_id,
+            process_instruction: mock_system_process_instruction,
+        }];
+
         let accounts = vec![
             (
                 solomka_sdk::pubkey::new_rand(),
@@ -504,11 +490,7 @@ mod tests {
         let mut transaction_context =
             TransactionContext::new(accounts, Some(Rent::default()), 1, 3);
         let program_indices = vec![vec![2]];
-        let mut programs_loaded_for_tx_batch = LoadedProgramsForTxBatch::default();
-        programs_loaded_for_tx_batch.replenish(
-            mock_program_id,
-            Arc::new(LoadedProgram::new_builtin(0, 0, process_instruction)),
-        );
+        let executors = Rc::new(RefCell::new(Executors::default()));
         let account_metas = vec![
             AccountMeta::new(
                 *transaction_context.get_key_of_account_at_index(0).unwrap(),
@@ -534,17 +516,14 @@ mod tests {
             Some(transaction_context.get_key_of_account_at_index(0).unwrap()),
         )));
         let sysvar_cache = SysvarCache::default();
-        let mut programs_modified_by_tx = LoadedProgramsForTxBatch::default();
-        let mut programs_updated_only_for_global_cache = LoadedProgramsForTxBatch::default();
         let result = MessageProcessor::process_message(
+            builtin_programs,
             &message,
             &program_indices,
             &mut transaction_context,
             rent_collector.rent,
             None,
-            &programs_loaded_for_tx_batch,
-            &mut programs_modified_by_tx,
-            &mut programs_updated_only_for_global_cache,
+            executors.clone(),
             Arc::new(FeatureSet::all_enabled()),
             ComputeBudget::default(),
             &mut ExecuteTimings::default(),
@@ -571,17 +550,14 @@ mod tests {
             )],
             Some(transaction_context.get_key_of_account_at_index(0).unwrap()),
         )));
-        let mut programs_modified_by_tx = LoadedProgramsForTxBatch::default();
-        let mut programs_updated_only_for_global_cache = LoadedProgramsForTxBatch::default();
         let result = MessageProcessor::process_message(
+            builtin_programs,
             &message,
             &program_indices,
             &mut transaction_context,
             rent_collector.rent,
             None,
-            &programs_loaded_for_tx_batch,
-            &mut programs_modified_by_tx,
-            &mut programs_updated_only_for_global_cache,
+            executors.clone(),
             Arc::new(FeatureSet::all_enabled()),
             ComputeBudget::default(),
             &mut ExecuteTimings::default(),
@@ -605,17 +581,14 @@ mod tests {
             )],
             Some(transaction_context.get_key_of_account_at_index(0).unwrap()),
         )));
-        let mut programs_modified_by_tx = LoadedProgramsForTxBatch::default();
-        let mut programs_updated_only_for_global_cache = LoadedProgramsForTxBatch::default();
         let result = MessageProcessor::process_message(
+            builtin_programs,
             &message,
             &program_indices,
             &mut transaction_context,
             rent_collector.rent,
             None,
-            &programs_loaded_for_tx_batch,
-            &mut programs_modified_by_tx,
-            &mut programs_updated_only_for_global_cache,
+            executors,
             Arc::new(FeatureSet::all_enabled()),
             ComputeBudget::default(),
             &mut ExecuteTimings::default(),
@@ -655,9 +628,16 @@ mod tests {
     #[test]
     fn test_precompile() {
         let mock_program_id = Pubkey::new_unique();
-        declare_process_instruction!(process_instruction, 1, |_invoke_context| {
+        fn mock_process_instruction(
+            _first_instruction_account: usize,
+            _invoke_context: &mut InvokeContext,
+        ) -> Result<(), InstructionError> {
             Err(InstructionError::Custom(0xbabb1e))
-        });
+        }
+        let builtin_programs = &[BuiltinProgram {
+            program_id: mock_program_id,
+            process_instruction: mock_process_instruction,
+        }];
 
         let mut secp256k1_account = AccountSharedData::new(1, 0, &native_loader::id());
         secp256k1_account.set_executable(true);
@@ -681,22 +661,14 @@ mod tests {
             None,
         )));
         let sysvar_cache = SysvarCache::default();
-        let mut programs_loaded_for_tx_batch = LoadedProgramsForTxBatch::default();
-        programs_loaded_for_tx_batch.replenish(
-            mock_program_id,
-            Arc::new(LoadedProgram::new_builtin(0, 0, process_instruction)),
-        );
-        let mut programs_modified_by_tx = LoadedProgramsForTxBatch::default();
-        let mut programs_updated_only_for_global_cache = LoadedProgramsForTxBatch::default();
         let result = MessageProcessor::process_message(
+            builtin_programs,
             &message,
             &[vec![0], vec![1]],
             &mut transaction_context,
             RentCollector::default().rent,
             None,
-            &programs_loaded_for_tx_batch,
-            &mut programs_modified_by_tx,
-            &mut programs_updated_only_for_global_cache,
+            Rc::new(RefCell::new(Executors::default())),
             Arc::new(FeatureSet::all_enabled()),
             ComputeBudget::default(),
             &mut ExecuteTimings::default(),
@@ -714,6 +686,6 @@ mod tests {
                 InstructionError::Custom(0xbabb1e)
             ))
         );
-        assert_eq!(transaction_context.get_instruction_trace_length(), 2);
+        assert_eq!(transaction_context.get_instruction_trace().len(), 2);
     }
 }

@@ -386,20 +386,25 @@ fn parse_disk_stats(reader_diskstats: &mut impl BufRead) -> Result<DiskStats, St
     Ok(stats)
 }
 
-pub struct SystemMonitorStatsReportConfig {
-    pub report_os_memory_stats: bool,
-    pub report_os_network_stats: bool,
-    pub report_os_cpu_stats: bool,
-    pub report_os_disk_stats: bool,
-}
-
 impl SystemMonitorService {
-    pub fn new(exit: Arc<AtomicBool>, config: SystemMonitorStatsReportConfig) -> Self {
+    pub fn new(
+        exit: Arc<AtomicBool>,
+        report_os_memory_stats: bool,
+        report_os_network_stats: bool,
+        report_os_cpu_stats: bool,
+        report_os_disk_stats: bool,
+    ) -> Self {
         info!("Starting SystemMonitorService");
         let thread_hdl = Builder::new()
             .name("solSystemMonitr".to_string())
             .spawn(move || {
-                Self::run(exit, config);
+                Self::run(
+                    exit,
+                    report_os_memory_stats,
+                    report_os_network_stats,
+                    report_os_cpu_stats,
+                    report_os_disk_stats,
+                );
             })
             .unwrap();
 
@@ -960,7 +965,13 @@ impl SystemMonitorService {
         )
     }
 
-    pub fn run(exit: Arc<AtomicBool>, config: SystemMonitorStatsReportConfig) {
+    pub fn run(
+        exit: Arc<AtomicBool>,
+        report_os_memory_stats: bool,
+        report_os_network_stats: bool,
+        report_os_cpu_stats: bool,
+        report_os_disk_stats: bool,
+    ) {
         let mut udp_stats = None;
         let mut disk_stats = None;
         let network_limits_timer = AtomicInterval::default();
@@ -974,7 +985,7 @@ impl SystemMonitorService {
             if exit.load(Ordering::Relaxed) {
                 break;
             }
-            if config.report_os_network_stats {
+            if report_os_network_stats {
                 if network_limits_timer.should_update(SAMPLE_INTERVAL_OS_NETWORK_LIMITS_MS) {
                     Self::check_os_network_limits();
                 }
@@ -982,10 +993,10 @@ impl SystemMonitorService {
                     Self::process_net_stats(&mut udp_stats);
                 }
             }
-            if config.report_os_memory_stats && mem_timer.should_update(SAMPLE_INTERVAL_MEM_MS) {
+            if report_os_memory_stats && mem_timer.should_update(SAMPLE_INTERVAL_MEM_MS) {
                 Self::report_mem_stats();
             }
-            if config.report_os_cpu_stats {
+            if report_os_cpu_stats {
                 if cpu_timer.should_update(SAMPLE_INTERVAL_CPU_MS) {
                     Self::report_cpu_stats();
                 }
@@ -994,7 +1005,7 @@ impl SystemMonitorService {
                     Self::report_cpuid_values();
                 }
             }
-            if config.report_os_disk_stats && disk_timer.should_update(SAMPLE_INTERVAL_DISK_MS) {
+            if report_os_disk_stats && disk_timer.should_update(SAMPLE_INTERVAL_DISK_MS) {
                 Self::process_disk_stats(&mut disk_stats);
             }
             sleep(SLEEP_INTERVAL);

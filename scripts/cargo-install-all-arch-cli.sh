@@ -4,8 +4,8 @@
 # other workspace crates or native program crates.
 here="$(dirname "$0")"
 readlink_cmd="readlink"
-echo "OSTYPE IS: $OSTYPE"
 if [[ $OSTYPE != linux-gnu ]]; then
+  echo "OSTYPE IS: $OSTYPE"
   echo "This script is intended to run on Linux only."
   exit 1
 fi
@@ -75,10 +75,10 @@ if [[ $CI_OS_NAME = windows ]]; then
     cargo-build-sbf
     cargo-test-bpf
     cargo-test-sbf
-    sonoma
+    solomka
     solana-install
     solana-install-init
-    sonoma-keygen
+    solomka-keygen
     solana-stake-accounts
     solana-test-validator
     solana-tokens
@@ -87,12 +87,12 @@ else
   ./fetch-perf-libs.sh
 
   BINS=(
-    sonoma
+    solomka
     solana-bench-tps
     solana-faucet
     solana-gossip
     solana-install
-    sonoma-keygen
+    solomka-keygen
     solana-ledger-tool
     solana-log-analyzer
     solana-net-shaper
@@ -166,7 +166,7 @@ fi
   done
 )
 
-tar -cjf "$installDir/bin/sonoma-cli-x86_64-unknown-linux-gnu.tar.bz2" -C "$installDir/bin/" "sonoma" "sonoma-keygen" > /dev/null 2>&1
+tar -cjf "$installDir/bin/solomka-cli-x86_64-unknown-linux-gnu.tar.bz2" -C "$installDir/bin/" "solomka" "solomka-keygen" > /dev/null 2>&1
 
 echo "Done after $SECONDS seconds"
 echo

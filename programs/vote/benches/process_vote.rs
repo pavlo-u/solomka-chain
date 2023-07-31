@@ -3,16 +3,15 @@
 extern crate test;
 
 use {
-    solana_program_runtime::invoke_context::mock_process_instruction,
+    solana_program_runtime::invoke_context::InvokeContext,
     solomka_sdk::{
         account::{create_account_for_test, Account, AccountSharedData},
         clock::{Clock, Slot},
         hash::Hash,
-        instruction::AccountMeta,
         pubkey::Pubkey,
         slot_hashes::{SlotHashes, MAX_ENTRIES},
         sysvar,
-        transaction_context::TransactionAccount,
+        transaction_context::{InstructionAccount, TransactionAccount, TransactionContext},
     },
     solana_vote_program::{
         vote_instruction::VoteInstruction,
@@ -23,7 +22,12 @@ use {
     test::Bencher,
 };
 
-fn create_accounts() -> (Slot, SlotHashes, Vec<TransactionAccount>, Vec<AccountMeta>) {
+fn create_accounts() -> (
+    Slot,
+    SlotHashes,
+    Vec<TransactionAccount>,
+    Vec<InstructionAccount>,
+) {
     // vote accounts are usually almost full of votes in normal operation
     let num_initial_votes = MAX_LOCKOUT_HISTORY as Slot;
 
@@ -76,48 +80,54 @@ fn create_accounts() -> (Slot, SlotHashes, Vec<TransactionAccount>, Vec<AccountM
         ),
         (authority_pubkey, AccountSharedData::default()),
     ];
-    let mut instruction_account_metas = (0..4)
-        .map(|index_in_callee| AccountMeta {
-            pubkey: transaction_accounts[1usize.saturating_add(index_in_callee)].0,
+    let mut instruction_accounts = (0..4)
+        .map(|index_in_callee| InstructionAccount {
+            index_in_transaction: 1usize.saturating_add(index_in_callee),
+            index_in_caller: index_in_callee,
+            index_in_callee,
             is_signer: false,
             is_writable: false,
         })
-        .collect::<Vec<AccountMeta>>();
-    instruction_account_metas[0].is_writable = true;
-    instruction_account_metas[3].is_signer = true;
+        .collect::<Vec<InstructionAccount>>();
+    instruction_accounts[0].is_writable = true;
+    instruction_accounts[3].is_signer = true;
 
     (
         num_initial_votes,
         slot_hashes,
         transaction_accounts,
-        instruction_account_metas,
+        instruction_accounts,
     )
 }
 
 fn bench_process_vote_instruction(
     bencher: &mut Bencher,
     transaction_accounts: Vec<TransactionAccount>,
-    instruction_account_metas: Vec<AccountMeta>,
+    instruction_accounts: Vec<InstructionAccount>,
     instruction_data: Vec<u8>,
 ) {
     bencher.iter(|| {
-        mock_process_instruction(
-            &solana_vote_program::id(),
-            Vec::new(),
-            &instruction_data,
+        let mut transaction_context = TransactionContext::new(
             transaction_accounts.clone(),
-            instruction_account_metas.clone(),
-            Ok(()),
-            solana_vote_program::vote_processor::process_instruction,
-            |_invoke_context| {},
-            |_invoke_context| {},
+            Some(sysvar::rent::Rent::default()),
+            1,
+            1,
         );
+        let mut invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
+        invoke_context
+            .push(&instruction_accounts, &[0], &instruction_data)
+            .unwrap();
+        assert!(
+            solana_vote_program::vote_processor::process_instruction(1, &mut invoke_context)
+                .is_ok()
+        );
+        invoke_context.pop().unwrap();
     });
 }
 
 #[bench]
 fn bench_process_vote(bencher: &mut Bencher) {
-    let (num_initial_votes, slot_hashes, transaction_accounts, instruction_account_metas) =
+    let (num_initial_votes, slot_hashes, transaction_accounts, instruction_accounts) =
         create_accounts();
 
     let num_vote_slots = 4;
@@ -138,14 +148,14 @@ fn bench_process_vote(bencher: &mut Bencher) {
     bench_process_vote_instruction(
         bencher,
         transaction_accounts,
-        instruction_account_metas,
+        instruction_accounts,
         instruction_data,
     );
 }
 
 #[bench]
 fn bench_process_vote_state_update(bencher: &mut Bencher) {
-    let (num_initial_votes, slot_hashes, transaction_accounts, instruction_account_metas) =
+    let (num_initial_votes, slot_hashes, transaction_accounts, instruction_accounts) =
         create_accounts();
 
     let num_vote_slots = MAX_LOCKOUT_HISTORY as Slot;
@@ -168,7 +178,7 @@ fn bench_process_vote_state_update(bencher: &mut Bencher) {
     bench_process_vote_instruction(
         bencher,
         transaction_accounts,
-        instruction_account_metas,
+        instruction_accounts,
         instruction_data,
     );
 }

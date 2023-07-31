@@ -16,10 +16,9 @@ use {
 
 pub type StakeActivationStatus = StakeHistoryEntry;
 
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Clone, Copy, AbiExample)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone, Copy, AbiExample)]
 #[allow(clippy::large_enum_variant)]
 pub enum StakeState {
-    #[default]
     Uninitialized,
     Initialized(Meta),
     Stake(Meta, Stake),
@@ -27,17 +26,17 @@ pub enum StakeState {
 }
 
 impl BorshDeserialize for StakeState {
-    fn deserialize_reader<R: io::Read>(reader: &mut R) -> io::Result<Self> {
-        let enum_value = u32::deserialize_reader(reader)?;
+    fn deserialize(buf: &mut &[u8]) -> io::Result<Self> {
+        let enum_value: u32 = BorshDeserialize::deserialize(buf)?;
         match enum_value {
             0 => Ok(StakeState::Uninitialized),
             1 => {
-                let meta = Meta::deserialize_reader(reader)?;
+                let meta: Meta = BorshDeserialize::deserialize(buf)?;
                 Ok(StakeState::Initialized(meta))
             }
             2 => {
-                let meta = Meta::deserialize_reader(reader)?;
-                let stake = Stake::deserialize_reader(reader)?;
+                let meta: Meta = BorshDeserialize::deserialize(buf)?;
+                let stake: Stake = BorshDeserialize::deserialize(buf)?;
                 Ok(StakeState::Stake(meta, stake))
             }
             3 => Ok(StakeState::RewardsPool),
@@ -64,6 +63,12 @@ impl BorshSerialize for StakeState {
             }
             StakeState::RewardsPool => writer.write_all(&3u32.to_le_bytes()),
         }
+    }
+}
+
+impl Default for StakeState {
+    fn default() -> Self {
+        StakeState::Uninitialized
     }
 }
 

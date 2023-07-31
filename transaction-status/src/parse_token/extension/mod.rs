@@ -1,6 +1,5 @@
 use super::*;
 
-pub(super) mod confidential_transfer;
 pub(super) mod cpi_guard;
 pub(super) mod default_account_state;
 pub(super) mod interest_bearing_mint;

@@ -101,7 +101,8 @@ impl<T: Serialize + Clone> StatusCache<T> {
                             }
                         } else {
                             panic!(
-                                "Map for key must exist if key exists in self.slot_deltas, slot: {slot}"
+                                "Map for key must exist if key exists in self.slot_deltas, slot: {}",
+                                slot
                             )
                         }
                     }
@@ -110,7 +111,10 @@ impl<T: Serialize + Clone> StatusCache<T> {
                         o_blockhash_entries.remove_entry();
                     }
                 } else {
-                    panic!("Blockhash must exist if it exists in self.slot_deltas, slot: {slot}")
+                    panic!(
+                        "Blockhash must exist if it exists in self.slot_deltas, slot: {}",
+                        slot
+                    )
                 }
             }
         }
@@ -133,7 +137,7 @@ impl<T: Serialize + Clone> StatusCache<T> {
         if let Some(stored_forks) = keymap.get(key_slice) {
             let res = stored_forks
                 .iter()
-                .find(|(f, _)| ancestors.contains_key(f) || self.roots.get(f).is_some())
+                .find(|(f, _)| ancestors.get(f) || self.roots.get(f).is_some())
                 .cloned();
             if res.is_some() {
                 return res;
@@ -215,15 +219,30 @@ impl<T: Serialize + Clone> StatusCache<T> {
             .for_each(|(_, status)| status.lock().unwrap().clear());
     }
 
+    // returns the statuses for each slot in the slots provided
+    pub fn slot_deltas(&self, slots: &[Slot]) -> Vec<SlotDelta<T>> {
+        let empty = Arc::new(Mutex::new(HashMap::new()));
+        slots
+            .iter()
+            .map(|slot| {
+                (
+                    *slot,
+                    self.roots.contains(slot),
+                    Arc::clone(self.slot_deltas.get(slot).unwrap_or(&empty)),
+                )
+            })
+            .collect()
+    }
+
     /// Get the statuses for all the root slots
     pub fn root_slot_deltas(&self) -> Vec<SlotDelta<T>> {
-        self.roots()
+        self.roots
             .iter()
-            .map(|root| {
+            .map(|slot| {
                 (
-                    *root,
-                    true, // <-- is_root
-                    self.slot_deltas.get(root).cloned().unwrap_or_default(),
+                    *slot,
+                    true,
+                    self.slot_deltas.get(slot).cloned().unwrap_or_default(),
                 )
             })
             .collect()
@@ -420,11 +439,10 @@ mod tests {
         let blockhash = hash(Hash::default().as_ref());
         status_cache.clear();
         status_cache.insert(&blockhash, sig, 0, ());
-        assert!(status_cache.roots().contains(&0));
-        let slot_deltas = status_cache.root_slot_deltas();
+        let slot_deltas = status_cache.slot_deltas(&[0]);
         let cache = StatusCache::from_slot_deltas(&slot_deltas);
         assert_eq!(cache, status_cache);
-        let slot_deltas = cache.root_slot_deltas();
+        let slot_deltas = cache.slot_deltas(&[0]);
         let cache = StatusCache::from_slot_deltas(&slot_deltas);
         assert_eq!(cache, status_cache);
     }
@@ -441,9 +459,10 @@ mod tests {
         for i in 0..(MAX_CACHE_ENTRIES + 1) {
             status_cache.add_root(i as u64);
         }
+        let slots: Vec<_> = (0..MAX_CACHE_ENTRIES as u64 + 1).collect();
         assert_eq!(status_cache.slot_deltas.len(), 1);
         assert!(status_cache.slot_deltas.get(&1).is_some());
-        let slot_deltas = status_cache.root_slot_deltas();
+        let slot_deltas = status_cache.slot_deltas(&slots);
         let cache = StatusCache::from_slot_deltas(&slot_deltas);
         assert_eq!(cache, status_cache);
     }

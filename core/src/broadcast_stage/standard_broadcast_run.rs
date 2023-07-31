@@ -498,8 +498,11 @@ impl BroadcastRun for StandardBroadcastRun {
     }
 }
 
-fn should_use_merkle_variant(_slot: Slot, _cluster_type: ClusterType, _shred_version: u16) -> bool {
-    false
+fn should_use_merkle_variant(slot: Slot, cluster_type: ClusterType, shred_version: u16) -> bool {
+    match cluster_type {
+        ClusterType::Testnet => shred_version == 28353,
+        _ => (slot % 19) == 1,
+    }
 }
 
 #[cfg(test)]
@@ -543,7 +546,7 @@ mod test {
         let leader_info = Node::new_localhost_with_pubkey(&leader_pubkey);
         let cluster_info = Arc::new(ClusterInfo::new(
             leader_info.info,
-            leader_keypair.clone(),
+            Arc::new(Keypair::new()),
             SocketAddrSpace::Unspecified,
         ));
         let socket = UdpSocket::bind("0.0.0.0:0").unwrap();

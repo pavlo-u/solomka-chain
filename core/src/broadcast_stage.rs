@@ -16,7 +16,7 @@ use {
     itertools::Itertools,
     solana_gossip::{
         cluster_info::{ClusterInfo, ClusterInfoError},
-        contact_info::Protocol,
+        legacy_contact_info::LegacyContactInfo as ContactInfo,
     },
     solana_ledger::{blockstore::Blockstore, shred::Shred},
     solana_measure::measure::Measure,
@@ -35,7 +35,6 @@ use {
     },
     std::{
         collections::{HashMap, HashSet},
-        iter::repeat_with,
         net::UdpSocket,
         sync::{
             atomic::{AtomicBool, Ordering},
@@ -236,6 +235,7 @@ impl BroadcastStage {
     /// which will then close FetchStage in the Tpu, and then the rest of the Tpu,
     /// completing the cycle.
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::same_item_push)]
     fn new(
         socks: Vec<UdpSocket>,
         cluster_info: Arc<ClusterInfo>,
@@ -271,43 +271,42 @@ impl BroadcastStage {
         };
         let mut thread_hdls = vec![thread_hdl];
         let socket_receiver = Arc::new(Mutex::new(socket_receiver));
-        thread_hdls.extend(socks.into_iter().map(|sock| {
+        for sock in socks.into_iter() {
             let socket_receiver = socket_receiver.clone();
             let mut bs_transmit = broadcast_stage_run.clone();
             let cluster_info = cluster_info.clone();
             let bank_forks = bank_forks.clone();
-            let run_transmit = move || loop {
-                let res = bs_transmit.transmit(&socket_receiver, &cluster_info, &sock, &bank_forks);
-                let res = Self::handle_error(res, "solana-broadcaster-transmit");
-                if let Some(res) = res {
-                    return res;
-                }
-            };
-            Builder::new()
+            let t = Builder::new()
                 .name("solBroadcastTx".to_string())
-                .spawn(run_transmit)
-                .unwrap()
-        }));
+                .spawn(move || loop {
+                    let res =
+                        bs_transmit.transmit(&socket_receiver, &cluster_info, &sock, &bank_forks);
+                    let res = Self::handle_error(res, "solana-broadcaster-transmit");
+                    if let Some(res) = res {
+                        return res;
+                    }
+                })
+                .unwrap();
+            thread_hdls.push(t);
+        }
         let blockstore_receiver = Arc::new(Mutex::new(blockstore_receiver));
-        thread_hdls.extend(
-            repeat_with(|| {
-                let blockstore_receiver = blockstore_receiver.clone();
-                let mut bs_record = broadcast_stage_run.clone();
-                let btree = blockstore.clone();
-                let run_record = move || loop {
+        for _ in 0..NUM_INSERT_THREADS {
+            let blockstore_receiver = blockstore_receiver.clone();
+            let mut bs_record = broadcast_stage_run.clone();
+            let btree = blockstore.clone();
+            let t = Builder::new()
+                .name("solBroadcastRec".to_string())
+                .spawn(move || loop {
                     let res = bs_record.record(&blockstore_receiver, &btree);
                     let res = Self::handle_error(res, "solana-broadcaster-record");
                     if let Some(res) = res {
                         return res;
                     }
-                };
-                Builder::new()
-                    .name("solBroadcastRec".to_string())
-                    .spawn(run_record)
-                    .unwrap()
-            })
-            .take(NUM_INSERT_THREADS),
-        );
+                })
+                .unwrap();
+            thread_hdls.push(t);
+        }
+
         let retransmit_thread = Builder::new()
             .name("solBroadcastRtx".to_string())
             .spawn(move || loop {
@@ -412,13 +411,10 @@ pub fn broadcast_shreds(
             let cluster_nodes =
                 cluster_nodes_cache.get(slot, &root_bank, &working_bank, cluster_info);
             update_peer_stats(&cluster_nodes, last_datapoint_submit);
-            shreds.filter_map(move |shred| {
-                cluster_nodes
-                    .get_broadcast_peer(&shred.id())?
-                    .tvu(Protocol::UDP)
-                    .ok()
-                    .filter(|addr| socket_addr_space.check(addr))
-                    .map(|addr| (shred.payload(), addr))
+            shreds.flat_map(move |shred| {
+                let node = cluster_nodes.get_broadcast_peer(&shred.id())?;
+                ContactInfo::is_valid_address(&node.tvu, socket_addr_space)
+                    .then(|| (shred.payload(), node.tvu))
             })
         })
         .collect();
@@ -452,6 +448,7 @@ pub mod test {
         solana_runtime::bank::Bank,
         solomka_sdk::{
             hash::Hash,
+            pubkey::Pubkey,
             signature::{Keypair, Signer},
         },
         std::{
@@ -579,7 +576,7 @@ pub mod test {
     }
 
     fn setup_dummy_broadcast_service(
-        leader_keypair: Arc<Keypair>,
+        leader_pubkey: &Pubkey,
         ledger_path: &Path,
         entry_receiver: Receiver<WorkingBankEntry>,
         retransmit_slots_receiver: RetransmitSlotsReceiver,
@@ -588,7 +585,7 @@ pub mod test {
         let blockstore = Arc::new(Blockstore::open(ledger_path).unwrap());
 
         // Make the leader node and scheduler
-        let leader_info = Node::new_localhost_with_pubkey(&leader_keypair.pubkey());
+        let leader_info = Node::new_localhost_with_pubkey(leader_pubkey);
 
         // Make a node to broadcast to
         let buddy_keypair = Keypair::new();
@@ -597,7 +594,7 @@ pub mod test {
         // Fill the cluster_info with the buddy's info
         let cluster_info = ClusterInfo::new(
             leader_info.info.clone(),
-            leader_keypair,
+            Arc::new(Keypair::new()),
             SocketAddrSpace::Unspecified,
         );
         cluster_info.insert_info(broadcast_buddy.info);
@@ -636,12 +633,12 @@ pub mod test {
 
         {
             // Create the leader scheduler
-            let leader_keypair = Arc::new(Keypair::new());
+            let leader_keypair = Keypair::new();
 
             let (entry_sender, entry_receiver) = unbounded();
             let (retransmit_slots_sender, retransmit_slots_receiver) = unbounded();
             let broadcast_service = setup_dummy_broadcast_service(
-                leader_keypair,
+                &leader_keypair.pubkey(),
                 &ledger_path,
                 entry_receiver,
                 retransmit_slots_receiver,
@@ -651,7 +648,7 @@ pub mod test {
             let ticks_per_slot;
             let slot;
             {
-                let bank = broadcast_service.bank;
+                let bank = broadcast_service.bank.clone();
                 start_tick_height = bank.tick_height();
                 max_tick_height = bank.max_tick_height();
                 ticks_per_slot = bank.ticks_per_slot();

@@ -1,14 +1,16 @@
 #![allow(clippy::integer_arithmetic)]
 use {
-    sonoma::{
+    solomka_cli::{
         check_balance,
         cli::{process_command, request_and_confirm_airdrop, CliCommand, CliConfig},
         spend_utils::SpendAmount,
     },
-    sonoma_cli_output::{parse_sign_only_reply_string, OutputFormat},
+    solomka_cli_output::{parse_sign_only_reply_string, OutputFormat},
+    solomka_client::{
+        blockhash_query::{self, BlockhashQuery},
+        rpc_client::RpcClient,
+    },
     solana_faucet::faucet::run_local_faucet,
-    solana_rpc_client::rpc_client::RpcClient,
-    solana_rpc_client_nonce_utils::blockhash_query::{self, BlockhashQuery},
     solomka_sdk::{
         account_utils::StateMut,
         commitment_config::CommitmentConfig,

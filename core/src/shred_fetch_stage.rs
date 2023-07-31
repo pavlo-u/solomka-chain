@@ -88,7 +88,7 @@ impl ShredFetchStage {
             let should_drop_merkle_shreds =
                 |shred_slot| should_drop_merkle_shreds(shred_slot, &root_bank);
             let turbine_disabled = turbine_disabled.load(Ordering::Relaxed);
-            for packet in packet_batch.iter_mut().filter(|p| !p.meta().discard()) {
+            for packet in packet_batch.iter_mut() {
                 if turbine_disabled
                     || should_discard_shred(
                         packet,
@@ -99,9 +99,9 @@ impl ShredFetchStage {
                         &mut stats,
                     )
                 {
-                    packet.meta_mut().set_discard(true);
+                    packet.meta.set_discard(true);
                 } else {
-                    packet.meta_mut().flags.insert(flags);
+                    packet.meta.flags.insert(flags);
                 }
             }
             stats.maybe_submit(name, STATS_SUBMIT_CADENCE);
@@ -134,7 +134,7 @@ impl ShredFetchStage {
                     packet_sender.clone(),
                     recycler.clone(),
                     Arc::new(StreamerReceiveStats::new("packet_modifier")),
-                    Duration::from_millis(1), // coalesce
+                    1,
                     true,
                     None,
                 )

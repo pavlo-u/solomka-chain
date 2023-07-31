@@ -24,76 +24,11 @@ This quickstart guide will demonstrate how to quickly install and setup your loc
 
 ## Install the Solana CLI
 
-To interact with the Solana network from your terminal, you will need to install the [Solana CLI tool suite](./../cli/install-solana-cli-tools) on your local system.
-
-<details>
-<summary>macOS / Linux / Windows Subsystem for Linux (WSL)</summary>
-Open your favourite terminal application and install the CLI by running:
+To interact with the Solana clusters from your terminal, install the [Solana CLI tool suite](./../cli/install-solomka-cli-tools) on your local system:
 
 ```bash
 sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
 ```
-
-Depending on your system, the end of the installer messaging may prompt you to
-
-```bash
-Please update your PATH environment variable to include the solana programs:
-```
-
-If you get the above message, copy and paste the recommended command below it to update `PATH`
-
-Confirm you have the desired version of `solana` installed by running:
-
-```bash
-solana --version
-```
-
-After a successful install, `solana-install update` may be used to easily update the Solana software to a newer version at any time.
-
-</details>
-
-<details>
-<summary>Windows</summary>
-
-:::caution
-[WSL](https://learn.microsoft.com/en-us/windows/wsl/install) is the recommended environment for Windows users.
-:::
-
-- Open a Command Prompt (`cmd.exe`) as an Administrator
-
-  - Search for Command Prompt in the Windows search bar. When the Command
-    Prompt app appears, right-click and select “Open as Administrator”.
-    If you are prompted by a pop-up window asking “Do you want to allow this app to
-    make changes to your device?”, click Yes.
-
-- Copy and paste the following command, then press Enter to download the Solana
-  installer into a temporary directory:
-
-```bash
-cmd /c "curl https://release.solana.com/stable/solana-install-init-x86_64-pc-windows-msvc.exe --output C:\solana-install-tmp\solana-install-init.exe --create-dirs"
-```
-
-- Copy and paste the following command, then press Enter to install the latest
-  version of Solana. If you see a security pop-up by your system, please select
-  to allow the program to run.
-
-```bash
-C:\solana-install-tmp\solana-install-init.exe stable
-```
-
-- When the installer is finished, press Enter.
-
-- Close the command prompt window and re-open a new command prompt window as a
-  normal user
-- Confirm you have the desired version of `solana` installed by entering:
-
-```bash
-solana --version
-```
-
-After a successful install, `solana-install update` may be used to easily update the Solana software to a newer version at any time.
-</details>
-
 
 ## Setup a localhost blockchain cluster
 
@@ -125,15 +60,15 @@ To deploy a program with Solana CLI, you will need a Solana wallet with SOL toke
 Let's create a simple file system wallet for testing:
 
 ```bash
-solana-keygen new
+solomka-keygen new
 ```
 
-By default, the `solana-keygen` command will create a new file system wallet located at `~/.config/solana/id.json`. You can manually specify the output file location using the `--outfile /path` option.
+By default, the `solomka-keygen` command will create a new file system wallet located at `~/.config/solana/id.json`. You can manually specify the output file location using the `--outfile /path` option.
 
 > **NOTE:**
 > If you already have a file system wallet saved at the default location, this command will **NOT** override it (unless you explicitly force override using the `--force` flag).
 
-### Set your new wallet as default
+#### Set your new wallet as default
 
 With your new file system wallet created, you must tell the Solana CLI to use this wallet to deploy and take ownership of your on chain program:
 

@@ -2,7 +2,7 @@ use {
     crate::error::AddressLookupError,
     serde::{Deserialize, Serialize},
     solana_frozen_abi_macro::{AbiEnumVisitor, AbiExample},
-    solana_program::{
+    solomka_program::{
         clock::Slot,
         instruction::InstructionError,
         pubkey::Pubkey,

@@ -53,6 +53,7 @@ const ERROR_RESPONSE: [u8; 2] = 0u16.to_le_bytes();
 
 pub const TIME_SLICE: u64 = 60;
 pub const FAUCET_PORT: u16 = 9900;
+pub const FAUCET_PORT_STR: &str = "9900";
 
 #[derive(Error, Debug)]
 pub enum FaucetError {
@@ -172,7 +173,7 @@ impl Faucet {
     /// Checks per-request and per-time-ip limits; if both pass, this method returns a signed
     /// SystemProgram::Transfer transaction from the faucet keypair to the requested recipient. If
     /// the request exceeds this per-request limit, this method returns a signed SPL Memo
-    /// transaction with the memo: `"request too large; req: <REQUEST> SOL cap: <CAP> SOL"`
+    /// transaction with the memo: "request too large; req: <REQUEST> SOL cap: <CAP> SOL"
     pub fn build_airdrop_transaction(
         &mut self,
         req: FaucetRequest,
@@ -329,18 +330,16 @@ pub fn request_airdrop_transaction(
 pub fn run_local_faucet_with_port(
     faucet_keypair: Keypair,
     sender: Sender<Result<SocketAddr, String>>,
-    time_input: Option<u64>,
     per_time_cap: Option<u64>,
-    per_request_cap: Option<u64>,
     port: u16, // 0 => auto assign
 ) {
     thread::spawn(move || {
-        let faucet_addr = socketaddr!(Ipv4Addr::UNSPECIFIED, port);
+        let faucet_addr = socketaddr!(0, port);
         let faucet = Arc::new(Mutex::new(Faucet::new(
             faucet_keypair,
-            time_input,
+            None,
             per_time_cap,
-            per_request_cap,
+            None,
         )));
         let runtime = Runtime::new().unwrap();
         runtime.block_on(run_faucet(faucet, faucet_addr, Some(sender)));
@@ -350,7 +349,7 @@ pub fn run_local_faucet_with_port(
 // For integration tests. Listens on random open port and reports port to Sender.
 pub fn run_local_faucet(faucet_keypair: Keypair, per_time_cap: Option<u64>) -> SocketAddr {
     let (sender, receiver) = unbounded();
-    run_local_faucet_with_port(faucet_keypair, sender, None, per_time_cap, None, 0);
+    run_local_faucet_with_port(faucet_keypair, sender, per_time_cap, 0);
     receiver
         .recv()
         .expect("run_local_faucet")
@@ -368,7 +367,8 @@ pub async fn run_faucet(
             listener.as_ref().map(|listener| listener.local_addr().unwrap())
                 .map_err(|err| {
                     format!(
-                        "Unable to bind faucet to {faucet_addr:?}, check the address is not already in use: {err}"
+                        "Unable to bind faucet to {:?}, check the address is not already in use: {}",
+                        faucet_addr, err
                     )
                 })
             )
@@ -389,11 +389,11 @@ pub async fn run_faucet(
     );
 
     loop {
-        let faucet = faucet.clone();
+        let _faucet = faucet.clone();
         match listener.accept().await {
             Ok((stream, _)) => {
                 tokio::spawn(async move {
-                    if let Err(e) = process(stream, faucet).await {
+                    if let Err(e) = process(stream, _faucet).await {
                         info!("failed to process request; error = {:?}", e);
                     }
                 });
@@ -514,7 +514,7 @@ mod tests {
     fn test_clear_caches() {
         let keypair = Keypair::new();
         let mut faucet = Faucet::new(keypair, None, None, None);
-        let ip = socketaddr!(Ipv4Addr::LOCALHOST, 0).ip();
+        let ip = socketaddr!([127, 0, 0, 1], 0).ip();
         assert_eq!(faucet.ip_cache.len(), 0);
         faucet.check_time_request_limit(1, ip).unwrap();
         assert_eq!(faucet.ip_cache.len(), 1);
@@ -588,7 +588,7 @@ mod tests {
         // Test multiple requests from loopback with different addresses succeed
         let mint = Keypair::new();
         faucet = Faucet::new(mint, None, Some(2), None);
-        let ip = socketaddr!(Ipv4Addr::LOCALHOST, 0).ip();
+        let ip = socketaddr!([127, 0, 0, 1], 0).ip();
         let other = Pubkey::new_unique();
         let _tx0 = faucet.build_airdrop_transaction(request, ip).unwrap(); // first request succeeds
         let request1 = FaucetRequest::GetAirdrop {

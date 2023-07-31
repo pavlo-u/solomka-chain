@@ -1,5 +1,3 @@
-//! Defines the [`TransportError`] type.
-
 #![cfg(feature = "full")]
 
 use {crate::transaction::TransactionError, std::io, thiserror::Error};

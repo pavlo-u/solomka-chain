@@ -6,9 +6,9 @@ use {
     rayon::iter::*,
     solana_gossip::{
         cluster_info::{ClusterInfo, Node},
-        contact_info::{LegacyContactInfo as ContactInfo, Protocol},
         crds::Cursor,
         gossip_service::GossipService,
+        legacy_contact_info::LegacyContactInfo as ContactInfo,
     },
     solana_perf::packet::Packet,
     solana_runtime::bank_forks::BankForks,
@@ -109,7 +109,7 @@ where
         } else {
             trace!("not converged {} {} {}", i, total + num, num * num);
         }
-        sleep(Duration::from_secs(1));
+        sleep(Duration::new(1, 0));
     }
     exit.store(true, Ordering::Relaxed);
     for (_, dr, _) in listen {
@@ -130,13 +130,13 @@ fn retransmit_to(
     let dests: Vec<_> = if forwarded {
         peers
             .iter()
-            .filter_map(|peer| peer.tvu_forwards().ok())
-            .filter(|addr| socket_addr_space.check(addr))
+            .map(|peer| peer.tvu_forwards)
+            .filter(|addr| ContactInfo::is_valid_address(addr, socket_addr_space))
             .collect()
     } else {
         peers
             .iter()
-            .filter_map(|peer| peer.tvu(Protocol::UDP).ok())
+            .map(|peer| peer.tvu)
             .filter(|addr| socket_addr_space.check(addr))
             .collect()
     };
@@ -162,8 +162,8 @@ fn gossip_ring() {
             let x = (n + 1) % listen.len();
             let yv = &listen[y].0;
             let mut d = yv.lookup_contact_info(&yv.id(), |ci| ci.clone()).unwrap();
-            d.set_wallclock(timestamp());
-            listen[x].0.insert_legacy_info(d);
+            d.wallclock = timestamp();
+            listen[x].0.insert_info(d);
         }
     });
 }
@@ -180,8 +180,8 @@ fn gossip_ring_large() {
             let x = (n + 1) % listen.len();
             let yv = &listen[y].0;
             let mut d = yv.lookup_contact_info(&yv.id(), |ci| ci.clone()).unwrap();
-            d.set_wallclock(timestamp());
-            listen[x].0.insert_legacy_info(d);
+            d.wallclock = timestamp();
+            listen[x].0.insert_info(d);
         }
     });
 }
@@ -196,9 +196,9 @@ fn gossip_star() {
             let y = (n + 1) % listen.len();
             let yv = &listen[y].0;
             let mut yd = yv.lookup_contact_info(&yv.id(), |ci| ci.clone()).unwrap();
-            yd.set_wallclock(timestamp());
+            yd.wallclock = timestamp();
             let xv = &listen[x].0;
-            xv.insert_legacy_info(yd);
+            xv.insert_info(yd);
             trace!("star leader {}", &xv.id());
         }
     });
@@ -214,12 +214,12 @@ fn gossip_rstar() {
             let xv = &listen[0].0;
             xv.lookup_contact_info(&xv.id(), |ci| ci.clone()).unwrap()
         };
-        trace!("rstar leader {}", xd.pubkey());
+        trace!("rstar leader {}", xd.id);
         for n in 0..(num - 1) {
             let y = (n + 1) % listen.len();
             let yv = &listen[y].0;
-            yv.insert_legacy_info(xd.clone());
-            trace!("rstar insert {} into {}", xd.pubkey(), yv.id());
+            yv.insert_info(xd.clone());
+            trace!("rstar insert {} into {}", xd.id, yv.id());
         }
     });
 }
@@ -251,11 +251,11 @@ pub fn cluster_info_retransmit() {
         if done {
             break;
         }
-        sleep(Duration::from_secs(1));
+        sleep(Duration::new(1, 0));
     }
     assert!(done);
     let mut p = Packet::default();
-    p.meta_mut().size = 10;
+    p.meta.size = 10;
     let peers = c1.tvu_peers();
     let retransmit_peers: Vec<_> = peers.iter().collect();
     retransmit_to(
@@ -269,7 +269,7 @@ pub fn cluster_info_retransmit() {
         .into_par_iter()
         .map(|s| {
             let mut p = Packet::default();
-            s.set_read_timeout(Some(Duration::from_secs(1))).unwrap();
+            s.set_read_timeout(Some(Duration::new(1, 0))).unwrap();
             let res = s.recv_from(p.buffer_mut());
             res.is_err() //true if failed to receive the retransmit packet
         })

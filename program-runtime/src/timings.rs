@@ -1,6 +1,6 @@
 use {
     core::fmt,
-    enum_iterator::Sequence,
+    enum_iterator::IntoEnumIterator,
     solomka_sdk::{clock::Slot, pubkey::Pubkey, saturating_add_assign},
     std::{
         collections::HashMap,
@@ -40,7 +40,7 @@ impl ProgramTiming {
 }
 
 /// Used as an index for `Metrics`.
-#[derive(Debug, Sequence)]
+#[derive(Debug, IntoEnumIterator)]
 pub enum ExecuteTimingType {
     CheckUs,
     LoadUs,
@@ -53,7 +53,7 @@ pub enum ExecuteTimingType {
     UpdateTransactionStatuses,
 }
 
-pub struct Metrics([u64; ExecuteTimingType::CARDINALITY]);
+pub struct Metrics([u64; ExecuteTimingType::ITEM_COUNT]);
 
 impl Index<ExecuteTimingType> for Metrics {
     type Output = u64;
@@ -70,7 +70,7 @@ impl IndexMut<ExecuteTimingType> for Metrics {
 
 impl Default for Metrics {
     fn default() -> Self {
-        Metrics([0; ExecuteTimingType::CARDINALITY])
+        Metrics([0; ExecuteTimingType::ITEM_COUNT])
     }
 }
 
@@ -188,6 +188,16 @@ eager_macro_rules! { $eager_1
             (
                 "execute_details_total_account_count",
                 $self.details.total_account_count,
+                i64
+            ),
+            (
+                "execute_details_total_data_size",
+                $self.details.total_data_size,
+                i64
+            ),
+            (
+                "execute_details_data_size_changed",
+                $self.details.data_size_changed,
                 i64
             ),
             (
@@ -337,7 +347,7 @@ impl ExecuteTimings {
         let idx = timing_type as usize;
         match self.metrics.0.get_mut(idx) {
             Some(elem) => *elem = elem.saturating_add(value_to_add),
-            None => debug_assert!(idx < ExecuteTimingType::CARDINALITY, "Index out of bounds"),
+            None => debug_assert!(idx < ExecuteTimingType::ITEM_COUNT, "Index out of bounds"),
         }
     }
 }
@@ -374,7 +384,10 @@ pub struct ExecuteAccessoryTimings {
 
 impl ExecuteAccessoryTimings {
     pub fn accumulate(&mut self, other: &ExecuteAccessoryTimings) {
-        saturating_add_assign!(self.feature_set_clone_us, other.feature_set_clone_us);
+        saturating_add_assign!(
+            self.compute_budget_process_transaction_us,
+            other.feature_set_clone_us
+        );
         saturating_add_assign!(
             self.compute_budget_process_transaction_us,
             other.compute_budget_process_transaction_us
@@ -396,6 +409,8 @@ pub struct ExecuteDetailsTimings {
     pub get_or_create_executor_us: u64,
     pub changed_account_count: u64,
     pub total_account_count: u64,
+    pub total_data_size: usize,
+    pub data_size_changed: usize,
     pub create_executor_register_syscalls_us: u64,
     pub create_executor_load_elf_us: u64,
     pub create_executor_verify_code_us: u64,
@@ -415,6 +430,8 @@ impl ExecuteDetailsTimings {
         );
         saturating_add_assign!(self.changed_account_count, other.changed_account_count);
         saturating_add_assign!(self.total_account_count, other.total_account_count);
+        saturating_add_assign!(self.total_data_size, other.total_data_size);
+        saturating_add_assign!(self.data_size_changed, other.data_size_changed);
         saturating_add_assign!(
             self.create_executor_register_syscalls_us,
             other.create_executor_register_syscalls_us
@@ -530,12 +547,15 @@ mod tests {
         let mut other_execute_details_timings =
             construct_execute_timings_with_program(&program_id, us, compute_units_consumed);
         let account_count = 1;
+        let data_size_changed = 1;
         other_execute_details_timings.serialize_us = us;
         other_execute_details_timings.create_vm_us = us;
         other_execute_details_timings.execute_us = us;
         other_execute_details_timings.deserialize_us = us;
         other_execute_details_timings.changed_account_count = account_count;
         other_execute_details_timings.total_account_count = account_count;
+        other_execute_details_timings.total_data_size = data_size_changed;
+        other_execute_details_timings.data_size_changed = data_size_changed;
 
         // Accumulate the other instance into the current instance
         execute_details_timings.accumulate(&other_execute_details_timings);

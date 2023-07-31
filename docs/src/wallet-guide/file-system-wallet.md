@@ -11,16 +11,16 @@ on your computer system's filesystem.
 ## Before you Begin
 
 Make sure you have
-[installed the Solana Command Line Tools](../cli/install-solana-cli-tools.md)
+[installed the Solana Command Line Tools](../cli/install-solomka-cli-tools.md)
 
 ## Generate a File System Wallet Keypair
 
-Use Solana's command-line tool `solana-keygen` to generate keypair files. For
+Use Solana's command-line tool `solomka-keygen` to generate keypair files. For
 example, run the following from a command-line shell:
 
 ```bash
 mkdir ~/my-solana-wallet
-solana-keygen new --outfile ~/my-solana-wallet/my-keypair.json
+solomka-keygen new --outfile ~/my-solana-wallet/my-keypair.json
 ```
 
 This file contains your **unencrypted** keypair. In fact, even if you specify
@@ -30,7 +30,7 @@ to all tokens sent to its public key. Instead, you should share only its public
 key. To display its public key, run:
 
 ```bash
-solana-keygen pubkey ~/my-solana-wallet/my-keypair.json
+solomka-keygen pubkey ~/my-solana-wallet/my-keypair.json
 ```
 
 It will output a string of characters, such as:
@@ -46,10 +46,10 @@ your _wallet address_.
 ## Verify your Address against your Keypair file
 
 To verify you hold the private key for a given address, use
-`solana-keygen verify`:
+`solomka-keygen verify`:
 
 ```bash
-solana-keygen verify <PUBKEY> ~/my-solana-wallet/my-keypair.json
+solomka-keygen verify <PUBKEY> ~/my-solana-wallet/my-keypair.json
 ```
 
 where `<PUBKEY>` is replaced with your wallet address.

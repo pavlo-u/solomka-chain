@@ -11,7 +11,8 @@ use {
 
 fn get_last_metrics(metric: &str, db: &str, name: &str, branch: &str) -> Result<String, String> {
     let query = format!(
-        r#"SELECT last("{metric}") FROM "{db}"."autogen"."{name}" WHERE "branch"='{branch}'"#
+        r#"SELECT last("{}") FROM "{}"."autogen"."{}" WHERE "branch"='{}'"#,
+        metric, db, name, branch
     );
 
     let response = solana_metrics::query(&query)?;
@@ -34,7 +35,7 @@ fn main() {
     // Open the path in read-only mode, returns `io::Result<File>`
     let fname = &args[1];
     let file = match File::open(fname) {
-        Err(why) => panic!("couldn't open {fname}: {why:?}"),
+        Err(why) => panic!("couldn't open {}: {:?}", fname, why),
         Ok(file) => file,
     };
 
@@ -89,7 +90,8 @@ fn main() {
 
     if let Some(commit) = last_commit {
         println!(
-            "Comparing current commits: {trimmed_hash} against baseline {commit} on {branch} branch"
+            "Comparing current commits: {} against baseline {} on {} branch",
+            trimmed_hash, commit, branch
         );
         println!("bench_name, median, last_median, deviation, last_deviation");
         for (entry, values) in results {
@@ -103,8 +105,8 @@ fn main() {
             );
         }
     } else {
-        println!("No previous results found for {branch} branch");
-        println!("hash: {trimmed_hash}");
+        println!("No previous results found for {} branch", branch);
+        println!("hash: {}", trimmed_hash);
         println!("bench_name, median, deviation");
         for (entry, values) in results {
             println!("{}, {:10?}, {:10?}", entry, values.0, values.1);

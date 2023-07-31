@@ -2,7 +2,7 @@ use {
     crate::tpu_info::TpuInfo,
     crossbeam_channel::{Receiver, RecvTimeoutError},
     log::*,
-    solana_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
+    solomka_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
     solana_measure::measure::Measure,
     solana_metrics::datapoint_warn,
     solana_runtime::{bank::Bank, bank_forks::BankForks},
@@ -533,7 +533,10 @@ impl SendTransactionService {
                         .store(transactions.len() as u64, Ordering::Relaxed);
                     let (root_bank, working_bank) = {
                         let bank_forks = bank_forks.read().unwrap();
-                        (bank_forks.root_bank(), bank_forks.working_bank())
+                        (
+                            bank_forks.root_bank().clone(),
+                            bank_forks.working_bank().clone(),
+                        )
                     };
 
                     let _result = Self::process_transactions(
@@ -705,7 +708,7 @@ impl SendTransactionService {
         connection_cache: &Arc<ConnectionCache>,
     ) -> Result<(), TransportError> {
         let conn = connection_cache.get_connection(tpu_address);
-        conn.send_data_async(wire_transaction.to_vec())
+        conn.send_wire_transaction_async(wire_transaction.to_vec())
     }
 
     fn send_transactions_with_metrics(
@@ -715,7 +718,7 @@ impl SendTransactionService {
     ) -> Result<(), TransportError> {
         let wire_transactions = wire_transactions.iter().map(|t| t.to_vec()).collect();
         let conn = connection_cache.get_connection(tpu_address);
-        conn.send_data_batch_async(wire_transactions)
+        conn.send_wire_transaction_batch_async(wire_transactions)
     }
 
     fn send_transactions(
@@ -794,8 +797,8 @@ mod test {
         let bank_forks = Arc::new(RwLock::new(BankForks::new(bank)));
         let (sender, receiver) = unbounded();
 
-        let connection_cache = Arc::new(ConnectionCache::new("connection_cache_test"));
-        let send_transaction_service = SendTransactionService::new::<NullTpuInfo>(
+        let connection_cache = Arc::new(ConnectionCache::default());
+        let send_tranaction_service = SendTransactionService::new::<NullTpuInfo>(
             tpu_address,
             &bank_forks,
             None,
@@ -807,7 +810,7 @@ mod test {
         );
 
         drop(sender);
-        send_transaction_service.join().unwrap();
+        send_tranaction_service.join().unwrap();
     }
 
     #[test]
@@ -828,7 +831,7 @@ mod test {
         };
 
         let exit = Arc::new(AtomicBool::new(false));
-        let connection_cache = Arc::new(ConnectionCache::new("connection_cache_test"));
+        let connection_cache = Arc::new(ConnectionCache::default());
         let _send_transaction_service = SendTransactionService::new::<NullTpuInfo>(
             tpu_address,
             &bank_forks,
@@ -905,7 +908,7 @@ mod test {
                 Some(Instant::now()),
             ),
         );
-        let connection_cache = Arc::new(ConnectionCache::new("connection_cache_test"));
+        let connection_cache = Arc::new(ConnectionCache::default());
         let result = SendTransactionService::process_transactions::<NullTpuInfo>(
             &working_bank,
             &root_bank,
@@ -1177,7 +1180,7 @@ mod test {
         );
         let leader_info_provider = Arc::new(Mutex::new(CurrentLeaderInfo::new(None)));
         let stats = SendTransactionServiceStats::default();
-        let connection_cache = Arc::new(ConnectionCache::new("connection_cache_test"));
+        let connection_cache = Arc::new(ConnectionCache::default());
         let result = SendTransactionService::process_transactions::<NullTpuInfo>(
             &working_bank,
             &root_bank,

@@ -1,42 +1,45 @@
-use {
-    predicates::prelude::*,
-    std::{
-        env, fs,
-        sync::atomic::{AtomicBool, Ordering},
-    },
+use std::{
+    env, fs,
+    io::{self, Write},
+    process::{Command, Output},
 };
 
 #[macro_use]
 extern crate serial_test;
 
-static SBF_TOOLS_INSTALL: AtomicBool = AtomicBool::new(true);
-fn run_cargo_build(crate_name: &str, extra_args: &[&str], fail: bool) {
+fn run_cargo_build(crate_name: &str, extra_args: &[&str], test_name: &str) -> Output {
     let cwd = env::current_dir().expect("Unable to get current working directory");
+    let root = cwd
+        .parent()
+        .expect("Unable to get parent directory of current working dir")
+        .parent()
+        .expect("Unable to get ../.. of current working dir");
     let toml = cwd
         .join("tests")
         .join("crates")
         .join(crate_name)
         .join("Cargo.toml");
     let toml = format!("{}", toml.display());
-    let mut args = vec!["-v", "--sbf-sdk", "../sbf", "--manifest-path", &toml];
-    if SBF_TOOLS_INSTALL.fetch_and(false, Ordering::SeqCst) {
-        args.push("--force-tools-install");
-    }
+    let mut args = vec!["-v", "--sbf-sdk", "../bpf", "--manifest-path", &toml];
     for arg in extra_args {
         args.push(arg);
     }
     args.push("--");
     args.push("-vv");
-    let mut cmd = assert_cmd::Command::cargo_bin("cargo-build-sbf").unwrap();
-    let assert = cmd.env("RUST_LOG", "debug").args(&args).assert();
-    let output = assert.get_output();
-    eprintln!("Test stdout\n{}\n", String::from_utf8_lossy(&output.stdout));
-    eprintln!("Test stderr\n{}\n", String::from_utf8_lossy(&output.stderr));
-    if fail {
-        assert.failure();
-    } else {
-        assert.success();
+    let cargo_build_sbf = root.join("target").join("debug").join("cargo-build-sbf");
+    env::set_var("RUST_LOG", "debug");
+    let output = Command::new(cargo_build_sbf)
+        .args(&args)
+        .output()
+        .expect("Error running cargo-build-sbf");
+    if !output.status.success() {
+        eprintln!("--- stdout of {} ---", test_name);
+        io::stderr().write_all(&output.stdout).unwrap();
+        eprintln!("--- stderr of {} ---", test_name);
+        io::stderr().write_all(&output.stderr).unwrap();
+        eprintln!("--------------");
     }
+    output
 }
 
 fn clean_target(crate_name: &str) {
@@ -52,7 +55,8 @@ fn clean_target(crate_name: &str) {
 #[test]
 #[serial]
 fn test_build() {
-    run_cargo_build("noop", &[], false);
+    let output = run_cargo_build("noop", &[], "test_build");
+    assert!(output.status.success());
     clean_target("noop");
 }
 
@@ -60,11 +64,13 @@ fn test_build() {
 #[serial]
 fn test_dump() {
     // This test requires rustfilt.
-    assert_cmd::Command::new("cargo")
+    assert!(Command::new("cargo")
         .args(["install", "-f", "rustfilt"])
-        .assert()
-        .success();
-    run_cargo_build("noop", &["--dump"], false);
+        .status()
+        .expect("Unable to install rustfilt required for --dump option")
+        .success());
+    let output = run_cargo_build("noop", &["--dump"], "test_dump");
+    assert!(output.status.success());
     let cwd = env::current_dir().expect("Unable to get current working directory");
     let dump = cwd
         .join("tests")
@@ -80,7 +86,8 @@ fn test_dump() {
 #[test]
 #[serial]
 fn test_out_dir() {
-    run_cargo_build("noop", &["--sbf-out-dir", "tmp_out"], false);
+    let output = run_cargo_build("noop", &["--sbf-out-dir", "tmp_out"], "test_out_dir");
+    assert!(output.status.success());
     let cwd = env::current_dir().expect("Unable to get current working directory");
     let dir = cwd.join("tmp_out");
     assert!(dir.exists());
@@ -90,8 +97,13 @@ fn test_out_dir() {
 
 #[test]
 #[serial]
-fn test_generate_child_script_on_failure() {
-    run_cargo_build("fail", &["--generate-child-script-on-failure"], true);
+fn test_generate_child_script_on_failre() {
+    let output = run_cargo_build(
+        "fail",
+        &["--generate-child-script-on-failure"],
+        "test_generate_child_script_on_failre",
+    );
+    assert!(!output.status.success());
     let cwd = env::current_dir().expect("Unable to get current working directory");
     let scr = cwd
         .join("tests")
@@ -101,40 +113,4 @@ fn test_generate_child_script_on_failure() {
     assert!(scr.exists());
     fs::remove_file(scr).expect("Failed to remove script");
     clean_target("fail");
-}
-
-#[test]
-#[serial]
-fn test_sbfv2() {
-    run_cargo_build("noop", &["--arch", "sbfv2"], false);
-    let cwd = env::current_dir().expect("Unable to get current working directory");
-    let bin = cwd
-        .join("tests")
-        .join("crates")
-        .join("noop")
-        .join("target")
-        .join("deploy")
-        .join("noop.so");
-    let bin = bin.to_str().unwrap();
-    let root = cwd
-        .parent()
-        .expect("Unable to get parent directory of current working dir")
-        .parent()
-        .expect("Unable to get ../.. of current working dir");
-    let readelf = root
-        .join("sdk")
-        .join("sbf")
-        .join("dependencies")
-        .join("platform-tools")
-        .join("llvm")
-        .join("bin")
-        .join("llvm-readelf");
-    assert_cmd::Command::new(readelf)
-        .args(["-h", bin])
-        .assert()
-        .stdout(predicate::str::contains(
-            "Flags:                             0x20",
-        ))
-        .success();
-    clean_target("noop");
 }

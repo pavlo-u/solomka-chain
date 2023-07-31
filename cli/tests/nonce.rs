@@ -1,15 +1,18 @@
 #![allow(clippy::integer_arithmetic)]
 use {
-    sonoma::{
+    solomka_cli::{
         check_balance,
         cli::{process_command, request_and_confirm_airdrop, CliCommand, CliConfig},
         spend_utils::SpendAmount,
         test_utils::check_ready,
     },
-    sonoma_cli_output::{parse_sign_only_reply_string, OutputFormat},
+    solomka_cli_output::{parse_sign_only_reply_string, OutputFormat},
+    solomka_client::{
+        blockhash_query::{self, BlockhashQuery},
+        nonce_utils,
+        rpc_client::RpcClient,
+    },
     solana_faucet::faucet::run_local_faucet,
-    solana_rpc_client::rpc_client::RpcClient,
-    solana_rpc_client_nonce_utils::blockhash_query::{self, BlockhashQuery},
     solomka_sdk::{
         commitment_config::CommitmentConfig,
         hash::Hash,
@@ -323,12 +326,12 @@ fn test_create_account_with_seed() {
     check_balance!(0, &rpc_client, &to_address);
 
     // Fetch nonce hash
-    let nonce_hash = solana_rpc_client_nonce_utils::get_account_with_commitment(
+    let nonce_hash = nonce_utils::get_account_with_commitment(
         &rpc_client,
         &nonce_address,
         CommitmentConfig::processed(),
     )
-    .and_then(|ref a| solana_rpc_client_nonce_utils::data_from_account(a))
+    .and_then(|ref a| nonce_utils::data_from_account(a))
     .unwrap()
     .blockhash();
 

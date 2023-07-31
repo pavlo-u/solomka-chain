@@ -128,9 +128,16 @@ impl RpcHealth {
 
     #[cfg(test)]
     pub(crate) fn stub() -> Arc<Self> {
-        use crate::rpc::tests::new_test_cluster_info;
+        use {
+            solana_gossip::legacy_contact_info::LegacyContactInfo as ContactInfo,
+            solomka_sdk::signer::keypair::Keypair, solana_streamer::socket::SocketAddrSpace,
+        };
         Arc::new(Self::new(
-            Arc::new(new_test_cluster_info()),
+            Arc::new(ClusterInfo::new(
+                ContactInfo::default(),
+                Arc::new(Keypair::new()),
+                SocketAddrSpace::Unspecified,
+            )),
             None,
             42,
             Arc::new(AtomicBool::new(false)),

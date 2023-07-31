@@ -5,7 +5,7 @@
 
 #[deprecated(
     since = "1.8.0",
-    note = "Please use `solomka_sdk::stake::state` or `solana_program::stake::state` instead"
+    note = "Please use `solomka_sdk::stake::state` or `solomka_program::stake::state` instead"
 )]
 pub use solomka_sdk::stake::state::*;
 use {
@@ -28,11 +28,9 @@ use {
             tools::{acceptable_reference_epoch_credits, eligible_for_deactivate_delinquent},
         },
         stake_history::{StakeHistory, StakeHistoryEntry},
-        transaction_context::{
-            BorrowedAccount, IndexOfAccount, InstructionContext, TransactionContext,
-        },
+        transaction_context::{BorrowedAccount, InstructionContext, TransactionContext},
     },
-    solana_vote_program::vote_state::{self, VoteState, VoteStateVersions},
+    solana_vote_program::vote_state::{VoteState, VoteStateVersions},
     std::{collections::HashSet, convert::TryFrom},
 };
 
@@ -541,7 +539,7 @@ pub fn authorize_with_seed(
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
     stake_account: &mut BorrowedAccount,
-    authority_base_index: IndexOfAccount,
+    authority_base_index: usize,
     authority_seed: &str,
     authority_owner: &Pubkey,
     new_authority: &Pubkey,
@@ -578,8 +576,8 @@ pub fn delegate(
     invoke_context: &InvokeContext,
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
-    stake_account_index: IndexOfAccount,
-    vote_account_index: IndexOfAccount,
+    stake_account_index: usize,
+    vote_account_index: usize,
     clock: &Clock,
     stake_history: &StakeHistory,
     config: &Config,
@@ -669,9 +667,9 @@ pub fn split(
     invoke_context: &InvokeContext,
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
-    stake_account_index: IndexOfAccount,
+    stake_account_index: usize,
     lamports: u64,
-    split_index: IndexOfAccount,
+    split_index: usize,
     signers: &HashSet<Pubkey>,
 ) -> Result<(), InstructionError> {
     let split =
@@ -833,8 +831,8 @@ pub fn merge(
     invoke_context: &InvokeContext,
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
-    stake_account_index: IndexOfAccount,
-    source_account_index: IndexOfAccount,
+    stake_account_index: usize,
+    source_account_index: usize,
     clock: &Clock,
     stake_history: &StakeHistory,
     signers: &HashSet<Pubkey>,
@@ -899,8 +897,8 @@ pub fn redelegate(
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
     stake_account: &mut BorrowedAccount,
-    uninitialized_stake_account_index: IndexOfAccount,
-    vote_account_index: IndexOfAccount,
+    uninitialized_stake_account_index: usize,
+    vote_account_index: usize,
     config: &Config,
     signers: &HashSet<Pubkey>,
 ) -> Result<(), InstructionError> {
@@ -1019,13 +1017,13 @@ pub fn redelegate(
 pub fn withdraw(
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
-    stake_account_index: IndexOfAccount,
+    stake_account_index: usize,
     lamports: u64,
-    to_index: IndexOfAccount,
+    to_index: usize,
     clock: &Clock,
     stake_history: &StakeHistory,
-    withdraw_authority_index: IndexOfAccount,
-    custodian_index: Option<IndexOfAccount>,
+    withdraw_authority_index: usize,
+    custodian_index: Option<usize>,
     feature_set: &FeatureSet,
 ) -> Result<(), InstructionError> {
     let withdraw_authority_pubkey = transaction_context.get_key_of_account_at_index(
@@ -1133,8 +1131,8 @@ pub(crate) fn deactivate_delinquent(
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
     stake_account: &mut BorrowedAccount,
-    delinquent_vote_account_index: IndexOfAccount,
-    reference_vote_account_index: IndexOfAccount,
+    delinquent_vote_account_index: usize,
+    reference_vote_account_index: usize,
     current_epoch: Epoch,
 ) -> Result<(), InstructionError> {
     let delinquent_vote_account_pubkey = transaction_context.get_key_of_account_at_index(
@@ -1225,8 +1223,8 @@ fn validate_split_amount(
     invoke_context: &InvokeContext,
     transaction_context: &TransactionContext,
     instruction_context: &InstructionContext,
-    source_account_index: IndexOfAccount,
-    destination_account_index: IndexOfAccount,
+    source_account_index: usize,
+    destination_account_index: usize,
     lamports: u64,
     source_meta: &Meta,
     source_stake: Option<&Stake>,
@@ -1712,7 +1710,9 @@ pub fn create_lockup_stake_account(
     let rent_exempt_reserve = rent.minimum_balance(stake_account.data().len());
     assert!(
         lamports >= rent_exempt_reserve,
-        "lamports: {lamports} is less than rent_exempt_reserve {rent_exempt_reserve}"
+        "lamports: {} is less than rent_exempt_reserve {}",
+        lamports,
+        rent_exempt_reserve
     );
 
     stake_account
@@ -1773,7 +1773,7 @@ fn do_create_account(
 ) -> AccountSharedData {
     let mut stake_account = AccountSharedData::new(lamports, StakeState::size_of(), &id());
 
-    let vote_state = vote_state::from(vote_account).expect("vote_state");
+    let vote_state = VoteState::from(vote_account).expect("vote_state");
 
     let rent_exempt_reserve = rent.minimum_balance(stake_account.data().len());
 
@@ -1802,12 +1802,13 @@ mod tests {
     use {
         super::*,
         proptest::prelude::*,
-        solana_program_runtime::with_mock_invoke_context,
+        solana_program_runtime::invoke_context::InvokeContext,
         solomka_sdk::{
             account::{create_account_shared_data_for_test, AccountSharedData},
             native_token,
             pubkey::Pubkey,
             sysvar::SysvarId,
+            transaction_context::TransactionContext,
         },
     };
 
@@ -2938,6 +2939,18 @@ mod tests {
         );
     }
 
+    fn create_mock_tx_context() -> TransactionContext {
+        TransactionContext::new(
+            vec![(
+                Rent::id(),
+                create_account_shared_data_for_test(&Rent::default()),
+            )],
+            Some(Rent::default()),
+            1,
+            1,
+        )
+    }
+
     #[test]
     fn test_lockup_is_expired() {
         let custodian = solomka_sdk::pubkey::new_rand();
@@ -3044,7 +3057,9 @@ mod tests {
 
     #[test]
     fn test_things_can_merge() {
-        with_mock_invoke_context!(invoke_context, transaction_context, Vec::new());
+        let mut transaction_context =
+            TransactionContext::new(Vec::new(), Some(Rent::default()), 1, 1);
+        let invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
         let good_stake = Stake {
             credits_observed: 4242,
             delegation: Delegation {
@@ -3142,7 +3157,9 @@ mod tests {
 
     #[test]
     fn test_metas_can_merge() {
-        with_mock_invoke_context!(invoke_context, transaction_context, Vec::new());
+        let mut transaction_context =
+            TransactionContext::new(Vec::new(), Some(Rent::default()), 1, 1);
+        let invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
         // Identical Metas can merge
         assert!(MergeKind::metas_can_merge(
             &invoke_context,
@@ -3288,7 +3305,9 @@ mod tests {
 
     #[test]
     fn test_merge_kind_get_if_mergeable() {
-        with_mock_invoke_context!(invoke_context, transaction_context, Vec::new());
+        let mut transaction_context =
+            TransactionContext::new(Vec::new(), Some(Rent::default()), 1, 1);
+        let invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
         let authority_pubkey = Pubkey::new_unique();
         let initial_lamports = 4242424242;
         let rent = Rent::default();
@@ -3526,7 +3545,9 @@ mod tests {
 
     #[test]
     fn test_merge_kind_merge() {
-        with_mock_invoke_context!(invoke_context, transaction_context, Vec::new());
+        let mut transaction_context =
+            TransactionContext::new(Vec::new(), Some(Rent::default()), 1, 1);
+        let invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
         let clock = Clock::default();
         let lamports = 424242;
         let meta = Meta {
@@ -3605,11 +3626,8 @@ mod tests {
 
     #[test]
     fn test_active_stake_merge() {
-        let transaction_accounts = vec![(
-            Rent::id(),
-            create_account_shared_data_for_test(&Rent::default()),
-        )];
-        with_mock_invoke_context!(invoke_context, transaction_context, transaction_accounts);
+        let mut transaction_context = create_mock_tx_context();
+        let invoke_context = InvokeContext::new_mock(&mut transaction_context, &[]);
         let clock = Clock::default();
         let delegation_a = 4_242_424_242u64;
         let delegation_b = 6_200_000_000u64;

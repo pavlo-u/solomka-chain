@@ -1,6 +1,7 @@
 use {
     solana_account_decoder::parse_token::{
-        is_known_spl_token_id, token_amount_to_ui_amount, UiTokenAmount,
+        is_known_spl_token_id, pubkey_from_spl_token, spl_token_native_mint,
+        token_amount_to_ui_amount, UiTokenAmount,
     },
     solana_measure::measure::Measure,
     solana_metrics::datapoint_debug,
@@ -17,7 +18,7 @@ use {
 };
 
 fn get_mint_decimals(bank: &Bank, mint: &Pubkey) -> Option<u8> {
-    if mint == &spl_token::native_mint::id() {
+    if mint == &spl_token_native_mint() {
         Some(spl_token::native_mint::DECIMALS)
     } else {
         let mint_account = bank.get_account(mint)?;
@@ -100,7 +101,7 @@ fn collect_token_balance_from_account(
     }
 
     let token_account = StateWithExtensions::<TokenAccount>::unpack(account.data()).ok()?;
-    let mint = token_account.base.mint;
+    let mint = pubkey_from_spl_token(&token_account.base.mint);
 
     let decimals = mint_decimals.get(&mint).cloned().or_else(|| {
         let decimals = get_mint_decimals(bank, &mint)?;
@@ -120,6 +121,7 @@ fn collect_token_balance_from_account(
 mod test {
     use {
         super::*,
+        solana_account_decoder::parse_token::{pubkey_from_spl_token, spl_token_pubkey},
         solomka_sdk::{account::Account, genesis_config::create_genesis_config},
         spl_token_2022::{
             extension::{
@@ -152,7 +154,7 @@ mod test {
         let mint = Account {
             lamports: 100,
             data: data.to_vec(),
-            owner: spl_token::id(),
+            owner: pubkey_from_spl_token(&spl_token::id()),
             executable: false,
             rent_epoch: 0,
         };
@@ -167,8 +169,8 @@ mod test {
 
         let token_owner = Pubkey::new_unique();
         let token_data = TokenAccount {
-            mint: mint_pubkey,
-            owner: token_owner,
+            mint: spl_token_pubkey(&mint_pubkey),
+            owner: spl_token_pubkey(&token_owner),
             amount: 42,
             delegate: COption::None,
             state: spl_token_2022::state::AccountState::Initialized,
@@ -182,7 +184,7 @@ mod test {
         let spl_token_account = Account {
             lamports: 100,
             data: data.to_vec(),
-            owner: spl_token::id(),
+            owner: pubkey_from_spl_token(&spl_token::id()),
             executable: false,
             rent_epoch: 0,
         };
@@ -195,8 +197,8 @@ mod test {
         };
 
         let other_mint_data = TokenAccount {
-            mint: other_mint_pubkey,
-            owner: token_owner,
+            mint: spl_token_pubkey(&other_mint_pubkey),
+            owner: spl_token_pubkey(&token_owner),
             amount: 42,
             delegate: COption::None,
             state: spl_token_2022::state::AccountState::Initialized,
@@ -210,7 +212,7 @@ mod test {
         let other_mint_token_account = Account {
             lamports: 100,
             data: data.to_vec(),
-            owner: spl_token::id(),
+            owner: pubkey_from_spl_token(&spl_token::id()),
             executable: false,
             rent_epoch: 0,
         };
@@ -309,13 +311,13 @@ mod test {
             .init_extension::<MintCloseAuthority>(true)
             .unwrap();
         mint_close_authority.close_authority =
-            OptionalNonZeroPubkey::try_from(Some(mint_authority)).unwrap();
+            OptionalNonZeroPubkey::try_from(Some(spl_token_pubkey(&mint_authority))).unwrap();
 
         let mint_pubkey = Pubkey::new_unique();
         let mint = Account {
             lamports: 100,
             data: mint_data.to_vec(),
-            owner: spl_token_2022::id(),
+            owner: pubkey_from_spl_token(&spl_token_2022::id()),
             executable: false,
             rent_epoch: 0,
         };
@@ -330,8 +332,8 @@ mod test {
 
         let token_owner = Pubkey::new_unique();
         let token_base = TokenAccount {
-            mint: mint_pubkey,
-            owner: token_owner,
+            mint: spl_token_pubkey(&mint_pubkey),
+            owner: spl_token_pubkey(&token_owner),
             amount: 42,
             delegate: COption::None,
             state: spl_token_2022::state::AccountState::Initialized,
@@ -359,7 +361,7 @@ mod test {
         let spl_token_account = Account {
             lamports: 100,
             data: account_data.to_vec(),
-            owner: spl_token_2022::id(),
+            owner: pubkey_from_spl_token(&spl_token_2022::id()),
             executable: false,
             rent_epoch: 0,
         };
@@ -372,8 +374,8 @@ mod test {
         };
 
         let other_mint_token_base = TokenAccount {
-            mint: other_mint_pubkey,
-            owner: token_owner,
+            mint: spl_token_pubkey(&other_mint_pubkey),
+            owner: spl_token_pubkey(&token_owner),
             amount: 42,
             delegate: COption::None,
             state: spl_token_2022::state::AccountState::Initialized,
@@ -401,7 +403,7 @@ mod test {
         let other_mint_token_account = Account {
             lamports: 100,
             data: account_data.to_vec(),
-            owner: spl_token_2022::id(),
+            owner: pubkey_from_spl_token(&spl_token_2022::id()),
             executable: false,
             rent_epoch: 0,
         };

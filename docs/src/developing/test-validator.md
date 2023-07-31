@@ -22,7 +22,7 @@ starts a full-featured, single-node cluster on the developer's workstation.
 ## Installation
 
 The `solana-test-validator` binary ships with the Solana CLI Tool Suite.
-[Install](/cli/install-solana-cli-tools) before continuing.
+[Install](/cli/install-solomka-cli-tools) before continuing.
 
 ## Running
 
@@ -85,7 +85,7 @@ solana balance
 ```
 
 - **NOTE:** `Error: No such file or directory (os error 2)` means that the default
-  wallet does not yet exist. Create it with `solana-keygen new`.
+  wallet does not yet exist. Create it with `solomka-keygen new`.
 - **NOTE:** If the wallet has a zero SOL balance, airdrop some localnet SOL with
   `solana airdrop 10`
 
@@ -147,7 +147,7 @@ JSON RPC URL: http://127.0.0.1:8899
 ⠈ 00:36:02 | Processed Slot: 5142 | Confirmed Slot: 5142 | Finalized Slot: 5110 | Snapshot Slot: 5100 | Transactions: 5142 | ◎499.974295000
 ```
 
-- Session running time, current slot of the three block
+- Session running time, current slot of the the three block
   [commitment levels](../api/http#configuring-state-commitment),
   slot height of the last snapshot, transaction count,
   [voting authority](/running-validator/vote-accounts#vote-authority) balance
@@ -156,7 +156,7 @@ JSON RPC URL: http://127.0.0.1:8899
 
 By default, the test validator runs with all [runtime features](programming-model/runtime#features) activated.
 
-You can verify this using the [Solana command-line tools](cli/install-solana-cli-tools.md):
+You can verify this using the [Solana command-line tools](cli/install-solomka-cli-tools.md):
 
 ```bash
 solana feature status -ul

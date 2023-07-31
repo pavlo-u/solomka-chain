@@ -27,8 +27,8 @@
 //! syscall.
 //!
 //! [secp256k1]: https://en.bitcoin.it/wiki/Secp256k1
-//! [`secp256k1_program`]: solana_program::secp256k1_program
-//! [`secp256k1_recover`]: solana_program::secp256k1_recover
+//! [`secp256k1_program`]: solomka_program::secp256k1_program
+//! [`secp256k1_recover`]: solomka_program::secp256k1_recover
 //! [`ecrecover`]: https://docs.soliditylang.org/en/v0.8.14/units-and-global-variables.html?highlight=ecrecover#mathematical-and-cryptographic-functions
 //!
 //! Use cases for the secp256k1 instruction include:
@@ -97,7 +97,7 @@
 //! transactions necessary for properly using the secp256k1 native program.
 //! Many steps must be done manually.
 //!
-//! The `solana_program` crate provides no APIs to assist in interpreting
+//! The `solomka_program` crate provides no APIs to assist in interpreting
 //! the the secp256k1 instruction data. It must be done manually.
 //!
 //! The secp256k1 program is implemented with the [`libsecp256k1`] crate,
@@ -207,7 +207,7 @@
 //!
 //! ```no_run
 //! mod secp256k1_defs {
-//!     use solana_program::program_error::ProgramError;
+//!     use solomka_program::program_error::ProgramError;
 //!     use std::iter::Iterator;
 //!
 //!     pub const HASHED_PUBKEY_SERIALIZED_SIZE: usize = 20;
@@ -273,7 +273,7 @@
 //!
 //! ```no_run
 //! # mod secp256k1_defs {
-//! #     use solana_program::program_error::ProgramError;
+//! #     use solomka_program::program_error::ProgramError;
 //! #     use std::iter::Iterator;
 //! #
 //! #     pub const HASHED_PUBKEY_SERIALIZED_SIZE: usize = 20;
@@ -321,7 +321,7 @@
 //! #             }))
 //! #     }
 //! # }
-//! use solana_program::{
+//! use solomka_program::{
 //!     account_info::{next_account_info, AccountInfo},
 //!     entrypoint::ProgramResult,
 //!     msg,
@@ -417,9 +417,9 @@
 //! The client program:
 //!
 //! ```no_run
-//! # use solomka_sdk::example_mocks::solana_rpc_client;
+//! # use solomka_sdk::example_mocks::solomka_client;
 //! use anyhow::Result;
-//! use solana_rpc_client::rpc_client::RpcClient;
+//! use solomka_client::rpc_client::RpcClient;
 //! use solomka_sdk::{
 //!     instruction::{AccountMeta, Instruction},
 //!     secp256k1_instruction,
@@ -486,7 +486,7 @@
 //!
 //! ```no_run
 //! # mod secp256k1_defs {
-//! #     use solana_program::program_error::ProgramError;
+//! #     use solomka_program::program_error::ProgramError;
 //! #     use std::iter::Iterator;
 //! #
 //! #     pub const HASHED_PUBKEY_SERIALIZED_SIZE: usize = 20;
@@ -534,7 +534,7 @@
 //! #             }))
 //! #     }
 //! # }
-//! use solana_program::{
+//! use solomka_program::{
 //!     account_info::{next_account_info, AccountInfo},
 //!     entrypoint::ProgramResult,
 //!     msg,
@@ -633,9 +633,9 @@
 //! The client program:
 //!
 //! ```no_run
-//! # use solomka_sdk::example_mocks::solana_rpc_client;
+//! # use solomka_sdk::example_mocks::solomka_client;
 //! use anyhow::Result;
-//! use solana_rpc_client::rpc_client::RpcClient;
+//! use solomka_client::rpc_client::RpcClient;
 //! use solomka_sdk::{
 //!     instruction::{AccountMeta, Instruction},
 //!     keccak,
@@ -798,6 +798,7 @@ use {
     },
     digest::Digest,
     serde_derive::{Deserialize, Serialize},
+    std::sync::Arc,
 };
 
 pub const HASHED_PUBKEY_SERIALIZED_SIZE: usize = 20;
@@ -810,7 +811,7 @@ pub const DATA_START: usize = SIGNATURE_OFFSETS_SERIALIZED_SIZE + 1;
 /// See the [module documentation][md] for a complete description.
 ///
 /// [md]: self
-#[derive(Default, Serialize, Deserialize, Debug, Eq, PartialEq)]
+#[derive(Default, Serialize, Deserialize, Debug)]
 pub struct SecpSignatureOffsets {
     /// Offset to 64-byte signature plus 1-byte recovery ID.
     pub signature_offset: u16,
@@ -928,11 +929,11 @@ pub fn construct_eth_pubkey(
 /// `feature_set` is the set of active Solana features. It is used to enable or
 /// disable a few minor additional checks that were activated on chain
 /// subsequent to the addition of the secp256k1 native program. For many
-/// purposes passing `FeatureSet::all_enabled()` is reasonable.
+/// purposes passing `Arc::new<FeatureSet::all_enabled()>` is reasonable.
 pub fn verify(
     data: &[u8],
     instruction_datas: &[&[u8]],
-    feature_set: &FeatureSet,
+    feature_set: &Arc<FeatureSet>,
 ) -> Result<(), PrecompileError> {
     if data.is_empty() {
         return Err(PrecompileError::InvalidInstructionDataSize);
@@ -1060,6 +1061,7 @@ pub mod test {
             transaction::Transaction,
         },
         rand::{thread_rng, Rng},
+        std::sync::Arc,
     };
 
     fn test_case(
@@ -1078,7 +1080,7 @@ pub mod test {
             .inactive
             .insert(libsecp256k1_0_5_upgrade_enabled::id());
 
-        verify(&instruction_data, &[&[0u8; 100]], &feature_set)
+        verify(&instruction_data, &[&[0u8; 100]], &Arc::new(feature_set))
     }
 
     #[test]
@@ -1100,7 +1102,7 @@ pub mod test {
             .insert(libsecp256k1_0_5_upgrade_enabled::id());
 
         assert_eq!(
-            verify(&instruction_data, &[&[0u8; 100]], &feature_set),
+            verify(&instruction_data, &[&[0u8; 100]], &Arc::new(feature_set)),
             Err(PrecompileError::InvalidInstructionDataSize)
         );
 
@@ -1235,7 +1237,7 @@ pub mod test {
             .insert(libsecp256k1_0_5_upgrade_enabled::id());
 
         assert_eq!(
-            verify(&instruction_data, &[&[0u8; 100]], &feature_set),
+            verify(&instruction_data, &[&[0u8; 100]], &Arc::new(feature_set)),
             Err(PrecompileError::InvalidInstructionDataSize)
         );
     }
@@ -1260,7 +1262,7 @@ pub mod test {
         feature_set
             .inactive
             .insert(feature_set::libsecp256k1_0_5_upgrade_enabled::id());
-        let feature_set = feature_set;
+        let feature_set = Arc::new(feature_set);
 
         let tx = Transaction::new_signed_with_payer(
             &[secp_instruction.clone()],
@@ -1347,7 +1349,7 @@ pub mod test {
         verify(
             &instruction_data,
             &[&instruction_data],
-            &FeatureSet::all_enabled(),
+            &Arc::new(FeatureSet::all_enabled()),
         )
         .unwrap();
     }

@@ -6,13 +6,12 @@ use {
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     console::style,
     serde::{Deserialize, Serialize},
-    solana_clap_utils::{
-        fee_payer::*, hidden_unless_forced, input_parsers::*, input_validators::*, keypair::*,
+    solomka_clap_utils::{input_parsers::*, input_validators::*, keypair::*},
+    solomka_cli_output::{cli_version::CliVersion, QuietDisplay, VerboseDisplay},
+    solomka_client::{
+        client_error::ClientError, rpc_client::RpcClient, rpc_request::MAX_MULTIPLE_ACCOUNTS,
     },
-    sonoma_cli_output::{cli_version::CliVersion, QuietDisplay, VerboseDisplay},
     solana_remote_wallet::remote_wallet::RemoteWalletManager,
-    solana_rpc_client::rpc_client::RpcClient,
-    solana_rpc_client_api::{client_error::Error as ClientError, request::MAX_MULTIPLE_ACCOUNTS},
     solomka_sdk::{
         account::Account,
         clock::Slot,
@@ -44,7 +43,6 @@ pub enum FeatureCliCommand {
     Activate {
         feature: Pubkey,
         force: ForceActivation,
-        fee_payer: SignerIndex,
     },
 }
 
@@ -95,7 +93,10 @@ impl PartialOrd for CliFeature {
 
 impl Ord for CliFeature {
     fn cmp(&self, other: &Self) -> Ordering {
-        (&self.status, &self.id).cmp(&(&other.status, &other.id))
+        match self.status.cmp(&other.status) {
+            Ordering::Equal => self.id.cmp(&other.id),
+            ordering => ordering,
+        }
     }
 }
 
@@ -142,7 +143,7 @@ impl fmt::Display for CliFeatures {
                     }
                     CliFeatureStatus::Active(activation_slot) => {
                         let activation_epoch = self.epoch_schedule.get_epoch(activation_slot);
-                        style(format!("active since epoch {activation_epoch}")).green()
+                        style(format!("active since epoch {}", activation_epoch)).green()
                     }
                 },
                 match feature.status {
@@ -154,11 +155,11 @@ impl fmt::Display for CliFeatures {
         }
 
         if let Some(software_versions) = &self.cluster_software_versions {
-            write!(f, "{software_versions}")?;
+            write!(f, "{}", software_versions)?;
         }
 
         if let Some(feature_sets) = &self.cluster_feature_sets {
-            write!(f, "{feature_sets}")?;
+            write!(f, "{}", feature_sets)?;
         }
 
         if self.inactive && !self.feature_activation_allowed {
@@ -233,7 +234,13 @@ impl fmt::Display for CliClusterSoftwareVersions {
             f,
             "{}",
             style(format!(
-                "{software_version_title:<max_software_version_len$}  {stake_percent_title:>max_stake_percent_len$}  {rpc_percent_title:>max_rpc_percent_len$}",
+                "{1:<0$}  {3:>2$}  {5:>4$}",
+                max_software_version_len,
+                software_version_title,
+                max_stake_percent_len,
+                stake_percent_title,
+                max_rpc_percent_len,
+                rpc_percent_title,
             ))
             .bold(),
         )?;
@@ -342,7 +349,15 @@ impl fmt::Display for CliClusterFeatureSets {
             f,
             "{}",
             style(format!(
-                "{software_versions_title:<max_software_versions_len$}  {feature_set_title:<max_feature_set_len$}  {stake_percent_title:>max_stake_percent_len$}  {rpc_percent_title:>max_rpc_percent_len$}",
+                "{1:<0$}  {3:<2$}  {5:>4$}  {7:>6$}",
+                max_software_versions_len,
+                software_versions_title,
+                max_feature_set_len,
+                feature_set_title,
+                max_stake_percent_len,
+                stake_percent_title,
+                max_rpc_percent_len,
+                rpc_percent_title,
             ))
             .bold(),
         )?;
@@ -426,11 +441,10 @@ impl FeatureSubCommands for App<'_, '_> {
                         .arg(
                             Arg::with_name("force")
                                 .long("yolo")
-                                .hidden(hidden_unless_forced())
+                                .hidden(true)
                                 .multiple(true)
                                 .help("Override activation sanity checks. Don't use this flag"),
-                        )
-                        .arg(fee_payer_arg()),
+                        ),
                 ),
         )
     }
@@ -441,7 +455,8 @@ fn known_feature(feature: &Pubkey) -> Result<(), CliError> {
         Ok(())
     } else {
         Err(CliError::BadParameter(format!(
-            "Unknown feature: {feature}"
+            "Unknown feature: {}",
+            feature
         )))
     }
 }
@@ -454,8 +469,7 @@ pub fn parse_feature_subcommand(
     let response = match matches.subcommand() {
         ("activate", Some(matches)) => {
             let (feature_signer, feature) = signer_of(matches, "feature", wallet_manager)?;
-            let (fee_payer, fee_payer_pubkey) =
-                signer_of(matches, FEE_PAYER_ARG.name, wallet_manager)?;
+            let mut signers = vec![default_signer.signer_from_path(matches, wallet_manager)?];
 
             let force = match matches.occurrences_of("force") {
                 2 => ForceActivation::Yes,
@@ -463,23 +477,14 @@ pub fn parse_feature_subcommand(
                 _ => ForceActivation::No,
             };
 
-            let signer_info = default_signer.generate_unique_signers(
-                vec![fee_payer, feature_signer],
-                matches,
-                wallet_manager,
-            )?;
-
+            signers.push(feature_signer.unwrap());
             let feature = feature.unwrap();
 
             known_feature(&feature)?;
 
             CliCommandInfo {
-                command: CliCommand::Feature(FeatureCliCommand::Activate {
-                    feature,
-                    force,
-                    fee_payer: signer_info.index_of(fee_payer_pubkey).unwrap(),
-                }),
-                signers: signer_info.signers,
+                command: CliCommand::Feature(FeatureCliCommand::Activate { feature, force }),
+                signers,
             }
         }
         ("status", Some(matches)) => {
@@ -517,11 +522,9 @@ pub fn process_feature_subcommand(
             features,
             display_all,
         } => process_status(rpc_client, config, features, *display_all),
-        FeatureCliCommand::Activate {
-            feature,
-            force,
-            fee_payer,
-        } => process_activate(rpc_client, config, *feature, *force, *fee_payer),
+        FeatureCliCommand::Activate { feature, force } => {
+            process_activate(rpc_client, config, *feature, *force)
+        }
     }
 }
 
@@ -856,9 +859,7 @@ fn process_activate(
     config: &CliConfig,
     feature_id: Pubkey,
     force: ForceActivation,
-    fee_payer: SignerIndex,
 ) -> ProcessResult {
-    let fee_payer = config.signers[fee_payer];
     let account = rpc_client
         .get_multiple_accounts(&[feature_id])?
         .into_iter()
@@ -867,7 +868,7 @@ fn process_activate(
 
     if let Some(account) = account {
         if feature::from_account(&account).is_some() {
-            return Err(format!("{feature_id} has already been activated").into());
+            return Err(format!("{} has already been activated", feature_id).into());
         }
     }
 
@@ -889,11 +890,15 @@ fn process_activate(
         false,
         SpendAmount::Some(rent),
         &blockhash,
-        &fee_payer.pubkey(),
+        &config.signers[0].pubkey(),
         |lamports| {
             Message::new(
-                &feature::activate_with_lamports(&feature_id, &fee_payer.pubkey(), lamports),
-                Some(&fee_payer.pubkey()),
+                &feature::activate_with_lamports(
+                    &feature_id,
+                    &config.signers[0].pubkey(),
+                    lamports,
+                ),
+                Some(&config.signers[0].pubkey()),
             )
         },
         config.commitment,

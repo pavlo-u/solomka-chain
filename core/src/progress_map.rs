@@ -2,7 +2,7 @@ use {
     crate::{
         cluster_info_vote_listener::SlotVoteTracker,
         cluster_slots::SlotPubkeys,
-        consensus::{Stake, ThresholdDecision, VotedStakes},
+        consensus::{Stake, VotedStakes},
         replay_stage::SUPERMINORITY_THRESHOLD,
     },
     solana_ledger::blockstore_processor::{ConfirmationProgress, ConfirmationTiming},
@@ -39,7 +39,6 @@ impl ReplaySlotStats {
     pub fn report_stats(
         &self,
         slot: Slot,
-        num_txs: usize,
         num_entries: usize,
         num_shreds: u64,
         bank_complete_time_us: u64,
@@ -64,29 +63,26 @@ impl ReplaySlotStats {
                     self.transaction_verify_elapsed as i64,
                     i64
                 ),
-                ("confirmation_time_us", self.confirmation_elapsed as i64, i64),
                 ("replay_time", self.replay_elapsed as i64, i64),
-                ("execute_batches_us", self.batch_execute.wall_clock_us as i64, i64),
+                ("execute_batches_us", self.execute_batches_us as i64, i64),
                 (
                     "replay_total_elapsed",
                     self.started.elapsed().as_micros() as i64,
                     i64
                 ),
                 ("bank_complete_time_us", bank_complete_time_us, i64),
-                ("total_transactions", num_txs as i64, i64),
                 ("total_entries", num_entries as i64, i64),
                 ("total_shreds", num_shreds as i64, i64),
                 // Everything inside the `eager!` block will be eagerly expanded before
                 // evaluation of the rest of the surrounding macro.
-                eager!{report_execute_timings!(self.batch_execute.totals)}
+                eager!{report_execute_timings!(self.execute_timings)}
             );
         };
 
-        self.batch_execute.slowest_thread.report_stats(slot);
+        self.end_to_end_execute_timings.report_stats(slot);
 
         let mut per_pubkey_timings: Vec<_> = self
-            .batch_execute
-            .totals
+            .execute_timings
             .details
             .per_program_timings
             .iter()
@@ -299,7 +295,7 @@ pub struct ForkStats {
     pub has_voted: bool,
     pub is_recent: bool,
     pub is_empty: bool,
-    pub vote_threshold: ThresholdDecision,
+    pub vote_threshold: bool,
     pub is_locked_out: bool,
     pub voted_stakes: VotedStakes,
     pub is_supermajority_confirmed: bool,
@@ -400,7 +396,7 @@ impl ProgressMap {
 
     pub fn get_propagated_stats_must_exist(&self, slot: Slot) -> &PropagatedStats {
         self.get_propagated_stats(slot)
-            .unwrap_or_else(|| panic!("slot={slot} must exist in ProgressMap"))
+            .unwrap_or_else(|| panic!("slot={} must exist in ProgressMap", slot))
     }
 
     pub fn get_fork_stats(&self, slot: Slot) -> Option<&ForkStats> {

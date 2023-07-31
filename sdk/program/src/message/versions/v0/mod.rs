@@ -7,7 +7,7 @@
 //!
 //! [`legacy`]: crate::message::legacy
 //! [`v0`]: crate::message::v0
-//! [future message format]: https://docs.solana.com/proposals/versioned-transactions
+//! [future message format]: https://docs.solana.com/proposals/transactions-v2
 
 use crate::{
     address_lookup_table_account::AddressLookupTableAccount,
@@ -130,8 +130,6 @@ impl Message {
 
         // the combined number of static and dynamic account keys must be <= 256
         // since account indices are encoded as `u8`
-        // Note that this is different from the per-transaction account load cap
-        // as defined in `Bank::get_transaction_account_lock_limit`
         let total_account_keys = num_static_account_keys.saturating_add(num_dynamic_account_keys);
         if total_account_keys > 256 {
             return Err(SanitizeError::IndexOutOfBounds);
@@ -182,24 +180,24 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_address_lookup_table_program`], [`solana_rpc_client`], [`solomka_sdk`], and [`anyhow`] crates.
+    /// This example uses the [`solana_address_lookup_table_program`], [`solomka_client`], [`solomka_sdk`], and [`anyhow`] crates.
     ///
     /// [`solana_address_lookup_table_program`]: https://docs.rs/solana-address-lookup-table-program
-    /// [`solana_rpc_client`]: https://docs.rs/solana-rpc-client
-    /// [`solomka_sdk`]: https://docs.rs/solomka-sdk
+    /// [`solomka_client`]: https://docs.rs/solana-client
+    /// [`solomka_sdk`]: https://docs.rs/solana-sdk
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solana_program::example_mocks::{
+    /// # use solomka_program::example_mocks::{
     /// #     solana_address_lookup_table_program,
-    /// #     solana_rpc_client,
+    /// #     solomka_client,
     /// #     solomka_sdk,
     /// # };
     /// # use std::borrow::Cow;
     /// # use solomka_sdk::account::Account;
     /// use anyhow::Result;
     /// use solana_address_lookup_table_program::state::AddressLookupTable;
-    /// use solana_rpc_client::rpc_client::RpcClient;
+    /// use solomka_client::rpc_client::RpcClient;
     /// use solomka_sdk::{
     ///      address_lookup_table_account::AddressLookupTableAccount,
     ///      instruction::{AccountMeta, Instruction},

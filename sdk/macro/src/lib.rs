@@ -44,18 +44,16 @@ fn id_to_tokens(
     tokens: &mut proc_macro2::TokenStream,
 ) {
     tokens.extend(quote! {
-        /// The const program ID.
-        pub const ID: #pubkey_type = #id;
+        /// The static program ID
+        pub static ID: #pubkey_type = #id;
 
-        /// Returns `true` if given pubkey is the program ID.
-        // TODO make this const once `derive_const` makes it out of nightly
-        // and we can `derive_const(PartialEq)` on `Pubkey`.
+        /// Confirms that a given pubkey is equivalent to the program ID
         pub fn check_id(id: &#pubkey_type) -> bool {
             id == &ID
         }
 
-        /// Returns the program ID.
-        pub const fn id() -> #pubkey_type {
+        /// Returns the program ID
+        pub fn id() -> #pubkey_type {
             ID
         }
 
@@ -73,16 +71,16 @@ fn deprecated_id_to_tokens(
     tokens: &mut proc_macro2::TokenStream,
 ) {
     tokens.extend(quote! {
-        /// The static program ID.
+        /// The static program ID
         pub static ID: #pubkey_type = #id;
 
-        /// Returns `true` if given pubkey is the program ID.
+        /// Confirms that a given pubkey is equivalent to the program ID
         #[deprecated()]
         pub fn check_id(id: &#pubkey_type) -> bool {
             id == &ID
         }
 
-        /// Returns the program ID.
+        /// Returns the program ID
         #[deprecated()]
         pub fn id() -> #pubkey_type {
             ID
@@ -116,7 +114,7 @@ struct ProgramSdkPubkey(proc_macro2::TokenStream);
 
 impl Parse for ProgramSdkPubkey {
     fn parse(input: ParseStream) -> Result<Self> {
-        parse_id(input, quote! { ::solana_program::pubkey::Pubkey }).map(Self)
+        parse_id(input, quote! { ::solomka_program::pubkey::Pubkey }).map(Self)
     }
 }
 
@@ -158,26 +156,26 @@ impl ToTokens for IdDeprecated {
 struct ProgramSdkId(proc_macro2::TokenStream);
 impl Parse for ProgramSdkId {
     fn parse(input: ParseStream) -> Result<Self> {
-        parse_id(input, quote! { ::solana_program::pubkey::Pubkey }).map(Self)
+        parse_id(input, quote! { ::solomka_program::pubkey::Pubkey }).map(Self)
     }
 }
 
 impl ToTokens for ProgramSdkId {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        id_to_tokens(&self.0, quote! { ::solana_program::pubkey::Pubkey }, tokens)
+        id_to_tokens(&self.0, quote! { ::solomka_program::pubkey::Pubkey }, tokens)
     }
 }
 
 struct ProgramSdkIdDeprecated(proc_macro2::TokenStream);
 impl Parse for ProgramSdkIdDeprecated {
     fn parse(input: ParseStream) -> Result<Self> {
-        parse_id(input, quote! { ::solana_program::pubkey::Pubkey }).map(Self)
+        parse_id(input, quote! { ::solomka_program::pubkey::Pubkey }).map(Self)
     }
 }
 
 impl ToTokens for ProgramSdkIdDeprecated {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
-        deprecated_id_to_tokens(&self.0, quote! { ::solana_program::pubkey::Pubkey }, tokens)
+        deprecated_id_to_tokens(&self.0, quote! { ::solomka_program::pubkey::Pubkey }, tokens)
     }
 }
 
@@ -381,7 +379,7 @@ pub fn pubkeys(input: TokenStream) -> TokenStream {
 }
 
 // The normal `wasm_bindgen` macro generates a .bss section which causes the resulting
-// SBF program to fail to load, so for now this stub should be used when building for SBF
+// BPF program to fail to load, so for now this stub should be used when building for BPF
 #[proc_macro_attribute]
 pub fn wasm_bindgen_stub(_attr: TokenStream, item: TokenStream) -> TokenStream {
     match parse_macro_input!(item as syn::Item) {
@@ -392,7 +390,7 @@ pub fn wasm_bindgen_stub(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 for field in fields.named.iter_mut() {
                     field.attrs.retain(|attr| {
                         !attr
-                            .path()
+                            .path
                             .segments
                             .iter()
                             .any(|segment| segment.ident == "wasm_bindgen")
@@ -404,41 +402,6 @@ pub fn wasm_bindgen_stub(_attr: TokenStream, item: TokenStream) -> TokenStream {
         item => {
             quote!(#item)
         }
-    }
-    .into()
-}
-
-// Sets padding in structures to zero explicitly.
-// Otherwise padding could be inconsistent across the network and lead to divergence / consensus failures.
-#[proc_macro_derive(CloneZeroed)]
-pub fn derive_clone_zeroed(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    match parse_macro_input!(input as syn::Item) {
-        syn::Item::Struct(item_struct) => {
-            let clone_statements = match item_struct.fields {
-                syn::Fields::Named(ref fields) => fields.named.iter().map(|f| {
-                    let name = &f.ident;
-                    quote! {
-                        std::ptr::addr_of_mut!((*ptr).#name).write(self.#name);
-                    }
-                }),
-                _ => unimplemented!(),
-            };
-            let name = &item_struct.ident;
-            quote! {
-                impl Clone for #name {
-                    fn clone(&self) -> Self {
-                        let mut value = std::mem::MaybeUninit::<Self>::uninit();
-                        unsafe {
-                            std::ptr::write_bytes(&mut value, 0, 1);
-                            let ptr = value.as_mut_ptr();
-                            #(#clone_statements)*
-                            value.assume_init()
-                        }
-                    }
-                }
-            }
-        }
-        _ => unimplemented!(),
     }
     .into()
 }

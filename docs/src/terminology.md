@@ -53,7 +53,7 @@ The [validator](#validator) that produces the genesis (first) [block](#block) of
 
 ## BPF loader
 
-The Solana program that owns and loads [BPF](developing/on-chain-programs/faq#berkeley-packet-filter-bpf) smart contract programs, allowing the program to interface with the runtime.
+The Solana program that owns and loads [BPF](developing/on-chain-programs/overview#berkeley-packet-filter-bpf) smart contract programs, allowing the program to interface with the runtime.
 
 ## client
 
@@ -169,10 +169,6 @@ A [public key](#public-key-pubkey) and corresponding [private key](#private-key)
 
 A fractional [native token](#native-token) with the value of 0.000000001 [sol](#sol).
 
-:::info
-Within the compute budget, a quantity of _[micro-lamports](https://github.com/solana-labs/solana/blob/ced8f6a512c61e0dd5308095ae8457add4a39e94/program-runtime/src/prioritization_fee.rs#L1-L2)_ is used in the calculation of [prioritization fees](#prioritization-fee).
-:::
-
 ## leader
 
 The role of a [validator](#validator) when it is appending [entries](#entry) to the [ledger](#ledger).
@@ -238,7 +234,7 @@ The executable code that interprets the [instructions](#instruction) sent inside
 
 ## program derived account (PDA)
 
-An account whose signing authority is a program and thus is not controlled by a private key like other accounts.
+An account whose owner is a program and thus is not controlled by a private key like other accounts.
 
 ## program id
 
@@ -268,7 +264,7 @@ See also [rent exempt](#rent-exempt) below. Learn more about rent here: [What is
 
 ## rent exempt
 
-Accounts that maintain more than 2 years with of rent payments in their account are considered "_rent exempt_" and will not incur the [collection of rent](../src/developing/intro/rent.md#collecting-rent).
+Accounts that maintain more than 2 years with of rent payments in their account are considered "*rent exempt*" and will not incur the [collection of rent](../src/developing/intro/rent.md#collecting-rent).
 
 ## root
 
@@ -348,10 +344,6 @@ A digitally transferable asset.
 
 [Transactions](#transaction) per second.
 
-## tpu
-
-[Transaction processing unit](validator/tpu.md).
-
 ## transaction
 
 One or more [instructions](#instruction) signed by a [client](#client) using one or more [keypairs](#keypair) and executed atomically with only two possible outcomes: success or failure.
@@ -367,10 +359,6 @@ The number of [confirmed blocks](#confirmed-block) since the transaction was acc
 ## transactions entry
 
 A set of [transactions](#transaction) that may be executed in parallel.
-
-## tvu
-
-[Transaction validation unit](validator/tvu.md).
 
 ## validator
 

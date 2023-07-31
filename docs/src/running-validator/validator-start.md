@@ -38,10 +38,27 @@ that CUDA is enabled: `"[<timestamp> solana::validator] CUDA is enabled"`
 
 ### Linux
 
+#### Automatic
+
+The solana repo includes a daemon to adjust system settings to optimize performance
+(namely by increasing the OS UDP buffer and file mapping limits).
+
+The daemon (`solana-sys-tuner`) is included in the solana binary release. Restart
+it, _before_ restarting your validator, after each software upgrade to ensure that
+the latest recommended settings are applied.
+
+To run it:
+
+```bash
+sudo $(command -v solana-sys-tuner) --user $(whoami) > sys-tuner.log 2>&1 &
+```
+
+#### Manual
+
 If you would prefer to manage system settings on your own, you may do so with
 the following commands.
 
-#### **Optimize sysctl knobs**
+##### **Optimize sysctl knobs**
 
 ```bash
 sudo bash -c "cat >/etc/sysctl.d/21-solana-validator.conf <<EOF
@@ -63,7 +80,7 @@ EOF"
 sudo sysctl -p /etc/sysctl.d/21-solana-validator.conf
 ```
 
-#### **Increase systemd and session file limits**
+##### **Increase systemd and session file limits**
 
 Add
 
@@ -100,13 +117,13 @@ EOF"
 Create an identity keypair for your validator by running:
 
 ```bash
-solana-keygen new -o ~/validator-keypair.json
+solomka-keygen new -o ~/validator-keypair.json
 ```
 
 The identity public key can now be viewed by running:
 
 ```bash
-solana-keygen pubkey ~/validator-keypair.json
+solomka-keygen pubkey ~/validator-keypair.json
 ```
 
 > Note: The "validator-keypair.json” file is also your \(ed25519\) private key.
@@ -117,13 +134,13 @@ You can create a paper wallet for your identity file instead of writing the
 keypair file to disk with:
 
 ```bash
-solana-keygen new --no-outfile
+solomka-keygen new --no-outfile
 ```
 
 The corresponding identity public key can now be viewed by running:
 
 ```bash
-solana-keygen pubkey ASK
+solomka-keygen pubkey ASK
 ```
 
 and then entering your seed phrase.
@@ -134,10 +151,10 @@ See [Paper Wallet Usage](../wallet-guide/paper-wallet.md) for more info.
 
 ### Vanity Keypair
 
-You can generate a custom vanity keypair using solana-keygen. For instance:
+You can generate a custom vanity keypair using solomka-keygen. For instance:
 
 ```bash
-solana-keygen grind --starts-with e1v1s:1
+solomka-keygen grind --starts-with e1v1s:1
 ```
 
 You may request that the generated vanity keypair be expressed as a seed phrase
@@ -146,7 +163,7 @@ supplied passphrase (note that this is significantly slower than grinding withou
 a mnemonic):
 
 ```bash
-solana-keygen grind --use-mnemonic --starts-with e1v1s:1
+solomka-keygen grind --use-mnemonic --starts-with e1v1s:1
 ```
 
 Depending on the string requested, it may take days to find a match...
@@ -221,7 +238,7 @@ stored anywhere from where it could be accessed by unauthorized parties. To
 create your authorized-withdrawer keypair:
 
 ```bash
-solana-keygen new -o ~/authorized-withdrawer-keypair.json
+solomka-keygen new -o ~/authorized-withdrawer-keypair.json
 ```
 
 ## Create Vote Account
@@ -231,7 +248,7 @@ vote account on the network. If you have completed this step, you should see the
 “vote-account-keypair.json” in your Solana runtime directory:
 
 ```bash
-solana-keygen new -o ~/vote-account-keypair.json
+solomka-keygen new -o ~/vote-account-keypair.json
 ```
 
 The following command can be used to create your vote account on the blockchain
@@ -306,23 +323,15 @@ the validator to ports 11000-11020.
 
 The `--limit-ledger-size` parameter allows you to specify how many ledger
 [shreds](../terminology.md#shred) your node retains on disk. If you do not
-include this parameter, the validator will keep all received ledger data
-until it runs out of disk space. Otherwise, the validator will continually
-purge the oldest data once to stay under the specified `--limit-ledger-size`
-value.
+include this parameter, the validator will keep the entire ledger until it runs
+out of disk space.
 
-The default value attempts to keep the blockstore (data within the rocksdb
-directory) disk usage under 500 GB. More or less disk usage may be requested
-by adding an argument to `--limit-ledger-size` if desired. More information
-about selecting a custom limit value is [available
-here](https://github.com/solana-labs/solana/blob/aa72aa87790277619d12c27f1ebc864d23739557/core/src/ledger_cleanup_service.rs#L26-L37).
-
-Note that the above target of 500 GB does not account for other items that
-may reside in the `ledger` directory, depending on validator configuration.
-These items may include (but are not limited to):
-- Persistent accounts data
-- Persistent accounts index
-- Snapshots
+The default value attempts to keep the ledger disk usage under 500GB. More or
+less disk usage may be requested by adding an argument to `--limit-ledger-size`
+if desired. Check `solana-validator --help` for the default limit value used by
+`--limit-ledger-size`. More information about
+selecting a custom limit value is [available
+here](https://github.com/solana-labs/solana/blob/36167b032c03fc7d1d8c288bb621920aaf903311/core/src/ledger_cleanup_service.rs#L23-L34).
 
 ### Systemd Unit
 
@@ -336,6 +345,7 @@ the following:
 [Unit]
 Description=Solana Validator
 After=network.target
+Wants=solana-sys-tuner.service
 StartLimitIntervalSec=0
 
 [Service]

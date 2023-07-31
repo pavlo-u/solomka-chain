@@ -67,11 +67,16 @@ impl DurableNonce {
 ///
 /// When created in memory with [`State::default`] or when deserialized from an
 /// uninitialized account, a nonce account will be [`State::Uninitialized`].
-#[derive(Debug, Default, Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub enum State {
-    #[default]
     Uninitialized,
     Initialized(Data),
+}
+
+impl Default for State {
+    fn default() -> Self {
+        State::Uninitialized
+    }
 }
 
 impl State {

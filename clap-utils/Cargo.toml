@@ -1,31 +1,30 @@
 [package]
-name = "solana-clap-utils"
-description = "Solana utilities for the clap"
-documentation = "https://docs.rs/solana-clap-utils"
-version = { workspace = true }
-authors = { workspace = true }
-repository = { workspace = true }
-homepage = { workspace = true }
-license = { workspace = true }
-edition = { workspace = true }
+name = "solomka-clap-utils"
+version = "1.14.20"
+description = "Solomka utilities for the clap"
+authors = ["Solana Maintainers <maintainers@solana.foundation>"]
+repository = "https://github.com/pavlo-u/solomka-chain"
+license = "Apache-2.0"
+documentation = "https://docs.rs/solomka-clap-utils"
+edition = "2021"
 
 [dependencies]
-chrono = { workspace = true, features = ["default"] }
+chrono = "0.4"
 clap = "2.33.0"
-rpassword = { workspace = true }
-solana-perf = { workspace = true }
-solana-remote-wallet = { workspace = true }
-solomka-sdk = { workspace = true }
-thiserror = { workspace = true }
-tiny-bip39 = { workspace = true }
-uriparse = { workspace = true }
-url = { workspace = true }
+rpassword = "6.0"
+solana-perf = { path = "../perf", version = "=1.14.20" }
+solana-remote-wallet = { path = "../remote-wallet", version = "=1.14.20", default-features = false }
+solomka-sdk= { path = "../sdk", version = "=1.14.20" }
+thiserror = "1.0.31"
+tiny-bip39 = "0.8.2"
+uriparse = "0.6.4"
+url = "2.2.2"
 
 [dev-dependencies]
-tempfile = { workspace = true }
+tempfile = "3.4.0"
 
 [lib]
-name = "solana_clap_utils"
+name = "solomka_clap_utils"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

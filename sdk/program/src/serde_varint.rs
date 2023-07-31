@@ -1,5 +1,3 @@
-//! Integers that serialize to variable size.
-
 #![allow(clippy::integer_arithmetic)]
 use {
     serde::{
@@ -115,13 +113,12 @@ macro_rules! impl_var_int {
     };
 }
 
-impl_var_int!(u16);
 impl_var_int!(u32);
 impl_var_int!(u64);
 
 #[cfg(test)]
 mod tests {
-    use {crate::short_vec::ShortU16, rand::Rng};
+    use rand::Rng;
 
     #[derive(Debug, Eq, PartialEq, Serialize, Deserialize)]
     struct Dummy {
@@ -199,14 +196,14 @@ mod tests {
         let out = bincode::deserialize::<Dummy>(&buffer);
         assert!(out.is_err());
         assert_eq!(
-            format!("{out:?}"),
+            format!("{:?}", out),
             r#"Err(Custom("Invalid Trailing Zeros"))"#
         );
         let buffer = [0x80, 0x0];
         let out = bincode::deserialize::<Dummy>(&buffer);
         assert!(out.is_err());
         assert_eq!(
-            format!("{out:?}"),
+            format!("{:?}", out),
             r#"Err(Custom("Invalid Trailing Zeros"))"#
         );
     }
@@ -216,7 +213,10 @@ mod tests {
         let buffer = [0xe4, 0xd7, 0x88, 0xf6, 0x6f, 0xd4, 0xb9, 0x59];
         let out = bincode::deserialize::<Dummy>(&buffer);
         assert!(out.is_err());
-        assert_eq!(format!("{out:?}"), r#"Err(Custom("Last Byte Truncated"))"#);
+        assert_eq!(
+            format!("{:?}", out),
+            r#"Err(Custom("Last Byte Truncated"))"#
+        );
     }
 
     #[test]
@@ -224,7 +224,10 @@ mod tests {
         let buffer = [0x84, 0xdf, 0x96, 0xfa, 0xef];
         let out = bincode::deserialize::<Dummy>(&buffer);
         assert!(out.is_err());
-        assert_eq!(format!("{out:?}"), r#"Err(Custom("Left Shift Overflows"))"#);
+        assert_eq!(
+            format!("{:?}", out),
+            r#"Err(Custom("Left Shift Overflows"))"#
+        );
     }
 
     #[test]
@@ -232,7 +235,7 @@ mod tests {
         let buffer = [0x84, 0xdf, 0x96, 0xfa];
         let out = bincode::deserialize::<Dummy>(&buffer);
         assert!(out.is_err());
-        assert_eq!(format!("{out:?}"), r#"Err(Io(Kind(UnexpectedEof)))"#);
+        assert_eq!(format!("{:?}", out), r#"Err(Io(Kind(UnexpectedEof)))"#);
     }
 
     #[test]
@@ -252,37 +255,6 @@ mod tests {
                 }
             }
         }
-        assert!(
-            (3_000..23_000).contains(&num_errors),
-            "num errors: {num_errors}"
-        );
-    }
-
-    #[test]
-    fn test_serde_varint_cross_fuzz() {
-        #[derive(Serialize, Deserialize)]
-        struct U16(#[serde(with = "super")] u16);
-        let mut rng = rand::thread_rng();
-        let mut buffer = [0u8; 16];
-        let mut num_errors = 0;
-        for _ in 0..200_000 {
-            rng.fill(&mut buffer[..]);
-            match bincode::deserialize::<U16>(&buffer) {
-                Err(_) => {
-                    assert!(bincode::deserialize::<ShortU16>(&buffer).is_err());
-                    num_errors += 1;
-                }
-                Ok(k) => {
-                    let bytes = bincode::serialize(&k).unwrap();
-                    assert_eq!(bytes, &buffer[..bytes.len()]);
-                    assert_eq!(bytes, bincode::serialize(&ShortU16(k.0)).unwrap());
-                    assert_eq!(bincode::deserialize::<ShortU16>(&buffer).unwrap().0, k.0);
-                }
-            }
-        }
-        assert!(
-            (30_000..70_000).contains(&num_errors),
-            "num errors: {num_errors}"
-        );
+        assert!(num_errors > 2_000);
     }
 }

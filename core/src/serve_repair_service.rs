@@ -11,7 +11,6 @@ use {
         net::UdpSocket,
         sync::{atomic::AtomicBool, Arc},
         thread::{self, JoinHandle},
-        time::Duration,
     },
 };
 
@@ -41,7 +40,7 @@ impl ServeRepairService {
             request_sender,
             Recycler::default(),
             Arc::new(StreamerReceiveStats::new("serve_repair_receiver")),
-            Duration::from_millis(1), // coalesce
+            1,
             false,
             None,
         );

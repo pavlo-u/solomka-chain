@@ -1,5 +1,3 @@
-//! The native loader native program.
-
 use crate::{
     account::{
         Account, AccountSharedData, InheritableAccountFields, DUMMY_INHERITABLE_ACCOUNT_FIELDS,

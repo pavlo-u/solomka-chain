@@ -6,12 +6,12 @@ use {
     clap::{
         crate_description, crate_name, value_t, value_t_or_exit, App, Arg, ArgMatches, SubCommand,
     },
-    solana_clap_utils::{
+    solomka_clap_utils::{
         input_parsers::{pubkey_of_signer, value_of},
-        input_validators::{is_amount, is_url_or_moniker, is_valid_pubkey, is_valid_signer},
+        input_validators::{is_amount, is_valid_pubkey, is_valid_signer},
         keypair::{pubkey_from_path, signer_from_path},
     },
-    sonoma_cli_config::CONFIG_FILE,
+    solomka_cli_config::CONFIG_FILE,
     solana_remote_wallet::remote_wallet::maybe_wallet_manager,
     solomka_sdk::native_token::sol_to_lamports,
     std::{error::Error, ffi::OsString, process::exit},
@@ -28,7 +28,6 @@ where
         .version(solana_version::version!())
         .arg(
             Arg::with_name("config_file")
-                .short("C")
                 .long("config")
                 .takes_value(true)
                 .value_name("FILEPATH")
@@ -36,17 +35,12 @@ where
                 .help("Config file"),
         )
         .arg(
-            Arg::with_name("json_rpc_url")
-                .short("u")
+            Arg::with_name("url")
                 .long("url")
-                .value_name("URL_OR_MONIKER")
-                .takes_value(true)
                 .global(true)
-                .validator(is_url_or_moniker)
-                .help(
-                    "URL for Solana's JSON RPC or moniker (or their first letter): \
-                       [mainnet-beta, testnet, devnet, localhost]",
-                ),
+                .takes_value(true)
+                .value_name("URL")
+                .help("RPC entrypoint address. i.e. http://api.devnet.solana.com"),
         )
         .subcommand(
             SubCommand::with_name("distribute-tokens")

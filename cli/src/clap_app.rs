@@ -4,8 +4,8 @@ use {
         inflation::*, nonce::*, program::*, stake::*, validator_info::*, vote::*, wallet::*,
     },
     clap::{App, AppSettings, Arg, ArgGroup, SubCommand},
-    solana_clap_utils::{self, hidden_unless_forced, input_validators::*, keypair::*},
-    sonoma_cli_config::CONFIG_FILE,
+    solomka_clap_utils::{self, input_validators::*, keypair::*},
+    solomka_cli_config::CONFIG_FILE,
 };
 
 pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> App<'ab, 'v> {
@@ -36,7 +36,7 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
                 .global(true)
                 .validator(is_url_or_moniker)
                 .help(
-                    "URL for Sonoma's JSON RPC or moniker (or their first letter): \
+                    "URL for Solomka's JSON RPC or moniker (or their first letter): \
                        [mainnet-beta, testnet, devnet, localhost]",
                 ),
         )
@@ -47,7 +47,7 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
                 .takes_value(true)
                 .global(true)
                 .validator(is_url)
-                .help("WebSocket URL for the Sonoma cluster"),
+                .help("WebSocket URL for the solomka cluster"),
         )
         .arg(
             Arg::with_name("keypair")
@@ -85,19 +85,6 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
                 .help("Show additional information"),
         )
         .arg(
-            Arg::with_name("use_quic")
-                .long("use-quic")
-                .global(true)
-                .help("Use QUIC when sending transactions."),
-        )
-        .arg(
-            Arg::with_name("use_udp")
-                .long("use-udp")
-                .global(true)
-                .conflicts_with("use_quic")
-                .help("Use UDP when sending transactions."),
-        )
-        .arg(
             Arg::with_name("no_address_labels")
                 .long("no-address-labels")
                 .global(true)
@@ -125,7 +112,7 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
                 .takes_value(true)
                 .default_value(DEFAULT_RPC_TIMEOUT_SECONDS)
                 .global(true)
-                .hidden(hidden_unless_forced())
+                .hidden(true)
                 .help("Timeout value for RPC requests"),
         )
         .arg(
@@ -135,7 +122,7 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
                 .takes_value(true)
                 .default_value(DEFAULT_CONFIRM_TX_TIMEOUT_SECONDS)
                 .global(true)
-                .hidden(hidden_unless_forced())
+                .hidden(true)
                 .help("Timeout value for initial transaction status"),
         )
         .cluster_query_subcommands()
@@ -150,7 +137,7 @@ pub fn get_clap_app<'ab, 'v>(name: &str, about: &'ab str, version: &'v str) -> A
         .wallet_subcommands()
         .subcommand(
             SubCommand::with_name("config")
-                .about("Sonoma command-line tool configuration settings")
+                .about("Solomka command-line tool configuration settings")
                 .aliases(&["get", "set"])
                 .setting(AppSettings::SubcommandRequiredElseHelp)
                 .subcommand(

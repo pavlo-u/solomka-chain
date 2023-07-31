@@ -12,15 +12,11 @@ use {
     jsonrpc_core::IoHandler,
     soketto::handshake::{server, Server},
     solana_metrics::TokenCounter,
-    solomka_sdk::timing::AtomicInterval,
     std::{
         io,
         net::SocketAddr,
         str,
-        sync::{
-            atomic::{AtomicUsize, Ordering},
-            Arc,
-        },
+        sync::Arc,
         thread::{self, Builder, JoinHandle},
     },
     stream_cancel::{Trigger, Tripwire},
@@ -119,133 +115,49 @@ impl PubSubService {
     }
 }
 
-const METRICS_REPORT_INTERVAL_MS: u64 = 10_000;
-
-#[derive(Default)]
-struct SentNotificationStats {
-    num_account: AtomicUsize,
-    num_logs: AtomicUsize,
-    num_program: AtomicUsize,
-    num_signature: AtomicUsize,
-    num_slot: AtomicUsize,
-    num_slots_updates: AtomicUsize,
-    num_root: AtomicUsize,
-    num_vote: AtomicUsize,
-    num_block: AtomicUsize,
-    last_report: AtomicInterval,
-}
-
-impl SentNotificationStats {
-    fn maybe_report(&self) {
-        if self.last_report.should_update(METRICS_REPORT_INTERVAL_MS) {
-            datapoint_info!(
-                "rpc_pubsub-sent_notifications",
-                (
-                    "num_account",
-                    self.num_account.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-                (
-                    "num_logs",
-                    self.num_logs.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-                (
-                    "num_program",
-                    self.num_program.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-                (
-                    "num_signature",
-                    self.num_signature.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-                (
-                    "num_slot",
-                    self.num_slot.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-                (
-                    "num_slots_updates",
-                    self.num_slots_updates.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-                (
-                    "num_root",
-                    self.num_root.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-                (
-                    "num_vote",
-                    self.num_vote.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-                (
-                    "num_block",
-                    self.num_block.swap(0, Ordering::Relaxed) as i64,
-                    i64
-                ),
-            );
-        }
-    }
-}
-
 struct BroadcastHandler {
     current_subscriptions: Arc<DashMap<SubscriptionId, SubscriptionToken>>,
-    sent_stats: Arc<SentNotificationStats>,
 }
 
-fn increment_sent_notification_stats(
-    params: &SubscriptionParams,
-    stats: &Arc<SentNotificationStats>,
-) {
+fn count_final(params: &SubscriptionParams) {
     match params {
         SubscriptionParams::Account(_) => {
-            stats.num_account.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-accounts", 1);
         }
         SubscriptionParams::Logs(_) => {
-            stats.num_logs.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-logs", 1);
         }
         SubscriptionParams::Program(_) => {
-            stats.num_program.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-programs", 1);
         }
         SubscriptionParams::Signature(_) => {
-            stats.num_signature.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-signatures", 1);
         }
         SubscriptionParams::Slot => {
-            stats.num_slot.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-slots", 1);
         }
         SubscriptionParams::SlotsUpdates => {
-            stats.num_slots_updates.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-slots-updates", 1);
         }
         SubscriptionParams::Root => {
-            stats.num_root.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-roots", 1);
         }
         SubscriptionParams::Vote => {
-            stats.num_vote.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-votes", 1);
         }
         SubscriptionParams::Block(_) => {
-            stats.num_block.fetch_add(1, Ordering::Relaxed);
+            inc_new_counter_info!("rpc-pubsub-final-slot-txs", 1);
         }
     }
-    stats.maybe_report();
 }
 
 impl BroadcastHandler {
-    fn new(current_subscriptions: Arc<DashMap<SubscriptionId, SubscriptionToken>>) -> Self {
-        let sent_stats = Arc::new(SentNotificationStats::default());
-        Self {
-            current_subscriptions,
-            sent_stats,
-        }
-    }
-
     fn handle(&self, notification: RpcNotification) -> Result<Option<Arc<String>>, Error> {
         if let Entry::Occupied(entry) = self
             .current_subscriptions
             .entry(notification.subscription_id)
         {
-            increment_sent_notification_stats(entry.get().params(), &self.sent_stats);
+            count_final(entry.get().params());
 
             let time_since_created = notification.created_at.elapsed();
 
@@ -282,7 +194,7 @@ pub struct TestBroadcastReceiver {
 impl TestBroadcastReceiver {
     pub fn recv(&mut self) -> String {
         match self.recv_timeout(std::time::Duration::from_secs(10)) {
-            Err(err) => panic!("broadcast receiver error: {err}"),
+            Err(err) => panic!("broadcast receiver error: {}", err),
             Ok(str) => str,
         }
     }
@@ -331,7 +243,9 @@ pub fn test_connection(
         subscriptions.control().clone(),
         Arc::clone(&current_subscriptions),
     );
-    let broadcast_handler = BroadcastHandler::new(current_subscriptions);
+    let broadcast_handler = BroadcastHandler {
+        current_subscriptions,
+    };
     let receiver = TestBroadcastReceiver {
         inner: subscriptions.control().broadcast_receiver(),
         handler: broadcast_handler,
@@ -377,7 +291,9 @@ async fn handle_connection(
         Arc::clone(&current_subscriptions),
     );
     json_rpc_handler.extend_with(rpc_impl.to_delegate());
-    let broadcast_handler = BroadcastHandler::new(current_subscriptions);
+    let broadcast_handler = BroadcastHandler {
+        current_subscriptions,
+    };
     loop {
         // Extra block for dropping `receive_future`.
         {
@@ -482,7 +398,7 @@ mod tests {
 
     #[test]
     fn test_pubsub_new() {
-        let pubsub_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
+        let pubsub_addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 0);
         let exit = Arc::new(AtomicBool::new(false));
         let max_complete_transaction_status_slot = Arc::new(AtomicU64::default());
         let max_complete_rewards_slot = Arc::new(AtomicU64::default());

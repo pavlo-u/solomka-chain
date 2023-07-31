@@ -1,5 +1,3 @@
-//! Used by validators to run events on exit.
-
 use std::fmt;
 
 #[derive(Default)]

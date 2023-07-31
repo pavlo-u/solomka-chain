@@ -1,5 +1,5 @@
-//! This sysvar is deprecated and unused.
-
+//! DEPRECATED: This sysvar can be removed once the pico-inflation feature is enabled
+//!
 use crate::sysvar::Sysvar;
 
 crate::declare_sysvar_id!("SysvarRewards111111111111111111111111111111", Rewards);

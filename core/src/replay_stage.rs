@@ -3684,7 +3684,7 @@ pub(crate) mod tests {
             transaction::TransactionError,
         },
         solana_streamer::socket::SocketAddrSpace,
-        solana_transaction_status::VersionedTransactionWithStatusMeta,
+        solomka_transaction_status::VersionedTransactionWithStatusMeta,
         solana_vote_program::{
             vote_state::{VoteState, VoteStateVersions},
             vote_transaction,

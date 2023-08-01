@@ -30,7 +30,7 @@ use {
         sysvar::epoch_schedule::EpochSchedule,
         transaction::{self, Transaction, TransactionError, TransactionVersion},
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         option_serializer::OptionSerializer, EncodedConfirmedBlock,
         EncodedConfirmedTransactionWithStatusMeta, EncodedTransaction,
         EncodedTransactionWithStatusMeta, Rewards, TransactionBinaryEncoding,

@@ -65,7 +65,7 @@ use {
         sysvar::{self, clock, rent},
         transaction::{SanitizedTransaction, Transaction, TransactionError, VersionedTransaction},
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         ConfirmedTransactionWithStatusMeta, InnerInstructions, TransactionStatusMeta,
         TransactionWithStatusMeta, VersionedTransactionWithStatusMeta,
     },

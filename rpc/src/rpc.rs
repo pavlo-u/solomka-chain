@@ -85,7 +85,7 @@ use {
     solana_stake_program,
     solana_storage_bigtable::Error as StorageError,
     solana_streamer::socket::SocketAddrSpace,
-    solana_transaction_status::{
+    solomka_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, ConfirmedTransactionStatusWithSignature,
         ConfirmedTransactionWithStatusMeta, EncodedConfirmedTransactionWithStatusMeta, Reward,
         RewardType, TransactionBinaryEncoding, TransactionConfirmationStatus, TransactionStatus,
@@ -4673,7 +4673,7 @@ pub mod tests {
                 self, SimpleAddressLoader, Transaction, TransactionError, TransactionVersion,
             },
         },
-        solana_transaction_status::{
+        solomka_transaction_status::{
             EncodedConfirmedBlock, EncodedTransaction, EncodedTransactionWithStatusMeta,
             TransactionDetails,
         },

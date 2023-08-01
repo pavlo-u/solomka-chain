@@ -3,7 +3,7 @@ use {
     solana_ledger::blockstore::Blockstore,
     solana_runtime::bank::RewardInfo,
     solomka_sdk::{clock::Slot, pubkey::Pubkey},
-    solana_transaction_status::Reward,
+    solomka_transaction_status::Reward,
     std::{
         sync::{
             atomic::{AtomicBool, AtomicU64, Ordering},

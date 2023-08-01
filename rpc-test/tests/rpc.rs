@@ -27,7 +27,7 @@ use {
     },
     solana_streamer::socket::SocketAddrSpace,
     solana_test_validator::TestValidator,
-    solana_transaction_status::TransactionStatus,
+    solomka_transaction_status::TransactionStatus,
     std::{
         collections::HashSet,
         net::UdpSocket,

@@ -15,7 +15,7 @@ use {
         transaction::{TransactionError, VersionedTransaction},
     },
     solana_storage_proto::convert::{generated, tx_by_addr},
-    solana_transaction_status::{
+    solomka_transaction_status::{
         extract_and_fmt_memos, ConfirmedBlock, ConfirmedTransactionStatusWithSignature,
         ConfirmedTransactionWithStatusMeta, Reward, TransactionByAddrInfo,
         TransactionConfirmationStatus, TransactionStatus, TransactionStatusMeta,

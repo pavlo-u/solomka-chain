@@ -41,7 +41,7 @@ use {
         system_program,
         transaction::{Transaction, VersionedTransaction},
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         EncodableWithMeta, EncodedConfirmedTransactionWithStatusMeta, EncodedTransaction,
         TransactionBinaryEncoding, UiTransactionEncoding,
     },

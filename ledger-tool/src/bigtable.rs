@@ -21,7 +21,7 @@ use {
     },
     solomka_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
     solana_storage_bigtable::CredentialType,
-    solana_transaction_status::{
+    solomka_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, EncodeError, TransactionDetails,
         UiTransactionEncoding,
     },

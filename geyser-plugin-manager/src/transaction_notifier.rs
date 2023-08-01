@@ -9,7 +9,7 @@ use {
     solana_metrics::*,
     solana_rpc::transaction_notifier_interface::TransactionNotifier,
     solomka_sdk::{clock::Slot, signature::Signature, transaction::SanitizedTransaction},
-    solana_transaction_status::TransactionStatusMeta,
+    solomka_transaction_status::TransactionStatusMeta,
     std::sync::{Arc, RwLock},
 };
 

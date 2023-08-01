@@ -9,7 +9,7 @@ use {
     },
     solomka_client::rpc_client::RpcClient,
     solomka_sdk::{instruction::Instruction, message::Message, native_token::lamports_to_sol},
-    solana_transaction_status::parse_token::spl_token_instruction,
+    solomka_transaction_status::parse_token::spl_token_instruction,
     spl_associated_token_account::{
         get_associated_token_address, instruction::create_associated_token_account,
     },

@@ -3,7 +3,7 @@ use {
     pickledb::{error::Error, PickleDb, PickleDbDumpPolicy},
     serde::{Deserialize, Serialize},
     solomka_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature, transaction::Transaction},
-    solana_transaction_status::TransactionStatus,
+    solomka_transaction_status::TransactionStatus,
     std::{cmp::Ordering, fs, io, path::Path},
 };
 
@@ -212,7 +212,7 @@ mod tests {
         super::*,
         csv::{ReaderBuilder, Trim},
         solomka_sdk::transaction::TransactionError,
-        solana_transaction_status::TransactionConfirmationStatus,
+        solomka_transaction_status::TransactionConfirmationStatus,
         tempfile::NamedTempFile,
     };
 

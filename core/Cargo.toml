@@ -57,7 +57,7 @@ solana-runtime = { path = "../runtime", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-send-transaction-service = { path = "../send-transaction-service", version = "=1.14.20" }
 solana-streamer = { path = "../streamer", version = "=1.14.20" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solomka-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 solana-version = { path = "../version", version = "=1.14.20" }
 solana-vote-program = { path = "../programs/vote", version = "=1.14.20" }
 sys-info = "0.9.1"

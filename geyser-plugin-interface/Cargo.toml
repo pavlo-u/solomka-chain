@@ -12,7 +12,7 @@ documentation = "https://docs.rs/solana-geyser-plugin-interface"
 [dependencies]
 log = "0.4.17"
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solomka-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 thiserror = "1.0.31"
 
 [package.metadata.docs.rs]

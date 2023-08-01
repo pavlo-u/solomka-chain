@@ -38,7 +38,7 @@ use {
         system_instruction,
         transaction::Transaction,
     },
-    solana_transaction_status::TransactionStatus,
+    solomka_transaction_status::TransactionStatus,
     spl_associated_token_account::get_associated_token_address,
     spl_token::solana_program::program_error::ProgramError,
     std::{
@@ -1230,7 +1230,7 @@ mod tests {
         },
         solana_streamer::socket::SocketAddrSpace,
         solana_test_validator::TestValidator,
-        solana_transaction_status::TransactionConfirmationStatus,
+        solomka_transaction_status::TransactionConfirmationStatus,
     };
 
     fn one_signer_message(client: &RpcClient) -> Message {

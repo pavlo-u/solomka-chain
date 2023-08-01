@@ -62,7 +62,7 @@ use {
         timing,
         transaction::Transaction,
     },
-    solana_transaction_status::UiTransactionEncoding,
+    solomka_transaction_status::UiTransactionEncoding,
     solana_vote_program::vote_state::VoteState,
     std::{
         collections::{BTreeMap, HashMap, VecDeque},

@@ -14,7 +14,7 @@ use {
         transaction::{Transaction, TransactionError, VersionedTransaction},
         transaction_context::TransactionReturnData,
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         ConfirmedBlock, InnerInstructions, Reward, RewardType, TransactionByAddrInfo,
         TransactionStatusMeta, TransactionTokenBalance, TransactionWithStatusMeta,
         VersionedConfirmedBlock, VersionedTransactionWithStatusMeta,

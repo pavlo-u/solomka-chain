@@ -32,7 +32,7 @@ use {
         stake_history::StakeHistoryEntry,
         transaction::{Transaction, TransactionError, VersionedTransaction},
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         EncodedConfirmedBlock, EncodedTransaction, TransactionConfirmationStatus,
         UiTransactionStatusMeta,
     },

@@ -38,7 +38,7 @@ use {
         timing::timestamp,
         transaction,
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, EncodeError, VersionedConfirmedBlock,
     },
     std::{
@@ -1295,7 +1295,7 @@ pub(crate) mod tests {
             stake, system_instruction, system_program, system_transaction,
             transaction::Transaction,
         },
-        solana_transaction_status::{TransactionDetails, UiTransactionEncoding},
+        solomka_transaction_status::{TransactionDetails, UiTransactionEncoding},
         std::{
             collections::HashSet,
             sync::atomic::{AtomicU64, Ordering::Relaxed},

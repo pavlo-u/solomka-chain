@@ -63,7 +63,7 @@ use {
         transport::TransportError,
     },
     solana_streamer::sendmmsg::batch_send,
-    solana_transaction_status::token_balances::TransactionTokenBalancesSet,
+    solomka_transaction_status::token_balances::TransactionTokenBalancesSet,
     std::{
         cmp,
         collections::{HashMap, HashSet},
@@ -2339,7 +2339,7 @@ mod tests {
             transaction::{MessageHash, Transaction, TransactionError, VersionedTransaction},
         },
         solana_streamer::{recvmmsg::recv_mmsg, socket::SocketAddrSpace},
-        solana_transaction_status::{TransactionStatusMeta, VersionedTransactionWithStatusMeta},
+        solomka_transaction_status::{TransactionStatusMeta, VersionedTransactionWithStatusMeta},
         std::{
             borrow::Cow,
             path::Path,

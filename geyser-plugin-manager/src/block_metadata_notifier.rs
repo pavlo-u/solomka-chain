@@ -11,7 +11,7 @@ use {
     solana_metrics::*,
     solana_runtime::bank::RewardInfo,
     solomka_sdk::{clock::UnixTimestamp, pubkey::Pubkey},
-    solana_transaction_status::{Reward, Rewards},
+    solomka_transaction_status::{Reward, Rewards},
     std::sync::{Arc, RwLock},
 };
 

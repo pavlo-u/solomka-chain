@@ -24,7 +24,7 @@ solana-net-utils = { path = "../net-utils", version = "=1.14.20" }
 solana-runtime = { path = "../runtime", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-streamer = { path = "../streamer", version = "=1.14.20" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solomka-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 solana-version = { path = "../version", version = "=1.14.20" }
 spl-token = { version = "=3.5.0", features = ["no-entrypoint"] }
 

@@ -25,7 +25,7 @@ solana-rpc = { path = "../rpc", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-streamer = { path = "../streamer", version = "=1.14.20" }
 solana-test-validator = { path = "../test-validator", version = "=1.14.20" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solomka-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 tokio = { version = "~1.14.1", features = ["full"] }
 
 [dev-dependencies]

@@ -50,7 +50,7 @@ use {
         transaction::VersionedTransaction,
     },
     solana_storage_proto::{StoredExtendedRewards, StoredTransactionStatusMeta},
-    solana_transaction_status::{
+    solomka_transaction_status::{
         ConfirmedTransactionStatusWithSignature, ConfirmedTransactionWithStatusMeta, Rewards,
         TransactionStatusMeta, TransactionWithStatusMeta, VersionedConfirmedBlock,
         VersionedTransactionWithStatusMeta,
@@ -4405,7 +4405,7 @@ pub mod tests {
             transaction_context::TransactionReturnData,
         },
         solana_storage_proto::convert::generated,
-        solana_transaction_status::{InnerInstructions, Reward, Rewards, TransactionTokenBalance},
+        solomka_transaction_status::{InnerInstructions, Reward, Rewards, TransactionTokenBalance},
         std::{thread::Builder, time::Duration},
     };
 

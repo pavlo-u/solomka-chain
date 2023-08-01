@@ -33,7 +33,7 @@ solana-runtime = { path = "../runtime", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-stake-program = { path = "../programs/stake", version = "=1.14.20" }
 solana-storage-bigtable = { path = "../storage-bigtable", version = "=1.14.20" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solomka-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 solana-version = { path = "../version", version = "=1.14.20" }
 solana-vote-program = { path = "../programs/vote", version = "=1.14.20" }
 tokio = { version = "1", features = ["full"] }

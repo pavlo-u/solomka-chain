@@ -7,7 +7,7 @@ use {
     solana_metrics::datapoint_debug,
     solana_runtime::{bank::Bank, transaction_batch::TransactionBatch},
     solomka_sdk::{account::ReadableAccount, pubkey::Pubkey},
-    solana_transaction_status::{
+    solomka_transaction_status::{
         token_balances::TransactionTokenBalances, TransactionTokenBalance,
     },
     spl_token_2022::{

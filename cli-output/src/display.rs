@@ -16,7 +16,7 @@ use {
         stake,
         transaction::{TransactionError, TransactionVersion, VersionedTransaction},
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         Rewards, UiReturnDataEncoding, UiTransactionReturnData, UiTransactionStatusMeta,
     },
     spl_memo::{id as spl_memo_id, v1::id as spl_memo_v1_id},
@@ -737,7 +737,7 @@ mod test {
             transaction::Transaction,
             transaction_context::TransactionReturnData,
         },
-        solana_transaction_status::{Reward, RewardType, TransactionStatusMeta},
+        solomka_transaction_status::{Reward, RewardType, TransactionStatusMeta},
         std::io::BufWriter,
     };
 

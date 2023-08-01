@@ -9,7 +9,7 @@ use {
         inflation::Inflation,
         transaction::{Result, TransactionError},
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         ConfirmedTransactionStatusWithSignature, TransactionConfirmationStatus, UiConfirmedBlock,
         UiTransactionReturnData,
     },

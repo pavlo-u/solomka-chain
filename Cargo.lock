@@ -4528,12 +4528,12 @@ dependencies = [
  "solana-runtime",
  "solana-streamer",
  "solana-test-validator",
- "solana-transaction-status",
  "solana-version",
  "solomka-account-decoder",
  "solomka-clap-utils",
  "solomka-client",
  "solomka-sdk",
+ "solomka-transaction-status",
  "spl-token",
 ]
 
@@ -4854,11 +4854,11 @@ dependencies = [
  "solana-send-transaction-service",
  "solana-stake-program",
  "solana-streamer",
- "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
  "solomka-client",
  "solomka-sdk",
+ "solomka-transaction-status",
  "static_assertions",
  "sys-info",
  "sysctl",
@@ -5091,8 +5091,8 @@ name = "solana-geyser-plugin-interface"
 version = "1.14.20"
 dependencies = [
  "log",
- "solana-transaction-status",
  "solomka-sdk",
+ "solomka-transaction-status",
  "thiserror",
 ]
 
@@ -5111,8 +5111,8 @@ dependencies = [
  "solana-metrics",
  "solana-rpc",
  "solana-runtime",
- "solana-transaction-status",
  "solomka-sdk",
+ "solomka-transaction-status",
  "thiserror",
 ]
 
@@ -5242,10 +5242,10 @@ dependencies = [
  "solana-stake-program",
  "solana-storage-bigtable",
  "solana-storage-proto",
- "solana-transaction-status",
  "solana-vote-program",
  "solomka-account-decoder",
  "solomka-sdk",
+ "solomka-transaction-status",
  "spl-token",
  "spl-token-2022",
  "static_assertions",
@@ -5284,12 +5284,12 @@ dependencies = [
  "solana-runtime",
  "solana-stake-program",
  "solana-storage-bigtable",
- "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
  "solomka-clap-utils",
  "solomka-cli-output",
  "solomka-sdk",
+ "solomka-transaction-status",
  "tikv-jemallocator",
  "tokio",
 ]
@@ -5655,12 +5655,12 @@ dependencies = [
  "solana-stake-program",
  "solana-storage-bigtable",
  "solana-streamer",
- "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
  "solomka-account-decoder",
  "solomka-client",
  "solomka-sdk",
+ "solomka-transaction-status",
  "spl-token",
  "spl-token-2022",
  "stream-cancel",
@@ -5686,10 +5686,10 @@ dependencies = [
  "solana-rpc",
  "solana-streamer",
  "solana-test-validator",
- "solana-transaction-status",
  "solomka-account-decoder",
  "solomka-client",
  "solomka-sdk",
+ "solomka-transaction-status",
  "tokio",
 ]
 
@@ -5898,8 +5898,8 @@ dependencies = [
  "smpl_jwt",
  "solana-metrics",
  "solana-storage-proto",
- "solana-transaction-status",
  "solomka-sdk",
+ "solomka-transaction-status",
  "thiserror",
  "tokio",
  "tonic 0.8.3",
@@ -5916,9 +5916,9 @@ dependencies = [
  "prost 0.11.9",
  "protobuf-src",
  "serde",
- "solana-transaction-status",
  "solomka-account-decoder",
  "solomka-sdk",
+ "solomka-transaction-status",
  "tonic-build 0.8.4",
 ]
 
@@ -6017,7 +6017,6 @@ dependencies = [
  "solana-logger 1.14.20",
  "solana-streamer",
  "solana-test-validator",
- "solana-transaction-status",
  "solana-version",
  "solomka-account-decoder",
  "solomka-clap-utils",
@@ -6025,6 +6024,7 @@ dependencies = [
  "solomka-client",
  "solomka-remote-wallet",
  "solomka-sdk",
+ "solomka-transaction-status",
  "spl-associated-token-account",
  "spl-token",
  "tempfile",
@@ -6049,39 +6049,12 @@ dependencies = [
  "solana-net-utils",
  "solana-runtime",
  "solana-streamer",
- "solana-transaction-status",
  "solana-version",
  "solomka-clap-utils",
  "solomka-cli",
  "solomka-client",
  "solomka-sdk",
-]
-
-[[package]]
-name = "solana-transaction-status"
-version = "1.14.20"
-dependencies = [
- "Inflector",
- "base64 0.13.1",
- "bincode",
- "borsh",
- "bs58",
- "lazy_static",
- "log",
- "serde",
- "serde_derive",
- "serde_json",
- "solana-address-lookup-table-program",
- "solana-measure",
- "solana-metrics",
- "solana-vote-program",
- "solomka-account-decoder",
- "solomka-sdk",
- "spl-associated-token-account",
- "spl-memo",
- "spl-token",
- "spl-token-2022",
- "thiserror",
+ "solomka-transaction-status",
 ]
 
 [[package]]
@@ -6386,7 +6359,6 @@ dependencies = [
  "solana-program-runtime",
  "solana-streamer",
  "solana-test-validator",
- "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
  "solana_rbpf",
@@ -6397,6 +6369,7 @@ dependencies = [
  "solomka-client",
  "solomka-remote-wallet",
  "solomka-sdk",
+ "solomka-transaction-status",
  "spl-memo",
  "tempfile",
  "thiserror",
@@ -6434,13 +6407,13 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "solana-transaction-status",
  "solana-vote-program",
  "solomka-account-decoder",
  "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-client",
  "solomka-sdk",
+ "solomka-transaction-status",
  "spl-memo",
 ]
 
@@ -6486,12 +6459,12 @@ dependencies = [
  "solana-net-utils",
  "solana-perf",
  "solana-streamer",
- "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
  "solomka-account-decoder",
  "solomka-clap-utils",
  "solomka-sdk",
+ "solomka-transaction-status",
  "spl-token-2022",
  "thiserror",
  "tokio",
@@ -6519,10 +6492,10 @@ dependencies = [
  "solana-runtime",
  "solana-streamer",
  "solana-test-validator",
- "solana-transaction-status",
  "solana-version",
  "solomka-client",
  "solomka-sdk",
+ "solomka-transaction-status",
  "systemstat",
  "tokio",
 ]
@@ -6675,6 +6648,33 @@ dependencies = [
  "quote 1.0.32",
  "rustversion",
  "syn 1.0.109",
+]
+
+[[package]]
+name = "solomka-transaction-status"
+version = "1.14.20"
+dependencies = [
+ "Inflector",
+ "base64 0.13.1",
+ "bincode",
+ "borsh",
+ "bs58",
+ "lazy_static",
+ "log",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "solana-address-lookup-table-program",
+ "solana-measure",
+ "solana-metrics",
+ "solana-vote-program",
+ "solomka-account-decoder",
+ "solomka-sdk",
+ "spl-associated-token-account",
+ "spl-memo",
+ "spl-token",
+ "spl-token-2022",
+ "thiserror",
 ]
 
 [[package]]

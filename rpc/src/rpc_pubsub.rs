@@ -28,7 +28,7 @@ use {
         },
     },
     solomka_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
-    solana_transaction_status::UiTransactionEncoding,
+    solomka_transaction_status::UiTransactionEncoding,
     std::{str::FromStr, sync::Arc},
 };
 

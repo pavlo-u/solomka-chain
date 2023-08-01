@@ -30,7 +30,7 @@ smpl_jwt = "0.7.1"
 solana-metrics = { path = "../metrics", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-storage-proto = { path = "../storage-proto", version = "=1.14.20" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solomka-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 thiserror = "1.0"
 tokio = "1"
 tonic = { version = "0.8.0", features = ["tls", "transport"] }

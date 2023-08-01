@@ -7,7 +7,7 @@ use {
         blockstore_processor::{TransactionStatusBatch, TransactionStatusMessage},
     },
     solana_runtime::bank::{DurableNonceFee, TransactionExecutionDetails},
-    solana_transaction_status::{
+    solomka_transaction_status::{
         extract_and_fmt_memos, InnerInstructions, Reward, TransactionStatusMeta,
     },
     std::{
@@ -239,7 +239,7 @@ pub(crate) mod tests {
                 VersionedTransaction,
             },
         },
-        solana_transaction_status::{
+        solomka_transaction_status::{
             token_balances::TransactionTokenBalancesSet, TransactionStatusMeta,
             TransactionTokenBalance,
         },

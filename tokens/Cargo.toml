@@ -25,7 +25,7 @@ solomka-cli-config = { path = "../cli-config", version = "=1.14.20" }
 solomka-client = { path = "../client", version = "=1.14.20" }
 solomka-remote-wallet = { path = "../remote-wallet", version = "=1.14.20" }
 solomka-sdk= { path = "../sdk", version = "=1.14.20" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solomka-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 solana-version = { path = "../version", version = "=1.14.20" }
 spl-associated-token-account = { version = "=1.1.3" }
 spl-token = { version = "=3.5.0", features = ["no-entrypoint"] }

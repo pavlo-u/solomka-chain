@@ -8,7 +8,7 @@ use {
         deserialize_utils::default_on_eof, message::v0::LoadedAddresses, transaction::Result,
         transaction_context::TransactionReturnData,
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         InnerInstructions, Reward, RewardType, TransactionStatusMeta, TransactionTokenBalance,
     },
     std::str::FromStr,

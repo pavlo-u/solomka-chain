@@ -47,7 +47,7 @@ use {
         signature::Signature,
         transaction,
     },
-    solana_transaction_status::{
+    solomka_transaction_status::{
         EncodedConfirmedBlock, EncodedConfirmedTransactionWithStatusMeta, TransactionStatus,
         UiConfirmedBlock, UiTransactionEncoding,
     },
@@ -2531,7 +2531,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solana_transaction_status::UiTransactionEncoding;
+    /// # use solomka_transaction_status::UiTransactionEncoding;
     /// # use solomka_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
@@ -2571,7 +2571,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solana_transaction_status::{
+    /// # use solomka_transaction_status::{
     /// #     TransactionDetails,
     /// #     UiTransactionEncoding,
     /// # };
@@ -3179,7 +3179,7 @@ impl RpcClient {
     /// #     signer::keypair::Keypair,
     /// #     system_transaction,
     /// # };
-    /// # use solana_transaction_status::UiTransactionEncoding;
+    /// # use solomka_transaction_status::UiTransactionEncoding;
     /// # futures::executor::block_on(async {
     /// #     let rpc_client = RpcClient::new_mock("succeeds".to_string());
     /// #     let alice = Keypair::new();
@@ -3242,7 +3242,7 @@ impl RpcClient {
     /// #     system_transaction,
     /// #     commitment_config::CommitmentConfig,
     /// # };
-    /// # use solana_transaction_status::UiTransactionEncoding;
+    /// # use solomka_transaction_status::UiTransactionEncoding;
     /// # futures::executor::block_on(async {
     /// #     let rpc_client = RpcClient::new_mock("succeeds".to_string());
     /// #     let alice = Keypair::new();

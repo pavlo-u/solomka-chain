@@ -3,7 +3,7 @@ use {
     crate::rpc_response::RpcSimulateTransactionResult,
     jsonrpc_core::{Error, ErrorCode},
     solomka_sdk::clock::Slot,
-    solana_transaction_status::EncodeError,
+    solomka_transaction_status::EncodeError,
     thiserror::Error,
 };
 

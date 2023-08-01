@@ -21,7 +21,7 @@ use {
         transaction::Transaction,
     },
     solana_streamer::socket::SocketAddrSpace,
-    solana_transaction_status::parse_token::spl_token_instruction,
+    solomka_transaction_status::parse_token::spl_token_instruction,
     std::{
         cmp::min,
         net::SocketAddr,

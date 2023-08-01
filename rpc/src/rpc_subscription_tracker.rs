@@ -11,7 +11,7 @@ use {
     solomka_sdk::{
         clock::Slot, commitment_config::CommitmentConfig, pubkey::Pubkey, signature::Signature,
     },
-    solana_transaction_status::{TransactionDetails, UiTransactionEncoding},
+    solomka_transaction_status::{TransactionDetails, UiTransactionEncoding},
     std::{
         collections::hash_map::{Entry, HashMap},
         fmt,

@@ -50,7 +50,7 @@ solomka-sdk= { path = "../sdk", version = "=1.14.20" }
 solana-stake-program = { path = "../programs/stake", version = "=1.14.20" }
 solana-storage-bigtable = { path = "../storage-bigtable", version = "=1.14.20" }
 solana-storage-proto = { path = "../storage-proto", version = "=1.14.20" }
-solana-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
+solomka-transaction-status = { path = "../transaction-status", version = "=1.14.20" }
 solana-vote-program = { path = "../programs/vote", version = "=1.14.20" }
 spl-token = { version = "=3.5.0", features = ["no-entrypoint"] }
 spl-token-2022 = { version = "=0.6.1", features = ["no-entrypoint"] }

@@ -17,7 +17,7 @@ use {
     },
     async_trait::async_trait,
     serde_json::{json, Number, Value},
-    solana_account_decoder::{UiAccount, UiAccountEncoding},
+    solomka_account_decoder::{UiAccount, UiAccountEncoding},
     solomka_sdk::{
         account::Account,
         clock::{Slot, UnixTimestamp},

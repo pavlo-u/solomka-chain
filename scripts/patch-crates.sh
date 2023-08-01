@@ -14,8 +14,8 @@ update_solana_dependencies() {
   sed -i -e "s#\(solomka-client = { version = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
   sed -i -e "s#\(solomka-clap-utils = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
   sed -i -e "s#\(solomka-clap-utils = { version = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
-  sed -i -e "s#\(solana-account-decoder = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
-  sed -i -e "s#\(solana-account-decoder = { version = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
+  sed -i -e "s#\(solomka-account-decoder = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
+  sed -i -e "s#\(solomka-account-decoder = { version = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
   sed -i -e "s#\(solana-faucet = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
   sed -i -e "s#\(solana-faucet = { version = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
   sed -i -e "s#\(solana-zk-token-sdk = \"\)[^\"]*\(\"\)#\1=$solana_ver\2#g" "${tomls[@]}" || return $?
@@ -27,7 +27,7 @@ patch_crates_io_solana() {
   declare solana_dir="$2"
   cat >> "$Cargo_toml" <<EOF
 [patch.crates-io]
-solana-account-decoder = { path = "$solana_dir/account-decoder" }
+solomka-account-decoder = { path = "$solana_dir/account-decoder" }
 solomka-clap-utils = { path = "$solana_dir/clap-utils" }
 solomka-client = { path = "$solana_dir/client" }
 solana-program = { path = "$solana_dir/sdk/program" }

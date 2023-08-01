@@ -13,7 +13,7 @@ clap = "2.33.1"
 log = "0.4.17"
 rand = "0.7.0"
 rayon = "1.5.3"
-solana-account-decoder = { path = "../account-decoder", version = "=1.14.20" }
+solomka-account-decoder = { path = "../account-decoder", version = "=1.14.20" }
 solomka-clap-utils = { path = "../clap-utils", version = "=1.14.20" }
 solomka-client = { path = "../client", version = "=1.14.20" }
 solana-faucet = { path = "../faucet", version = "=1.14.20" }

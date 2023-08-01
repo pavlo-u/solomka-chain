@@ -7,7 +7,7 @@ use {
         parse_accounts::{parse_legacy_message_accounts, parse_v0_message_accounts, ParsedAccount},
         parse_instruction::{parse, ParsedInstruction},
     },
-    solana_account_decoder::parse_token::UiTokenAmount,
+    solomka_account_decoder::parse_token::UiTokenAmount,
     solomka_sdk::{
         clock::{Slot, UnixTimestamp},
         commitment_config::CommitmentConfig,

@@ -122,7 +122,7 @@ mod tests {
         },
         clap::App,
         serde_json::{self, json},
-        solana_account_decoder::{UiAccount, UiAccountEncoding},
+        solomka_account_decoder::{UiAccount, UiAccountEncoding},
         solomka_sdk::{
             account::Account,
             fee_calculator::FeeCalculator,

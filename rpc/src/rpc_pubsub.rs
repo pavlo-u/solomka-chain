@@ -15,7 +15,7 @@ use {
     jsonrpc_core::{Error, ErrorCode, Result},
     jsonrpc_derive::rpc,
     jsonrpc_pubsub::{typed::Subscriber, SubscriptionId as PubSubSubscriptionId},
-    solana_account_decoder::{UiAccount, UiAccountEncoding},
+    solomka_account_decoder::{UiAccount, UiAccountEncoding},
     solomka_client::{
         rpc_config::{
             RpcAccountInfoConfig, RpcBlockSubscribeConfig, RpcBlockSubscribeFilter,
@@ -600,7 +600,7 @@ mod tests {
         },
         jsonrpc_core::{IoHandler, Response},
         serial_test::serial,
-        solana_account_decoder::{parse_account_data::parse_account_data, UiAccountEncoding},
+        solomka_account_decoder::{parse_account_data::parse_account_data, UiAccountEncoding},
         solomka_client::rpc_response::{
             ProcessedSignatureResult, ReceivedSignatureResult, RpcSignatureResult, SlotInfo,
         },

@@ -5,7 +5,7 @@ use {
     log::*,
     reqwest::{self, header::CONTENT_TYPE},
     serde_json::{json, Value},
-    solana_account_decoder::UiAccount,
+    solomka_account_decoder::UiAccount,
     solomka_client::{
         client_error::{ClientErrorKind, Result as ClientResult},
         connection_cache::{ConnectionCache, DEFAULT_TPU_CONNECTION_POOL_SIZE},
@@ -119,7 +119,7 @@ fn test_rpc_send_tx() {
     assert!(confirmed_tx);
 
     use {
-        solana_account_decoder::UiAccountEncoding, solomka_client::rpc_config::RpcAccountInfoConfig,
+        solomka_account_decoder::UiAccountEncoding, solomka_client::rpc_config::RpcAccountInfoConfig,
     };
     let config = RpcAccountInfoConfig {
         encoding: Some(UiAccountEncoding::Base64),

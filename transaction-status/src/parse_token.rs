@@ -7,7 +7,7 @@ use {
         mint_close_authority::*, permanent_delegate::*, reallocate::*, transfer_fee::*,
     },
     serde_json::{json, Map, Value},
-    solana_account_decoder::parse_token::{
+    solomka_account_decoder::parse_token::{
         pubkey_from_spl_token, token_amount_to_ui_amount, UiAccountState,
     },
     solomka_sdk::{

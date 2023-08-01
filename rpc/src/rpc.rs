@@ -9,7 +9,7 @@ use {
     crossbeam_channel::{unbounded, Receiver, Sender},
     jsonrpc_core::{futures::future, types::error, BoxFuture, Error, Metadata, Result},
     jsonrpc_derive::rpc,
-    solana_account_decoder::{
+    solomka_account_decoder::{
         parse_token::{is_known_spl_token_id, token_amount_to_ui_amount, UiTokenAmount},
         UiAccount, UiAccountEncoding, UiDataSliceConfig, MAX_BASE58_BYTES,
     },
@@ -7365,7 +7365,7 @@ pub mod tests {
 
     #[test]
     fn test_token_rpcs() {
-        for program_id in solana_account_decoder::parse_token::spl_token_ids() {
+        for program_id in solomka_account_decoder::parse_token::spl_token_ids() {
             let rpc = RpcHandler::start();
             let bank = rpc.working_bank();
             let RpcHandler { io, meta, .. } = rpc;
@@ -7866,7 +7866,7 @@ pub mod tests {
 
     #[test]
     fn test_token_parsing() {
-        for program_id in solana_account_decoder::parse_token::spl_token_ids() {
+        for program_id in solomka_account_decoder::parse_token::spl_token_ids() {
             let rpc = RpcHandler::start();
             let bank = rpc.working_bank();
             let RpcHandler { io, meta, .. } = rpc;

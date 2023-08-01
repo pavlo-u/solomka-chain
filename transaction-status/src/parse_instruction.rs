@@ -11,7 +11,7 @@ use {
     },
     inflector::Inflector,
     serde_json::Value,
-    solana_account_decoder::parse_token::spl_token_ids,
+    solomka_account_decoder::parse_token::spl_token_ids,
     solomka_sdk::{
         instruction::CompiledInstruction, message::AccountKeys, pubkey::Pubkey, stake,
         system_program,

@@ -4,7 +4,7 @@ use {
     log::*,
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solana_account_decoder::parse_token::spl_token_pubkey,
+    solomka_account_decoder::parse_token::spl_token_pubkey,
     solomka_clap_utils::input_parsers::pubkey_of,
     solomka_client::{rpc_client::RpcClient, transaction_executor::TransactionExecutor},
     solana_faucet::faucet::{request_airdrop_transaction, FAUCET_PORT},

@@ -4497,29 +4497,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-account-decoder"
-version = "1.14.20"
-dependencies = [
- "Inflector",
- "base64 0.13.1",
- "bincode",
- "bs58",
- "bv",
- "lazy_static",
- "serde",
- "serde_derive",
- "serde_json",
- "solana-address-lookup-table-program",
- "solana-config-program",
- "solana-vote-program",
- "solomka-sdk",
- "spl-token",
- "spl-token-2022",
- "thiserror",
- "zstd",
-]
-
-[[package]]
 name = "solana-accounts-bench"
 version = "1.14.20"
 dependencies = [
@@ -4541,7 +4518,6 @@ dependencies = [
  "log",
  "rand 0.7.3",
  "rayon",
- "solana-account-decoder",
  "solana-core",
  "solana-faucet",
  "solana-gossip",
@@ -4554,6 +4530,7 @@ dependencies = [
  "solana-test-validator",
  "solana-transaction-status",
  "solana-version",
+ "solomka-account-decoder",
  "solomka-clap-utils",
  "solomka-client",
  "solomka-sdk",
@@ -5251,7 +5228,6 @@ dependencies = [
  "serde",
  "serde_bytes",
  "sha2 0.10.7",
- "solana-account-decoder",
  "solana-bpf-loader-program",
  "solana-entry",
  "solana-frozen-abi 1.14.20",
@@ -5268,6 +5244,7 @@ dependencies = [
  "solana-storage-proto",
  "solana-transaction-status",
  "solana-vote-program",
+ "solomka-account-decoder",
  "solomka-sdk",
  "spl-token",
  "spl-token-2022",
@@ -5662,7 +5639,6 @@ dependencies = [
  "serde_json",
  "serial_test 0.8.0",
  "soketto",
- "solana-account-decoder",
  "solana-address-lookup-table-program",
  "solana-entry",
  "solana-faucet",
@@ -5682,6 +5658,7 @@ dependencies = [
  "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
+ "solomka-account-decoder",
  "solomka-client",
  "solomka-sdk",
  "spl-token",
@@ -5705,12 +5682,12 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "solana-account-decoder",
  "solana-logger 1.14.20",
  "solana-rpc",
  "solana-streamer",
  "solana-test-validator",
  "solana-transaction-status",
+ "solomka-account-decoder",
  "solomka-client",
  "solomka-sdk",
  "tokio",
@@ -5939,8 +5916,8 @@ dependencies = [
  "prost 0.11.9",
  "protobuf-src",
  "serde",
- "solana-account-decoder",
  "solana-transaction-status",
+ "solomka-account-decoder",
  "solomka-sdk",
  "tonic-build 0.8.4",
 ]
@@ -6037,12 +6014,12 @@ dependencies = [
  "indicatif",
  "pickledb",
  "serde",
- "solana-account-decoder",
  "solana-logger 1.14.20",
  "solana-streamer",
  "solana-test-validator",
  "solana-transaction-status",
  "solana-version",
+ "solomka-account-decoder",
  "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-client",
@@ -6094,11 +6071,11 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "solana-account-decoder",
  "solana-address-lookup-table-program",
  "solana-measure",
  "solana-metrics",
  "solana-vote-program",
+ "solomka-account-decoder",
  "solomka-sdk",
  "spl-associated-token-account",
  "spl-memo",
@@ -6324,6 +6301,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "solomka-account-decoder"
+version = "1.14.20"
+dependencies = [
+ "Inflector",
+ "base64 0.13.1",
+ "bincode",
+ "bs58",
+ "bv",
+ "lazy_static",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "solana-address-lookup-table-program",
+ "solana-config-program",
+ "solana-vote-program",
+ "solomka-sdk",
+ "spl-token",
+ "spl-token-2022",
+ "thiserror",
+ "zstd",
+]
+
+[[package]]
 name = "solomka-clap-utils"
 version = "1.14.20"
 dependencies = [
@@ -6378,7 +6378,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "solana-account-decoder",
  "solana-address-lookup-table-program",
  "solana-bpf-loader-program",
  "solana-config-program",
@@ -6391,6 +6390,7 @@ dependencies = [
  "solana-version",
  "solana-vote-program",
  "solana_rbpf",
+ "solomka-account-decoder",
  "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-cli-output",
@@ -6434,9 +6434,9 @@ dependencies = [
  "semver",
  "serde",
  "serde_json",
- "solana-account-decoder",
  "solana-transaction-status",
  "solana-vote-program",
+ "solomka-account-decoder",
  "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-client",
@@ -6479,7 +6479,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "solana-account-decoder",
  "solana-faucet",
  "solana-logger 1.14.20",
  "solana-measure",
@@ -6490,6 +6489,7 @@ dependencies = [
  "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
+ "solomka-account-decoder",
  "solomka-clap-utils",
  "solomka-sdk",
  "spl-token-2022",

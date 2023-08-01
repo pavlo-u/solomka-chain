@@ -1,6 +1,6 @@
 use {
     jsonrpc_core::{Error, Result},
-    solana_account_decoder::{
+    solomka_account_decoder::{
         parse_account_data::AccountAdditionalData,
         parse_token::{
             get_token_account_mint, spl_token_native_mint, spl_token_native_mint_program_id,

@@ -6,7 +6,7 @@ extern crate solana_bpf_loader_program;
 use {
     itertools::izip,
     log::{log_enabled, trace, Level::Trace},
-    solana_account_decoder::parse_bpf_loader::{
+    solomka_account_decoder::parse_bpf_loader::{
         parse_bpf_upgradeable_loader, BpfUpgradeableLoaderAccountType,
     },
     solana_bpf_loader_program::{

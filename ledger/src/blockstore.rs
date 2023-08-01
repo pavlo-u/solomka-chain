@@ -4391,7 +4391,7 @@ pub mod tests {
         crossbeam_channel::unbounded,
         itertools::Itertools,
         rand::{seq::SliceRandom, thread_rng},
-        solana_account_decoder::parse_token::UiTokenAmount,
+        solomka_account_decoder::parse_token::UiTokenAmount,
         solana_entry::entry::{next_entry, next_entry_mut},
         solana_runtime::bank::{Bank, RewardType},
         solomka_sdk::{

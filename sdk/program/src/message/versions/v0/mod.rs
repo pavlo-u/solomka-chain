@@ -15,9 +15,8 @@ use crate::{
     hash::Hash,
     instruction::{CompiledInstruction, Instruction},
     message::{
-        compiled_keys::{CompileError, CompiledKeys},
-        legacy::is_builtin_key_or_sysvar,
-        AccountKeys, MessageHeader, MESSAGE_VERSION_PREFIX,
+        compiled_keys::CompileError, legacy::is_builtin_key_or_sysvar, AccountKeys, CompiledKeys,
+        MessageHeader, MESSAGE_VERSION_PREFIX,
     },
     pubkey::Pubkey,
     sanitize::SanitizeError,
@@ -180,24 +179,24 @@ impl Message {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solana_address_lookup_table_program`], [`solomka_client`], [`solomka_sdk`], and [`anyhow`] crates.
+    /// This example uses the [`solana_address_lookup_table_program`], [`solana_client`], [`solomka_sdk`], and [`anyhow`] crates.
     ///
     /// [`solana_address_lookup_table_program`]: https://docs.rs/solana-address-lookup-table-program
-    /// [`solomka_client`]: https://docs.rs/solana-client
+    /// [`solana_client`]: https://docs.rs/solana-client
     /// [`solomka_sdk`]: https://docs.rs/solana-sdk
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
     /// # use solomka_program::example_mocks::{
     /// #     solana_address_lookup_table_program,
-    /// #     solomka_client,
+    /// #     solana_client,
     /// #     solomka_sdk,
     /// # };
     /// # use std::borrow::Cow;
     /// # use solomka_sdk::account::Account;
     /// use anyhow::Result;
     /// use solana_address_lookup_table_program::state::AddressLookupTable;
-    /// use solomka_client::rpc_client::RpcClient;
+    /// use solana_client::rpc_client::RpcClient;
     /// use solomka_sdk::{
     ///      address_lookup_table_account::AddressLookupTableAccount,
     ///      instruction::{AccountMeta, Instruction},

@@ -29,7 +29,7 @@ this step, you should see the “validator-stake-keypair.json” in your Solana
 runtime directory.
 
 ```bash
-solomka-keygen new -o ~/validator-stake-keypair.json
+solana-keygen new -o ~/validator-stake-keypair.json
 ```
 
 ## Delegate Stake
@@ -71,7 +71,7 @@ account.
 This is a normal transaction so the standard transaction fee will apply. The
 transaction fee range is defined by the genesis block. The actual fee will
 fluctuate based on transaction load. You can determine the current fee via the
-[RPC API “getRecentBlockhash”](../api/http#getrecentblockhash)
+[RPC API “getRecentBlockhash”](developing/clients/jsonrpc-api.md#getrecentblockhash)
 before submitting a transaction.
 
 Learn more about [transaction fees here](../implemented-proposals/transaction-fees.md).

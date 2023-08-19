@@ -7,7 +7,7 @@ use {
         test_utils::check_ready,
     },
     solomka_cli_output::{parse_sign_only_reply_string, OutputFormat},
-    solomka_client::{
+    solana_client::{
         blockhash_query::{self, BlockhashQuery},
         nonce_utils,
         rpc_client::RpcClient,
@@ -259,7 +259,7 @@ fn test_create_account_with_seed() {
 
     let offline_nonce_authority_signer = keypair_from_seed(&[1u8; 32]).unwrap();
     let online_nonce_creator_signer = keypair_from_seed(&[2u8; 32]).unwrap();
-    let to_address = Pubkey::from([3u8; 32]);
+    let to_address = Pubkey::new(&[3u8; 32]);
 
     // Setup accounts
     let rpc_client =

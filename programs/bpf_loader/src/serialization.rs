@@ -375,7 +375,7 @@ pub fn deserialize_parameters_aligned(
 mod tests {
     use {
         super::*,
-        solana_program_runtime::invoke_context::{prepare_mock_invoke_context, InvokeContext},
+        solomka_program_runtime::invoke_context::{prepare_mock_invoke_context, InvokeContext},
         solomka_sdk::{
             account::{Account, AccountSharedData, ReadableAccount, WritableAccount},
             account_info::AccountInfo,

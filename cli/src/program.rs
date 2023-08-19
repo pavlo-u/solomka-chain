@@ -9,15 +9,15 @@ use {
     bip39::{Language, Mnemonic, MnemonicType, Seed},
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     log::*,
-    solomka_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
+    solana_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
     solana_bpf_loader_program::{syscalls::register_syscalls, BpfError, ThisInstructionMeter},
-    solomka_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
+    solana_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
     solomka_cli_output::{
         CliProgram, CliProgramAccountType, CliProgramAuthority, CliProgramBuffer, CliProgramId,
         CliUpgradeableBuffer, CliUpgradeableBuffers, CliUpgradeableProgram,
         CliUpgradeableProgramClosed, CliUpgradeablePrograms,
     },
-    solomka_client::{
+    solana_client::{
         client_error::ClientErrorKind,
         connection_cache::ConnectionCache,
         rpc_client::RpcClient,
@@ -25,13 +25,13 @@ use {
         rpc_filter::{Memcmp, RpcFilterType},
         tpu_client::{TpuClient, TpuClientConfig},
     },
-    solana_program_runtime::invoke_context::InvokeContext,
+    solomka_program_runtime::invoke_context::InvokeContext,
     solana_rbpf::{
         elf::Executable,
         verifier::RequisiteVerifier,
         vm::{Config, VerifiedExecutable},
     },
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::Account,
         account_utils::StateMut,

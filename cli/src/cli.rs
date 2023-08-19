@@ -7,12 +7,12 @@ use {
     log::*,
     num_traits::FromPrimitive,
     serde_json::{self, Value},
-    solomka_clap_utils::{self, input_parsers::*, keypair::*},
+    solana_clap_utils::{self, input_parsers::*, keypair::*},
     solomka_cli_config::ConfigInput,
     solomka_cli_output::{
         display::println_name_value, CliSignature, CliValidatorsSortOrder, OutputFormat,
     },
-    solomka_client::{
+    solana_client::{
         blockhash_query::BlockhashQuery,
         client_error::{ClientError, Result as ClientResult},
         nonce_utils,
@@ -21,7 +21,7 @@ use {
             RpcLargestAccountsFilter, RpcSendTransactionConfig, RpcTransactionLogsFilter,
         },
     },
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         clock::{Epoch, Slot},
         commitment_config::CommitmentConfig,
@@ -221,7 +221,7 @@ pub enum CliCommand {
         nonce_authority: SignerIndex,
         memo: Option<String>,
         fee_payer: SignerIndex,
-        redelegation_stake_account: Option<SignerIndex>,
+        redelegation_stake_account_pubkey: Option<Pubkey>,
         compute_unit_price: Option<u64>,
     },
     SplitStake {
@@ -1184,7 +1184,7 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             nonce_authority,
             memo,
             fee_payer,
-            redelegation_stake_account,
+            redelegation_stake_account_pubkey,
             compute_unit_price,
         } => process_delegate_stake(
             &rpc_client,
@@ -1200,7 +1200,7 @@ pub fn process_command(config: &CliConfig) -> ProcessResult {
             *nonce_authority,
             memo.as_ref(),
             *fee_payer,
-            *redelegation_stake_account,
+            redelegation_stake_account_pubkey.as_ref(),
             compute_unit_price.as_ref(),
         ),
         CliCommand::SplitStake {
@@ -1711,7 +1711,7 @@ mod tests {
     use {
         super::*,
         serde_json::{json, Value},
-        solomka_client::{
+        solana_client::{
             blockhash_query,
             mock_sender_for_cli::SIGNATURE,
             rpc_request::RpcRequest,
@@ -1725,7 +1725,7 @@ mod tests {
             stake, system_program,
             transaction::TransactionError,
         },
-        solomka_transaction_status::TransactionConfirmationStatus,
+        solana_transaction_status::TransactionConfirmationStatus,
         std::path::PathBuf,
     };
 
@@ -2617,7 +2617,7 @@ mod tests {
         );
 
         //Test Transfer Subcommand, with nonce
-        let nonce_address = Pubkey::from([1u8; 32]);
+        let nonce_address = Pubkey::new(&[1u8; 32]);
         let nonce_address_string = nonce_address.to_string();
         let nonce_authority = keypair_from_seed(&[2u8; 32]).unwrap();
         let nonce_authority_file = make_tmp_path("nonce_authority_file");

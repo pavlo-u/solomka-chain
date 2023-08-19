@@ -1,16 +1,7 @@
 ---
 title: "Local Development Quickstart"
 description: "This quickstart guide will demonstrate how to quickly install and setup your local Solana development environment."
-keywords:
-  - rust
-  - cargo
-  - toml
-  - program
-  - tutorial
-  - intro to solana development
-  - blockchain developer
-  - blockchain tutorial
-  - web3 developer
+keywords: "rust, cargo, toml, program, tutorial, intro to solana development, blockchain developer, blockchain tutorial, web3 developer"
 ---
 
 This quickstart guide will demonstrate how to quickly install and setup your local development environment, getting you ready to start developing and deploying Solana programs to the blockchain.
@@ -24,7 +15,7 @@ This quickstart guide will demonstrate how to quickly install and setup your loc
 
 ## Install the Solana CLI
 
-To interact with the Solana clusters from your terminal, install the [Solana CLI tool suite](./../cli/install-solomka-cli-tools) on your local system:
+To interact with the Solana clusters from your terminal, install the [Solana CLI tool suite](./../cli/install-solana-cli-tools) on your local system:
 
 ```bash
 sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
@@ -60,10 +51,10 @@ To deploy a program with Solana CLI, you will need a Solana wallet with SOL toke
 Let's create a simple file system wallet for testing:
 
 ```bash
-solomka-keygen new
+solana-keygen new
 ```
 
-By default, the `solomka-keygen` command will create a new file system wallet located at `~/.config/solana/id.json`. You can manually specify the output file location using the `--outfile /path` option.
+By default, the `solana-keygen` command will create a new file system wallet located at `~/.config/solana/id.json`. You can manually specify the output file location using the `--outfile /path` option.
 
 > **NOTE:**
 > If you already have a file system wallet saved at the default location, this command will **NOT** override it (unless you explicitly force override using the `--force` flag).

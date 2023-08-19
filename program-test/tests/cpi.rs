@@ -1,5 +1,5 @@
 use {
-    solana_program_test::{processor, ProgramTest},
+    solomka_program_test::{processor, ProgramTest},
     solomka_sdk::{
         account_info::{next_account_info, AccountInfo},
         entrypoint::{ProgramResult, MAX_PERMITTED_DATA_INCREASE},

@@ -9,7 +9,7 @@ use {
     crossbeam_channel::unbounded,
     indicatif::{ProgressBar, ProgressStyle},
     serde::{Deserialize, Serialize},
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solana_config_program::{config_instruction, get_config_data, ConfigState},
     solomka_sdk::{
         hash::{Hash, Hasher},

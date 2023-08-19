@@ -7,7 +7,7 @@ use {
         mint_close_authority::*, permanent_delegate::*, reallocate::*, transfer_fee::*,
     },
     serde_json::{json, Map, Value},
-    solomka_account_decoder::parse_token::{
+    solana_account_decoder::parse_token::{
         pubkey_from_spl_token, token_amount_to_ui_amount, UiAccountState,
     },
     solomka_sdk::{
@@ -229,8 +229,7 @@ pub fn parse_token(
                 | AuthorityType::WithheldWithdraw
                 | AuthorityType::CloseMint
                 | AuthorityType::InterestRate
-                | AuthorityType::PermanentDelegate
-                | AuthorityType::ConfidentialTransferMint => "mint",
+                | AuthorityType::PermanentDelegate => "mint",
                 AuthorityType::AccountOwner | AuthorityType::CloseAccount => "account",
             };
             let mut value = json!({
@@ -604,7 +603,6 @@ pub enum UiAuthorityType {
     CloseMint,
     InterestRate,
     PermanentDelegate,
-    ConfidentialTransferMint,
 }
 
 impl From<AuthorityType> for UiAuthorityType {
@@ -619,7 +617,6 @@ impl From<AuthorityType> for UiAuthorityType {
             AuthorityType::CloseMint => UiAuthorityType::CloseMint,
             AuthorityType::InterestRate => UiAuthorityType::InterestRate,
             AuthorityType::PermanentDelegate => UiAuthorityType::PermanentDelegate,
-            AuthorityType::ConfidentialTransferMint => UiAuthorityType::ConfidentialTransferMint,
         }
     }
 }
@@ -640,7 +637,6 @@ pub enum UiExtensionType {
     InterestBearingConfig,
     CpiGuard,
     PermanentDelegate,
-    NonTransferableAccount,
 }
 
 impl From<ExtensionType> for UiExtensionType {
@@ -661,7 +657,6 @@ impl From<ExtensionType> for UiExtensionType {
             ExtensionType::InterestBearingConfig => UiExtensionType::InterestBearingConfig,
             ExtensionType::CpiGuard => UiExtensionType::CpiGuard,
             ExtensionType::PermanentDelegate => UiExtensionType::PermanentDelegate,
-            ExtensionType::NonTransferableAccount => UiExtensionType::NonTransferableAccount,
         }
     }
 }

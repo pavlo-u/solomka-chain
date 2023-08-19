@@ -6,7 +6,7 @@ use {
         spend_utils::SpendAmount,
     },
     solomka_cli_output::{parse_sign_only_reply_string, OutputFormat},
-    solomka_client::{
+    solana_client::{
         blockhash_query::{self, BlockhashQuery},
         rpc_client::RpcClient,
     },

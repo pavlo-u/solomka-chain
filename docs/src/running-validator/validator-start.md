@@ -81,7 +81,6 @@ sudo sysctl -p /etc/sysctl.d/21-solana-validator.conf
 ```
 
 ##### **Increase systemd and session file limits**
-
 Add
 
 ```
@@ -117,13 +116,13 @@ EOF"
 Create an identity keypair for your validator by running:
 
 ```bash
-solomka-keygen new -o ~/validator-keypair.json
+solana-keygen new -o ~/validator-keypair.json
 ```
 
 The identity public key can now be viewed by running:
 
 ```bash
-solomka-keygen pubkey ~/validator-keypair.json
+solana-keygen pubkey ~/validator-keypair.json
 ```
 
 > Note: The "validator-keypair.json” file is also your \(ed25519\) private key.
@@ -134,13 +133,13 @@ You can create a paper wallet for your identity file instead of writing the
 keypair file to disk with:
 
 ```bash
-solomka-keygen new --no-outfile
+solana-keygen new --no-outfile
 ```
 
 The corresponding identity public key can now be viewed by running:
 
 ```bash
-solomka-keygen pubkey ASK
+solana-keygen pubkey ASK
 ```
 
 and then entering your seed phrase.
@@ -151,10 +150,10 @@ See [Paper Wallet Usage](../wallet-guide/paper-wallet.md) for more info.
 
 ### Vanity Keypair
 
-You can generate a custom vanity keypair using solomka-keygen. For instance:
+You can generate a custom vanity keypair using solana-keygen. For instance:
 
 ```bash
-solomka-keygen grind --starts-with e1v1s:1
+solana-keygen grind --starts-with e1v1s:1
 ```
 
 You may request that the generated vanity keypair be expressed as a seed phrase
@@ -163,7 +162,7 @@ supplied passphrase (note that this is significantly slower than grinding withou
 a mnemonic):
 
 ```bash
-solomka-keygen grind --use-mnemonic --starts-with e1v1s:1
+solana-keygen grind --use-mnemonic --starts-with e1v1s:1
 ```
 
 Depending on the string requested, it may take days to find a match...
@@ -227,18 +226,18 @@ Read more about the [difference between SOL and lamports here](../introduction.m
 ## Create Authorized Withdrawer Account
 
 If you haven't already done so, create an authorized-withdrawer keypair to be used
-as the ultimate authority over your validator. This keypair will have the
+as the ultimate authority over your validator.  This keypair will have the
 authority to withdraw from your vote account, and will have the additional
-authority to change all other aspects of your vote account. Needless to say,
+authority to change all other aspects of your vote account.  Needless to say,
 this is a very important keypair as anyone who possesses it can make any
 changes to your vote account, including taking ownership of it permanently.
 So it is very important to keep your authorized-withdrawer keypair in a safe
-location. It does not need to be stored on your validator, and should not be
-stored anywhere from where it could be accessed by unauthorized parties. To
+location.  It does not need to be stored on your validator, and should not be
+stored anywhere from where it could be accessed by unauthorized parties.  To
 create your authorized-withdrawer keypair:
 
 ```bash
-solomka-keygen new -o ~/authorized-withdrawer-keypair.json
+solana-keygen new -o ~/authorized-withdrawer-keypair.json
 ```
 
 ## Create Vote Account
@@ -248,7 +247,7 @@ vote account on the network. If you have completed this step, you should see the
 “vote-account-keypair.json” in your Solana runtime directory:
 
 ```bash
-solomka-keygen new -o ~/vote-account-keypair.json
+solana-keygen new -o ~/vote-account-keypair.json
 ```
 
 The following command can be used to create your vote account on the blockchain
@@ -364,7 +363,7 @@ WantedBy=multi-user.target
 
 Now create `/home/sol/bin/validator.sh` to include the desired
 `solana-validator` command-line. Ensure that the 'exec' command is used to
-start the validator process (i.e. "exec solana-validator ..."). This is
+start the validator process (i.e. "exec solana-validator ...").  This is
 important because without it, logrotate will end up killing the validator
 every time the logs are rotated.
 
@@ -431,6 +430,12 @@ solana-validator ..."); otherwise, when logrotate sends its signal to the
 validator, the enclosing script will die and take the validator process with
 it.
 
+### Disable port checks to speed up restarts
+
+Once your validator is operating normally, you can reduce the time it takes to
+restart your validator by adding the `--no-port-check` flag to your
+`solana-validator` command-line.
+
 ### Using a ramdisk with spill-over into swap for the accounts database to reduce SSD wear
 
 If your machine has plenty of RAM, a tmpfs ramdisk
@@ -469,13 +474,13 @@ command-line arguments and restart the validator.
 
 As the number of populated accounts on the cluster grows, account-data RPC
 requests that scan the entire account set -- like
-[`getProgramAccounts`](../api/http#getprogramaccounts) and
-[SPL-token-specific requests](../api/http#gettokenaccountsbydelegate) --
+[`getProgramAccounts`](developing/clients/jsonrpc-api.md#getprogramaccounts) and
+[SPL-token-specific requests](developing/clients/jsonrpc-api.md#gettokenaccountsbydelegate) --
 may perform poorly. If your validator needs to support any of these requests,
 you can use the `--account-index` parameter to activate one or more in-memory
 account indexes that significantly improve RPC performance by indexing accounts
 by the key field. Currently supports the following parameter values:
 
-- `program-id`: each account indexed by its owning program; used by [getProgramAccounts](../api/http#getprogramaccounts)
-- `spl-token-mint`: each SPL token account indexed by its token Mint; used by [getTokenAccountsByDelegate](../api/http#gettokenaccountsbydelegate), and [getTokenLargestAccounts](../api/http#gettokenlargestaccounts)
-- `spl-token-owner`: each SPL token account indexed by the token-owner address; used by [getTokenAccountsByOwner](../api/http#gettokenaccountsbyowner), and [getProgramAccounts](../api/http#getprogramaccounts) requests that include an spl-token-owner filter.
+- `program-id`: each account indexed by its owning program; used by [`getProgramAccounts`](developing/clients/jsonrpc-api.md#getprogramaccounts)
+- `spl-token-mint`: each SPL token account indexed by its token Mint; used by [getTokenAccountsByDelegate](developing/clients/jsonrpc-api.md#gettokenaccountsbydelegate), and [getTokenLargestAccounts](developing/clients/jsonrpc-api.md#gettokenlargestaccounts)
+- `spl-token-owner`: each SPL token account indexed by the token-owner address; used by [getTokenAccountsByOwner](developing/clients/jsonrpc-api.md#gettokenaccountsbyowner), and [`getProgramAccounts`](developing/clients/jsonrpc-api.md#getprogramaccounts) requests that include an spl-token-owner filter.

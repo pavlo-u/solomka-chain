@@ -1,7 +1,7 @@
 #![allow(clippy::integer_arithmetic)]
 use {
     solomka_cli::cli::{process_command, CliCommand, CliConfig},
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solana_faucet::faucet::run_local_faucet,
     solomka_sdk::{
         commitment_config::CommitmentConfig,

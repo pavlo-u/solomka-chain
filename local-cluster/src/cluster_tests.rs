@@ -6,15 +6,15 @@ use log::*;
 use {
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solomka_client::{connection_cache::ConnectionCache, thin_client::ThinClient},
+    solana_client::{connection_cache::ConnectionCache, thin_client::ThinClient},
     solana_core::consensus::VOTE_THRESHOLD_DEPTH,
     solana_entry::entry::{Entry, EntrySlice},
     solana_gossip::{
         cluster_info,
+        contact_info::ContactInfo,
         crds_value::{self, CrdsData, CrdsValue},
         gossip_error::GossipError,
         gossip_service::discover_cluster,
-        legacy_contact_info::LegacyContactInfo as ContactInfo,
     },
     solana_ledger::blockstore::Blockstore,
     solomka_sdk::{

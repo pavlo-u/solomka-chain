@@ -1,6 +1,6 @@
 use {
     solana_bpf_rust_sysvar::process_instruction,
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         feature_set::disable_fees_sysvar,
         instruction::{AccountMeta, Instruction},

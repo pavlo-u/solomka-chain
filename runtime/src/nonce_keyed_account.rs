@@ -1,5 +1,5 @@
 use {
-    solana_program_runtime::{ic_msg, invoke_context::InvokeContext},
+    solomka_program_runtime::{ic_msg, invoke_context::InvokeContext},
     solomka_sdk::{
         feature_set,
         instruction::{checked_add, InstructionError},
@@ -270,7 +270,7 @@ mod test {
     use {
         super::*,
         assert_matches::assert_matches,
-        solana_program_runtime::invoke_context::InvokeContext,
+        solomka_program_runtime::invoke_context::InvokeContext,
         solomka_sdk::{
             account::AccountSharedData,
             hash::{hash, Hash},

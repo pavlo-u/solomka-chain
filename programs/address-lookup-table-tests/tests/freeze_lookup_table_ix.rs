@@ -6,7 +6,7 @@ use {
     solana_address_lookup_table_program::{
         instruction::freeze_lookup_table, state::AddressLookupTable,
     },
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         instruction::InstructionError,
         pubkey::Pubkey,

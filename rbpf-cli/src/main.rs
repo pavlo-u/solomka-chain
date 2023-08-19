@@ -6,7 +6,7 @@ use {
         create_vm, serialization::serialize_parameters, syscalls::register_syscalls, BpfError,
         ThisInstructionMeter,
     },
-    solana_program_runtime::invoke_context::{prepare_mock_invoke_context, InvokeContext},
+    solomka_program_runtime::invoke_context::{prepare_mock_invoke_context, InvokeContext},
     solana_rbpf::{
         assembler::assemble,
         elf::Executable,

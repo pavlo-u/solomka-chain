@@ -18,11 +18,11 @@
 //! more keypairs, and this signing is typically performed by an abstract
 //! [`Signer`], which may be a [`Keypair`] but may also be other types of
 //! signers including remote wallets, such as Ledger devices, as represented by
-//! the [`RemoteKeypair`] type in the [`solomka-remote-wallet`] crate.
+//! the [`RemoteKeypair`] type in the [`solana-remote-wallet`] crate.
 //!
 //! [`Signer`]: crate::signer::Signer
 //! [`Keypair`]: crate::signer::keypair::Keypair
-//! [`solomka-remote-wallet`]: https://docs.rs/solana-remote-wallet/latest/
+//! [`solana-remote-wallet`]: https://docs.rs/solana-remote-wallet/latest/
 //! [`RemoteKeypair`]: https://docs.rs/solana-remote-wallet/latest/solana_remote_wallet/remote_keypair/struct.RemoteKeypair.html
 //!
 //! Every transaction must be signed by a fee-paying account, the account from
@@ -42,21 +42,21 @@
 //! transaction nonce]_ mechanism instead of a recent blockhash to ensure unique
 //! transactions.
 //!
-//! [`RpcClient::get_latest_blockhash`]: https://docs.rs/solana-client/latest/solomka_client/rpc_client/struct.RpcClient.html#method.get_latest_blockhash
+//! [`RpcClient::get_latest_blockhash`]: https://docs.rs/solana-client/latest/solana_client/rpc_client/struct.RpcClient.html#method.get_latest_blockhash
 //! [durable transaction nonce]: https://docs.solana.com/implemented-proposals/durable-tx-nonces
 //!
 //! # Examples
 //!
-//! This example uses the [`solomka_client`] and [`anyhow`] crates.
+//! This example uses the [`solana_client`] and [`anyhow`] crates.
 //!
-//! [`solomka_client`]: https://docs.rs/solana-client
+//! [`solana_client`]: https://docs.rs/solana-client
 //! [`anyhow`]: https://docs.rs/anyhow
 //!
 //! ```
-//! # use solomka_sdk::example_mocks::solomka_client;
+//! # use solomka_sdk::example_mocks::solana_client;
 //! use anyhow::Result;
 //! use borsh::{BorshSerialize, BorshDeserialize};
-//! use solomka_client::rpc_client::RpcClient;
+//! use solana_client::rpc_client::RpcClient;
 //! use solomka_sdk::{
 //!      instruction::Instruction,
 //!      message::Message,
@@ -206,16 +206,16 @@ impl Transaction {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solomka_client`] and [`anyhow`] crates.
+    /// This example uses the [`solana_client`] and [`anyhow`] crates.
     ///
-    /// [`solomka_client`]: https://docs.rs/solana-client
+    /// [`solana_client`]: https://docs.rs/solana-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solomka_sdk::example_mocks::solomka_client;
+    /// # use solomka_sdk::example_mocks::solana_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solomka_client::rpc_client::RpcClient;
+    /// use solana_client::rpc_client::RpcClient;
     /// use solomka_sdk::{
     ///      instruction::Instruction,
     ///      message::Message,
@@ -285,16 +285,16 @@ impl Transaction {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solomka_client`] and [`anyhow`] crates.
+    /// This example uses the [`solana_client`] and [`anyhow`] crates.
     ///
-    /// [`solomka_client`]: https://docs.rs/solana-client
+    /// [`solana_client`]: https://docs.rs/solana-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solomka_sdk::example_mocks::solomka_client;
+    /// # use solomka_sdk::example_mocks::solana_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solomka_client::rpc_client::RpcClient;
+    /// use solana_client::rpc_client::RpcClient;
     /// use solomka_sdk::{
     ///      instruction::Instruction,
     ///      message::Message,
@@ -364,16 +364,16 @@ impl Transaction {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solomka_client`] and [`anyhow`] crates.
+    /// This example uses the [`solana_client`] and [`anyhow`] crates.
     ///
-    /// [`solomka_client`]: https://docs.rs/solana-client
+    /// [`solana_client`]: https://docs.rs/solana-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solomka_sdk::example_mocks::solomka_client;
+    /// # use solomka_sdk::example_mocks::solana_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solomka_client::rpc_client::RpcClient;
+    /// use solana_client::rpc_client::RpcClient;
     /// use solomka_sdk::{
     ///      instruction::Instruction,
     ///      message::Message,
@@ -440,16 +440,16 @@ impl Transaction {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solomka_client`] and [`anyhow`] crates.
+    /// This example uses the [`solana_client`] and [`anyhow`] crates.
     ///
-    /// [`solomka_client`]: https://docs.rs/solana-client
+    /// [`solana_client`]: https://docs.rs/solana-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solomka_sdk::example_mocks::solomka_client;
+    /// # use solomka_sdk::example_mocks::solana_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solomka_client::rpc_client::RpcClient;
+    /// use solana_client::rpc_client::RpcClient;
     /// use solomka_sdk::{
     ///      instruction::Instruction,
     ///      message::Message,
@@ -648,16 +648,16 @@ impl Transaction {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solomka_client`] and [`anyhow`] crates.
+    /// This example uses the [`solana_client`] and [`anyhow`] crates.
     ///
-    /// [`solomka_client`]: https://docs.rs/solana-client
+    /// [`solana_client`]: https://docs.rs/solana-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solomka_sdk::example_mocks::solomka_client;
+    /// # use solomka_sdk::example_mocks::solana_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solomka_client::rpc_client::RpcClient;
+    /// use solana_client::rpc_client::RpcClient;
     /// use solomka_sdk::{
     ///      instruction::Instruction,
     ///      message::Message,
@@ -789,16 +789,16 @@ impl Transaction {
     ///
     /// # Examples
     ///
-    /// This example uses the [`solomka_client`] and [`anyhow`] crates.
+    /// This example uses the [`solana_client`] and [`anyhow`] crates.
     ///
-    /// [`solomka_client`]: https://docs.rs/solana-client
+    /// [`solana_client`]: https://docs.rs/solana-client
     /// [`anyhow`]: https://docs.rs/anyhow
     ///
     /// ```
-    /// # use solomka_sdk::example_mocks::solomka_client;
+    /// # use solomka_sdk::example_mocks::solana_client;
     /// use anyhow::Result;
     /// use borsh::{BorshSerialize, BorshDeserialize};
-    /// use solomka_client::rpc_client::RpcClient;
+    /// use solana_client::rpc_client::RpcClient;
     /// use solomka_sdk::{
     ///      instruction::Instruction,
     ///      message::Message,
@@ -899,7 +899,7 @@ impl Transaction {
     ///   - Some device-specific protocol error occurs ([`SignerError::Protocol`]).
     ///   - Some other error occurs ([`SignerError::Custom`]).
     ///
-    /// See the documentation for the [`solomka-remote-wallet`] crate for details
+    /// See the documentation for the [`solana-remote-wallet`] crate for details
     /// on the operation of [`RemoteKeypair`] signers.
     ///
     /// [`num_required_signatures`]: crate::message::MessageHeader::num_required_signatures
@@ -907,7 +907,7 @@ impl Transaction {
     /// [`Presigner`]: crate::signer::presigner::Presigner
     /// [`PresignerError`]: crate::signer::presigner::PresignerError
     /// [`PresignerError::VerificationFailure`]: crate::signer::presigner::PresignerError::VerificationFailure
-    /// [`solomka-remote-wallet`]: https://docs.rs/solana-remote-wallet/latest/
+    /// [`solana-remote-wallet`]: https://docs.rs/solana-remote-wallet/latest/
     /// [`RemoteKeypair`]: https://docs.rs/solana-remote-wallet/latest/solana_remote_wallet/remote_keypair/struct.RemoteKeypair.html
     pub fn try_partial_sign<T: Signers>(
         &mut self,
@@ -1273,12 +1273,12 @@ mod tests {
             62, 89, 99,
         ])
         .unwrap();
-        let to = Pubkey::from([
+        let to = Pubkey::new(&[
             1, 1, 1, 4, 5, 6, 7, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 8, 7, 6, 5, 4,
             1, 1, 1,
         ]);
 
-        let program_id = Pubkey::from([
+        let program_id = Pubkey::new(&[
             2, 2, 2, 4, 5, 6, 7, 8, 9, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9, 8, 7, 6, 5, 4,
             2, 2, 2,
         ]);

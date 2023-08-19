@@ -19,18 +19,18 @@ Some important crates:
   that do not run on-chain will import this.
 
 - [`solana-client`] &mdash; For interacting with a Solana node via the
-  [JSON RPC API](/api).
+  [JSON RPC API](jsonrpc-api).
 
-- [`solomka-cli-config`] &mdash; Loading and saving the Solana CLI configuration
+- [`solana-cli-config`] &mdash; Loading and saving the Solana CLI configuration
   file.
 
-- [`solomka-clap-utils`] &mdash; Routines for setting up a CLI, using [`clap`],
+- [`solana-clap-utils`] &mdash; Routines for setting up a CLI, using [`clap`],
   as used by the main Solana CLI. Includes functions for loading all types of
   signers supported by the CLI.
 
 [`solana-program`]: https://docs.rs/solana-program
 [`solana-sdk`]: https://docs.rs/solana-sdk
 [`solana-client`]: https://docs.rs/solana-client
-[`solomka-cli-config`]: https://docs.rs/solomka-cli-config
-[`solomka-clap-utils`]: https://docs.rs/solana-clap-utils
+[`solana-cli-config`]: https://docs.rs/solana-cli-config
+[`solana-clap-utils`]: https://docs.rs/solana-clap-utils
 [`clap`]: https://docs.rs/clap

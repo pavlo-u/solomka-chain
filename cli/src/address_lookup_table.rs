@@ -8,10 +8,10 @@ use {
         },
         state::AddressLookupTable,
     },
-    solomka_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
+    solana_clap_utils::{self, input_parsers::*, input_validators::*, keypair::*},
     solomka_cli_output::{CliAddressLookupTable, CliAddressLookupTableCreated, CliSignature},
-    solomka_client::{rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig},
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_client::{rpc_client::RpcClient, rpc_config::RpcSendTransactionConfig},
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::from_account, clock::Clock, commitment_config::CommitmentConfig, message::Message,
         pubkey::Pubkey, sysvar, transaction::Transaction,

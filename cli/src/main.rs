@@ -1,7 +1,7 @@
 use {
     clap::{crate_description, crate_name, value_t_or_exit, ArgMatches},
     console::style,
-    solomka_clap_utils::{
+    solana_clap_utils::{
         input_validators::normalize_to_url_if_moniker,
         keypair::{CliSigners, DefaultSigner},
         DisplayError,
@@ -15,8 +15,8 @@ use {
         display::{println_name_value, println_name_value_or},
         OutputFormat,
     },
-    solomka_client::rpc_config::RpcSendTransactionConfig,
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_client::rpc_config::RpcSendTransactionConfig,
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     std::{collections::HashMap, error, path::PathBuf, sync::Arc, time::Duration},
 };
 

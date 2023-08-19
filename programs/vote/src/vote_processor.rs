@@ -8,7 +8,7 @@ use {
         vote_state::{self, VoteAuthorize},
     },
     log::*,
-    solana_program_runtime::{
+    solomka_program_runtime::{
         invoke_context::InvokeContext, sysvar_cache::get_sysvar_with_account_check,
     },
     solomka_sdk::{
@@ -280,7 +280,7 @@ mod tests {
             },
         },
         bincode::serialize,
-        solana_program_runtime::invoke_context::mock_process_instruction,
+        solomka_program_runtime::invoke_context::mock_process_instruction,
         solomka_sdk::{
             account::{self, Account, AccountSharedData, ReadableAccount},
             account_utils::StateMut,

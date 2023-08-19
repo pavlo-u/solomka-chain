@@ -1,15 +1,15 @@
-//! Loading and saving the Solana CLI configuration file.
+//! Loading and saving the Solomka CLI configuration file.
 //!
-//! The configuration file used by the Solana CLI includes information about the
+//! The configuration file used by the Solomka CLI includes information about the
 //! RPC node to connect to, the path to the user's signing source, and more.
-//! Other software than the Solana CLI may wish to access the same configuration
+//! Other software than the Solomka CLI may wish to access the same configuration
 //! and signer.
 //!
 //! The default path to the configuration file can be retrieved from
 //! [`CONFIG_FILE`], which is a [lazy_static] of `Option<String>`, the value of
 //! which is
 //!
-//! > `~/.config/solana/cli/config.yml`
+//! > `~/.config/solomka/cli/config.yml`
 //!
 //! [`CONFIG_FILE`]: struct@CONFIG_FILE
 //! [lazy_static]: https://docs.rs/lazy_static
@@ -23,10 +23,10 @@
 //! Two important fields of `Config` are
 //!
 //! - [`json_rpc_url`], the URL to pass to
-//!   `solomka_client::rpc_client::RpcClient`.
+//!   `solana_client::rpc_client::RpcClient`.
 //! - [`keypair_path`], a signing source, which may be a keypair file, but
 //!   may also represent several other types of signers, as described in
-//!   the documentation for `solomka_clap_utils::keypair::signer_from_path`.
+//!   the documentation for `solana_clap_utils::keypair::signer_from_path`.
 //!
 //! [`json_rpc_url`]: Config::json_rpc_url
 //! [`keypair_path`]: Config::keypair_path

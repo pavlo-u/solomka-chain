@@ -4,7 +4,7 @@ extern crate test;
 
 use {
     solomka_sdk::{instruction::CompiledInstruction, message::Message, pubkey::Pubkey},
-    solomka_transaction_status::extract_memos::{spl_memo_id_v1, spl_memo_id_v3, ExtractMemos},
+    solana_transaction_status::extract_memos::{spl_memo_id_v1, spl_memo_id_v3, ExtractMemos},
     test::Bencher,
 };
 

@@ -19,7 +19,7 @@ use {
     },
     log::{log_enabled, trace, Level::Trace},
     solana_measure::measure::Measure,
-    solana_program_runtime::{
+    solomka_program_runtime::{
         executor_cache::Executor,
         ic_logger_msg, ic_msg,
         invoke_context::{ComputeMeter, InvokeContext},
@@ -1433,7 +1433,7 @@ mod tests {
     use {
         super::*,
         rand::Rng,
-        solana_program_runtime::invoke_context::mock_process_instruction,
+        solomka_program_runtime::invoke_context::mock_process_instruction,
         solana_rbpf::{verifier::Verifier, vm::SyscallRegistry},
         solana_runtime::{bank::Bank, bank_client::BankClient},
         solomka_sdk::{

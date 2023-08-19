@@ -3,7 +3,7 @@
 extern crate test;
 
 use {
-    solana_program_runtime::invoke_context::InvokeContext,
+    solomka_program_runtime::invoke_context::InvokeContext,
     solomka_sdk::{
         account::{create_account_for_test, Account, AccountSharedData},
         clock::{Clock, Slot},

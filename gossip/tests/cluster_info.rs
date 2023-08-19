@@ -8,7 +8,7 @@ use {
     serial_test::serial,
     solana_gossip::{
         cluster_info::{compute_retransmit_peers, ClusterInfo},
-        legacy_contact_info::LegacyContactInfo as ContactInfo,
+        contact_info::ContactInfo,
         weighted_shuffle::WeightedShuffle,
     },
     solomka_sdk::{pubkey::Pubkey, signer::keypair::Keypair},

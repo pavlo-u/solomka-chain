@@ -3,7 +3,7 @@
 use {
     crate::ConfigKeys,
     bincode::deserialize,
-    solana_program_runtime::{ic_msg, invoke_context::InvokeContext},
+    solomka_program_runtime::{ic_msg, invoke_context::InvokeContext},
     solomka_sdk::{
         feature_set, instruction::InstructionError, program_utils::limited_deserialize,
         pubkey::Pubkey,
@@ -143,7 +143,7 @@ mod tests {
         crate::{config_instruction, get_config_data, id, ConfigKeys, ConfigState},
         bincode::serialized_size,
         serde_derive::{Deserialize, Serialize},
-        solana_program_runtime::invoke_context::mock_process_instruction,
+        solomka_program_runtime::invoke_context::mock_process_instruction,
         solomka_sdk::{
             account::{AccountSharedData, ReadableAccount},
             instruction::AccountMeta,

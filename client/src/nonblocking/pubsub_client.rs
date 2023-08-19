@@ -20,7 +20,7 @@ use {
     log::*,
     serde::de::DeserializeOwned,
     serde_json::{json, Map, Value},
-    solomka_account_decoder::UiAccount,
+    solana_account_decoder::UiAccount,
     solomka_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
     std::collections::BTreeMap,
     thiserror::Error,

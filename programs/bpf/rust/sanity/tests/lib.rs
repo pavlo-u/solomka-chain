@@ -2,7 +2,7 @@
 
 use {
     solana_bpf_rust_sanity::process_instruction,
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         instruction::{AccountMeta, Instruction},
         pubkey::Pubkey,

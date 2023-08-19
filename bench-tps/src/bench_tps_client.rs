@@ -1,5 +1,5 @@
 use {
-    solomka_client::{client_error::ClientError, tpu_client::TpuSenderError},
+    solana_client::{client_error::ClientError, tpu_client::TpuSenderError},
     solomka_sdk::{
         account::Account, commitment_config::CommitmentConfig, epoch_info::EpochInfo, hash::Hash,
         message::Message, pubkey::Pubkey, signature::Signature, transaction::Transaction,

@@ -14,10 +14,10 @@ use {
     indicatif::{ProgressBar, ProgressStyle},
     pickledb::PickleDb,
     serde::{Deserialize, Serialize},
-    solomka_account_decoder::parse_token::{
+    solana_account_decoder::parse_token::{
         pubkey_from_spl_token, real_number_string, spl_token_pubkey,
     },
-    solomka_client::{
+    solana_client::{
         client_error::{ClientError, Result as ClientResult},
         rpc_client::RpcClient,
         rpc_config::RpcSendTransactionConfig,
@@ -38,7 +38,7 @@ use {
         system_instruction,
         transaction::Transaction,
     },
-    solomka_transaction_status::TransactionStatus,
+    solana_transaction_status::TransactionStatus,
     spl_associated_token_account::get_associated_token_address,
     spl_token::solana_program::program_error::ProgramError,
     std::{
@@ -1230,7 +1230,7 @@ mod tests {
         },
         solana_streamer::socket::SocketAddrSpace,
         solana_test_validator::TestValidator,
-        solomka_transaction_status::TransactionConfirmationStatus,
+        solana_transaction_status::TransactionConfirmationStatus,
     };
 
     fn one_signer_message(client: &RpcClient) -> Message {

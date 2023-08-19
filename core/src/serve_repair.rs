@@ -15,7 +15,7 @@ use {
     },
     solana_gossip::{
         cluster_info::{ClusterInfo, ClusterInfoError},
-        legacy_contact_info::{LegacyContactInfo as ContactInfo, LegacyContactInfo},
+        contact_info::ContactInfo,
         ping_pong::{self, PingCache, Pong},
         weighted_shuffle::WeightedShuffle,
     },
@@ -171,7 +171,6 @@ struct ServeRepairStats {
     ping_cache_check_failed: usize,
     pings_sent: usize,
     decode_time_us: u64,
-    handle_requests_time_us: u64,
     err_time_skew: usize,
     err_malformed: usize,
     err_sig_verify: usize,
@@ -205,13 +204,13 @@ pub(crate) type Ping = ping_pong::Ping<[u8; REPAIR_PING_TOKEN_SIZE]>;
 /// Window protocol messages
 #[derive(Serialize, Deserialize, Debug)]
 pub enum RepairProtocol {
-    LegacyWindowIndex(LegacyContactInfo, Slot, u64),
-    LegacyHighestWindowIndex(LegacyContactInfo, Slot, u64),
-    LegacyOrphan(LegacyContactInfo, Slot),
-    LegacyWindowIndexWithNonce(LegacyContactInfo, Slot, u64, Nonce),
-    LegacyHighestWindowIndexWithNonce(LegacyContactInfo, Slot, u64, Nonce),
-    LegacyOrphanWithNonce(LegacyContactInfo, Slot, Nonce),
-    LegacyAncestorHashes(LegacyContactInfo, Slot, Nonce),
+    LegacyWindowIndex(ContactInfo, Slot, u64),
+    LegacyHighestWindowIndex(ContactInfo, Slot, u64),
+    LegacyOrphan(ContactInfo, Slot),
+    LegacyWindowIndexWithNonce(ContactInfo, Slot, u64, Nonce),
+    LegacyHighestWindowIndexWithNonce(ContactInfo, Slot, u64, Nonce),
+    LegacyOrphanWithNonce(ContactInfo, Slot, Nonce),
+    LegacyAncestorHashes(ContactInfo, Slot, Nonce),
     Pong(ping_pong::Pong),
     WindowIndex {
         header: RepairRequestHeader,
@@ -525,8 +524,7 @@ impl ServeRepair {
             decoded_reqs.truncate(MAX_REQUESTS_PER_ITERATION);
         }
 
-        let handle_requests_start = Instant::now();
-        self.handle_requests(
+        self.handle_packets(
             ping_cache,
             recycler,
             blockstore,
@@ -536,7 +534,6 @@ impl ServeRepair {
             data_budget,
             cluster_type,
         );
-        stats.handle_requests_time_us += handle_requests_start.elapsed().as_micros() as u64;
 
         Ok(())
     }
@@ -613,11 +610,6 @@ impl ServeRepair {
             ),
             ("pings_sent", stats.pings_sent, i64),
             ("decode_time_us", stats.decode_time_us, i64),
-            (
-                "handle_requests_time_us",
-                stats.handle_requests_time_us,
-                i64
-            ),
             ("err_time_skew", stats.err_time_skew, i64),
             ("err_malformed", stats.err_malformed, i64),
             ("err_sig_verify", stats.err_sig_verify, i64),
@@ -783,7 +775,7 @@ impl ServeRepair {
         (check, ping_pkt)
     }
 
-    fn handle_requests(
+    fn handle_packets(
         &self,
         ping_cache: &mut PingCache,
         recycler: &PacketBatchRecycler,

@@ -1,5 +1,5 @@
 use {
-    solana_program_test::{processor, ProgramTest},
+    solomka_program_test::{processor, ProgramTest},
     solomka_sdk::{
         account_info::AccountInfo, clock::Clock, entrypoint::ProgramResult,
         epoch_schedule::EpochSchedule, instruction::Instruction, msg, pubkey::Pubkey, rent::Rent,

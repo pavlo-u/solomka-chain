@@ -1,6 +1,6 @@
 use {
     crate::bench_tps_client::{BenchTpsClient, Result},
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solomka_sdk::{
         account::Account, commitment_config::CommitmentConfig, epoch_info::EpochInfo, hash::Hash,
         message::Message, pubkey::Pubkey, signature::Signature, transaction::Transaction,

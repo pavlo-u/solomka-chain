@@ -1,7 +1,7 @@
 /**
  * @brief return data Syscall test
  */
-#include <solana_sdk.h>
+#include <solomka_sdk.h>
 
 #define DATA "the quick brown fox jumps over the lazy dog"
 

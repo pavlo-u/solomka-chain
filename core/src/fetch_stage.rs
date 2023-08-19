@@ -6,7 +6,7 @@ use {
         result::{Error, Result},
     },
     crossbeam_channel::{unbounded, RecvTimeoutError},
-    solomka_client::connection_cache::DEFAULT_TPU_ENABLE_UDP,
+    solana_client::connection_cache::DEFAULT_TPU_ENABLE_UDP,
     solana_metrics::{inc_new_counter_debug, inc_new_counter_info},
     solana_perf::{packet::PacketBatchRecycler, recycler::Recycler},
     solana_poh::poh_recorder::PohRecorder,

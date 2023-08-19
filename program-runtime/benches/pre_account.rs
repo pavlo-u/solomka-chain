@@ -4,7 +4,7 @@ extern crate test;
 
 use {
     log::*,
-    solana_program_runtime::{pre_account::PreAccount, timings::ExecuteDetailsTimings},
+    solomka_program_runtime::{pre_account::PreAccount, timings::ExecuteDetailsTimings},
     solomka_sdk::{account::AccountSharedData, pubkey, rent::Rent},
     test::Bencher,
 };

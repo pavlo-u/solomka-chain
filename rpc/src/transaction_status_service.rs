@@ -7,7 +7,7 @@ use {
         blockstore_processor::{TransactionStatusBatch, TransactionStatusMessage},
     },
     solana_runtime::bank::{DurableNonceFee, TransactionExecutionDetails},
-    solomka_transaction_status::{
+    solana_transaction_status::{
         extract_and_fmt_memos, InnerInstructions, Reward, TransactionStatusMeta,
     },
     std::{
@@ -220,7 +220,7 @@ pub(crate) mod tests {
         crate::transaction_notifier_interface::TransactionNotifier,
         crossbeam_channel::unbounded,
         dashmap::DashMap,
-        solomka_account_decoder::parse_token::token_amount_to_ui_amount,
+        solana_account_decoder::parse_token::token_amount_to_ui_amount,
         solana_ledger::{genesis_utils::create_genesis_config, get_tmp_ledger_path},
         solana_runtime::bank::{Bank, NonceFull, NoncePartial, RentDebits, TransactionBalancesSet},
         solomka_sdk::{
@@ -239,7 +239,7 @@ pub(crate) mod tests {
                 VersionedTransaction,
             },
         },
-        solomka_transaction_status::{
+        solana_transaction_status::{
             token_balances::TransactionTokenBalancesSet, TransactionStatusMeta,
             TransactionTokenBalance,
         },
@@ -351,7 +351,7 @@ pub(crate) mod tests {
 
         let mut nonce_account = nonce_account::create_account(1).into_inner();
         let durable_nonce = DurableNonce::from_blockhash(&Hash::new(&[42u8; 32]));
-        let data = nonce::state::Data::new(Pubkey::from([1u8; 32]), durable_nonce, 42);
+        let data = nonce::state::Data::new(Pubkey::new(&[1u8; 32]), durable_nonce, 42);
         nonce_account
             .set_state(&nonce::state::Versions::new(nonce::State::Initialized(
                 data,

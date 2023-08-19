@@ -1,5 +1,5 @@
 use {
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solomka_sdk::{
         clock::{Epoch, DEFAULT_MS_PER_SLOT},
         commitment_config::CommitmentConfig,

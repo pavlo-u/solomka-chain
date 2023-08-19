@@ -11,7 +11,7 @@ use {
         },
     },
     solomka_cli_config::Config,
-    solomka_client::{client_error::ClientError, rpc_client::RpcClient},
+    solana_client::{client_error::ClientError, rpc_client::RpcClient},
     solomka_sdk::{
         message::Message,
         native_token::lamports_to_sol,

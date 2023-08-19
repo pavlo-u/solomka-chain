@@ -1,8 +1,8 @@
 use {
     clap::{crate_description, crate_name, App, Arg, ArgMatches},
-    solomka_clap_utils::input_validators::{is_url, is_url_or_moniker},
+    solana_clap_utils::input_validators::{is_url, is_url_or_moniker},
     solomka_cli_config::{ConfigInput, CONFIG_FILE},
-    solomka_client::connection_cache::{DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC},
+    solana_client::connection_cache::{DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_USE_QUIC},
     solomka_sdk::{
         fee_calculator::FeeRateGovernor,
         pubkey::Pubkey,

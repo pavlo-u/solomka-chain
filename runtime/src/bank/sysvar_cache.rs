@@ -1,5 +1,5 @@
 use {
-    super::Bank, solana_program_runtime::sysvar_cache::SysvarCache,
+    super::Bank, solomka_program_runtime::sysvar_cache::SysvarCache,
     solomka_sdk::account::ReadableAccount,
 };
 

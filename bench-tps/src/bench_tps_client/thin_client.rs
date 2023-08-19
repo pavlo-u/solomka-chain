@@ -1,6 +1,6 @@
 use {
     crate::bench_tps_client::{BenchTpsClient, Result},
-    solomka_client::thin_client::ThinClient,
+    solana_client::thin_client::ThinClient,
     solomka_sdk::{
         account::Account,
         client::{AsyncClient, Client, SyncClient},

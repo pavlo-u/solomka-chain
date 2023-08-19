@@ -1,11 +1,12 @@
 [package]
 authors = ["Solana Maintainers <maintainers@solana.foundation>"]
 edition = "2021"
-name = "solomka-remote-wallet"
+name = "solana-remote-wallet"
 description = "Blockchain, Rebuilt for Scale"
-version = "1.14.20"
-repository = "https://github.com/pavlo-u/solomka-chain"
+version = "1.14.12"
+repository = "https://github.com/solana-labs/solana"
 license = "Apache-2.0"
+homepage = "https://solana.com/"
 documentation = "https://docs.rs/solana-remote-wallet"
 
 [dependencies]
@@ -18,7 +19,7 @@ num-traits = { version = "0.2" }
 parking_lot = "0.12"
 qstring = "0.7.2"
 semver = "1.0"
-solomka-sdk= { path = "../sdk", version = "=1.14.20" }
+solomka-sdk = { path = "../sdk", version = "=1.14.12" }
 thiserror = "1.0"
 uriparse = "0.6.4"
 

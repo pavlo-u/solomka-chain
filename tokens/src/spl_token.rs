@@ -4,12 +4,12 @@ use {
         commands::{get_fees_for_messages, Allocation, Error, FundingSource},
     },
     console::style,
-    solomka_account_decoder::parse_token::{
+    solana_account_decoder::parse_token::{
         pubkey_from_spl_token, real_number_string, real_number_string_trimmed, spl_token_pubkey,
     },
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solomka_sdk::{instruction::Instruction, message::Message, native_token::lamports_to_sol},
-    solomka_transaction_status::parse_token::spl_token_instruction,
+    solana_transaction_status::parse_token::spl_token_instruction,
     spl_associated_token_account::{
         get_associated_token_address, instruction::create_associated_token_account,
     },

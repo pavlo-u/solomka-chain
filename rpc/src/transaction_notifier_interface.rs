@@ -1,6 +1,6 @@
 use {
     solomka_sdk::{clock::Slot, signature::Signature, transaction::SanitizedTransaction},
-    solomka_transaction_status::TransactionStatusMeta,
+    solana_transaction_status::TransactionStatusMeta,
     std::sync::{Arc, RwLock},
 };
 

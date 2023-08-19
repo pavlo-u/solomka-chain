@@ -48,7 +48,7 @@ impl HttpSender {
     pub fn new_with_timeout<U: ToString>(url: U, timeout: Duration) -> Self {
         let mut default_headers = header::HeaderMap::new();
         default_headers.append(
-            header::HeaderName::from_static("solomka-client"),
+            header::HeaderName::from_static("solana-client"),
             header::HeaderValue::from_str(
                 format!("rust/{}", solana_version::Version::default()).as_str(),
             )

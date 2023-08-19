@@ -10,8 +10,8 @@ use {
         spend_utils::{resolve_spend_tx_and_check_account_balances, SpendAmount},
     },
     clap::{value_t_or_exit, App, Arg, ArgMatches, SubCommand},
-    solomka_account_decoder::{UiAccount, UiAccountEncoding},
-    solomka_clap_utils::{
+    solana_account_decoder::{UiAccount, UiAccountEncoding},
+    solana_clap_utils::{
         compute_unit_price::{compute_unit_price_arg, COMPUTE_UNIT_PRICE_ARG},
         fee_payer::*,
         input_parsers::*,
@@ -26,11 +26,11 @@ use {
         return_signers_with_config, CliAccount, CliBalance, CliSignatureVerificationStatus,
         CliTransaction, CliTransactionConfirmation, OutputFormat, ReturnSignersConfig,
     },
-    solomka_client::{
+    solana_client::{
         blockhash_query::BlockhashQuery, nonce_utils, rpc_client::RpcClient,
         rpc_config::RpcTransactionConfig, rpc_response::RpcKeyedAccount,
     },
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         commitment_config::CommitmentConfig,
         message::Message,
@@ -41,7 +41,7 @@ use {
         system_program,
         transaction::{Transaction, VersionedTransaction},
     },
-    solomka_transaction_status::{
+    solana_transaction_status::{
         EncodableWithMeta, EncodedConfirmedTransactionWithStatusMeta, EncodedTransaction,
         TransactionBinaryEncoding, UiTransactionEncoding,
     },
@@ -526,7 +526,7 @@ pub fn process_airdrop(
 
         if current_balance < pre_balance.saturating_add(lamports) {
             println!("Balance unchanged");
-            println!("Run `solomka confirm -v {:?}` for more info", signature);
+            println!("Run `solana confirm -v {:?}` for more info", signature);
             Ok("".to_string())
         } else {
             Ok(build_balance_message(current_balance, false, true))

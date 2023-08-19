@@ -50,7 +50,7 @@ use {
         transaction::VersionedTransaction,
     },
     solana_storage_proto::{StoredExtendedRewards, StoredTransactionStatusMeta},
-    solomka_transaction_status::{
+    solana_transaction_status::{
         ConfirmedTransactionStatusWithSignature, ConfirmedTransactionWithStatusMeta, Rewards,
         TransactionStatusMeta, TransactionWithStatusMeta, VersionedConfirmedBlock,
         VersionedTransactionWithStatusMeta,
@@ -3160,7 +3160,7 @@ impl Blockstore {
     // given slot and index as this implies the leader generated two different shreds with
     // the same slot and index
     pub fn is_shred_duplicate(&self, shred: ShredId, payload: Vec<u8>) -> Option<Vec<u8>> {
-        let (slot, index, shred_type) = shred.unpack();
+        let (slot, index, shred_type) = shred.unwrap();
         let existing_shred = match shred_type {
             ShredType::Data => self.get_data_shred(slot, index as u64),
             ShredType::Code => self.get_coding_shred(slot, index as u64),
@@ -4391,7 +4391,7 @@ pub mod tests {
         crossbeam_channel::unbounded,
         itertools::Itertools,
         rand::{seq::SliceRandom, thread_rng},
-        solomka_account_decoder::parse_token::UiTokenAmount,
+        solana_account_decoder::parse_token::UiTokenAmount,
         solana_entry::entry::{next_entry, next_entry_mut},
         solana_runtime::bank::{Bank, RewardType},
         solomka_sdk::{
@@ -4405,7 +4405,7 @@ pub mod tests {
             transaction_context::TransactionReturnData,
         },
         solana_storage_proto::convert::generated,
-        solomka_transaction_status::{InnerInstructions, Reward, Rewards, TransactionTokenBalance},
+        solana_transaction_status::{InnerInstructions, Reward, Rewards, TransactionTokenBalance},
         std::{thread::Builder, time::Duration},
     };
 
@@ -6966,8 +6966,8 @@ pub mod tests {
                 .write_transaction_status(
                     slot0,
                     Signature::new(&random_bytes),
-                    vec![&Pubkey::try_from(&random_bytes[..32]).unwrap()],
-                    vec![&Pubkey::try_from(&random_bytes[32..]).unwrap()],
+                    vec![&Pubkey::new(&random_bytes[0..32])],
+                    vec![&Pubkey::new(&random_bytes[32..])],
                     TransactionStatusMeta::default(),
                 )
                 .unwrap();
@@ -7032,8 +7032,8 @@ pub mod tests {
                 .write_transaction_status(
                     slot1,
                     Signature::new(&random_bytes),
-                    vec![&Pubkey::try_from(&random_bytes[..32]).unwrap()],
-                    vec![&Pubkey::try_from(&random_bytes[32..]).unwrap()],
+                    vec![&Pubkey::new(&random_bytes[0..32])],
+                    vec![&Pubkey::new(&random_bytes[32..])],
                     TransactionStatusMeta::default(),
                 )
                 .unwrap();

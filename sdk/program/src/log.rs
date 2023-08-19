@@ -16,9 +16,9 @@
 //!   network. Note though that transactions that fail during pre-flight
 //!   simulation are not displayed here.
 //! - When submitting transactions via [`RpcClient`], if Rust's own logging is
-//!   active then the `solomka_client` crate logs at the "debug" level any logs
+//!   active then the `solana_client` crate logs at the "debug" level any logs
 //!   for transactions that failed during simulation. If using [`env_logger`]
-//!   these logs can be activated by setting `RUST_LOG=solomka_client=debug`.
+//!   these logs can be activated by setting `RUST_LOG=solana_client=debug`.
 //! - Logs can be retrieved from a finalized transaction by calling
 //!   [`RpcClient::get_transaction`].
 //! - Block explorers may display logs.

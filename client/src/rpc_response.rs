@@ -1,7 +1,7 @@
 use {
     crate::client_error,
     serde::{Deserialize, Deserializer, Serialize, Serializer},
-    solomka_account_decoder::{parse_token::UiTokenAmount, UiAccount},
+    solana_account_decoder::{parse_token::UiTokenAmount, UiAccount},
     solomka_sdk::{
         clock::{Epoch, Slot, UnixTimestamp},
         fee_calculator::{FeeCalculator, FeeRateGovernor},
@@ -9,7 +9,7 @@ use {
         inflation::Inflation,
         transaction::{Result, TransactionError},
     },
-    solomka_transaction_status::{
+    solana_transaction_status::{
         ConfirmedTransactionStatusWithSignature, TransactionConfirmationStatus, UiConfirmedBlock,
         UiTransactionReturnData,
     },
@@ -543,7 +543,6 @@ pub struct RpcSnapshotSlotInfo {
 }
 
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
 pub struct RpcPrioritizationFee {
     pub slot: Slot,
     pub prioritization_fee: u64,

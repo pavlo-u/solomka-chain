@@ -7,7 +7,7 @@ use {
         program::{ProgramCliCommand, CLOSE_PROGRAM_WARNING},
     },
     solomka_cli_output::OutputFormat,
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solana_faucet::faucet::run_local_faucet,
     solomka_sdk::{
         account_utils::StateMut,

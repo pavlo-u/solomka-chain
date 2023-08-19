@@ -7,18 +7,18 @@ use {
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     reqwest::blocking::Client,
     serde_json::{Map, Value},
-    solomka_account_decoder::validator_info::{
+    solana_account_decoder::validator_info::{
         self, ValidatorInfo, MAX_LONG_FIELD_LENGTH, MAX_SHORT_FIELD_LENGTH,
     },
-    solomka_clap_utils::{
+    solana_clap_utils::{
         input_parsers::pubkey_of,
         input_validators::{is_pubkey, is_url},
         keypair::DefaultSigner,
     },
     solomka_cli_output::{CliValidatorInfo, CliValidatorInfoVec},
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solana_config_program::{config_instruction, get_config_data, ConfigKeys, ConfigState},
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::Account,
         message::Message,

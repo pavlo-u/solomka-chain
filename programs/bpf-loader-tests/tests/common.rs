@@ -2,7 +2,7 @@
 
 use {
     solana_bpf_loader_program::{process_instruction, upgradeable::id},
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         account::AccountSharedData,
         account_utils::StateMut,

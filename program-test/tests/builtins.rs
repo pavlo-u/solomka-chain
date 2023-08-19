@@ -1,5 +1,5 @@
 use {
-    solana_program_test::ProgramTest,
+    solomka_program_test::ProgramTest,
     solomka_sdk::{
         bpf_loader_upgradeable::{self, UpgradeableLoaderState},
         signature::{Keypair, Signer},

@@ -6,7 +6,7 @@ use {
     },
     log::info,
     serde_json::json,
-    solomka_clap_utils::{
+    solana_clap_utils::{
         input_parsers::pubkey_of,
         input_validators::{is_slot, is_valid_pubkey},
     },
@@ -21,7 +21,7 @@ use {
     },
     solomka_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
     solana_storage_bigtable::CredentialType,
-    solomka_transaction_status::{
+    solana_transaction_status::{
         BlockEncodingOptions, ConfirmedBlock, EncodeError, TransactionDetails,
         UiTransactionEncoding,
     },

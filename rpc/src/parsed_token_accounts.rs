@@ -1,13 +1,13 @@
 use {
     jsonrpc_core::{Error, Result},
-    solomka_account_decoder::{
+    solana_account_decoder::{
         parse_account_data::AccountAdditionalData,
         parse_token::{
             get_token_account_mint, spl_token_native_mint, spl_token_native_mint_program_id,
         },
         UiAccount, UiAccountData, UiAccountEncoding,
     },
-    solomka_client::rpc_response::RpcKeyedAccount,
+    solana_client::rpc_response::RpcKeyedAccount,
     solana_runtime::bank::Bank,
     solomka_sdk::{
         account::{AccountSharedData, ReadableAccount},

@@ -1,7 +1,7 @@
 use {
-    solomka_client::thin_client::ThinClient,
+    solana_client::thin_client::ThinClient,
     solana_core::validator::{Validator, ValidatorConfig},
-    solana_gossip::{cluster_info::Node, legacy_contact_info::LegacyContactInfo as ContactInfo},
+    solana_gossip::{cluster_info::Node, contact_info::ContactInfo},
     solomka_sdk::{pubkey::Pubkey, signature::Keypair},
     solana_streamer::socket::SocketAddrSpace,
     std::{path::PathBuf, sync::Arc},

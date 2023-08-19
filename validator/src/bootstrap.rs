@@ -1,15 +1,15 @@
 use {
     log::*,
     rand::{seq::SliceRandom, thread_rng, Rng},
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solana_core::validator::{ValidatorConfig, ValidatorStartProgress},
     solana_download_utils::{download_snapshot_archive, DownloadProgressRecord},
     solana_genesis_utils::download_then_check_genesis_hash,
     solana_gossip::{
         cluster_info::{ClusterInfo, Node},
+        contact_info::ContactInfo,
         crds_value,
         gossip_service::GossipService,
-        legacy_contact_info::LegacyContactInfo as ContactInfo,
     },
     solana_runtime::{
         snapshot_archive_info::SnapshotArchiveInfoGetter,

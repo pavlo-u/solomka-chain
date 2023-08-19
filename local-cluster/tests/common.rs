@@ -1,7 +1,7 @@
 #![allow(clippy::integer_arithmetic, dead_code)]
 use {
     log::*,
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solana_core::{
         broadcast_stage::BroadcastStageType,
         consensus::{Tower, SWITCH_FORK_THRESHOLD},

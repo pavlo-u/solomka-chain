@@ -31,7 +31,7 @@ use {
     bincode::serialize,
     log::*,
     serde_json::{json, Value},
-    solomka_account_decoder::{
+    solana_account_decoder::{
         parse_token::{TokenAccountType, UiTokenAccount, UiTokenAmount},
         UiAccount, UiAccountData, UiAccountEncoding,
     },
@@ -47,7 +47,7 @@ use {
         signature::Signature,
         transaction,
     },
-    solomka_transaction_status::{
+    solana_transaction_status::{
         EncodedConfirmedBlock, EncodedConfirmedTransactionWithStatusMeta, TransactionStatus,
         UiConfirmedBlock, UiTransactionEncoding,
     },
@@ -118,8 +118,8 @@ use {
 ///
 /// ```
 /// # use solomka_sdk::system_transaction;
-/// # use solomka_client::rpc_client::RpcClient;
-/// # use solomka_client::client_error::ClientError;
+/// # use solana_client::rpc_client::RpcClient;
+/// # use solana_client::client_error::ClientError;
 /// # use solomka_sdk::signature::{Keypair, Signer};
 /// # use solomka_sdk::hash::Hash;
 /// # let rpc_client = RpcClient::new_mock("succeeds".to_string());
@@ -176,7 +176,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// let url = "http://localhost:8899".to_string();
     /// let client = RpcClient::new(url);
     /// ```
@@ -198,7 +198,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use solomka_sdk::commitment_config::CommitmentConfig;
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// let url = "http://localhost:8899".to_string();
     /// let commitment_config = CommitmentConfig::processed();
     /// let client = RpcClient::new_with_commitment(url, commitment_config);
@@ -224,7 +224,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use std::time::Duration;
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// let url = "http://localhost::8899".to_string();
     /// let timeout = Duration::from_secs(1);
     /// let client = RpcClient::new_with_timeout(url, timeout);
@@ -247,7 +247,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use std::time::Duration;
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// # use solomka_sdk::commitment_config::CommitmentConfig;
     /// let url = "http://localhost::8899".to_string();
     /// let timeout = Duration::from_secs(1);
@@ -288,7 +288,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use std::time::Duration;
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// # use solomka_sdk::commitment_config::CommitmentConfig;
     /// let url = "http://localhost::8899".to_string();
     /// let timeout = Duration::from_secs(1);
@@ -350,14 +350,14 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// // Create an `RpcClient` that always succeeds
     /// let url = "succeeds".to_string();
     /// let successful_client = RpcClient::new_mock(url);
     /// ```
     ///
     /// ```
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// // Create an `RpcClient` that always fails
     /// let url = "fails".to_string();
     /// let successful_client = RpcClient::new_mock(url);
@@ -412,7 +412,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     rpc_request::RpcRequest,
     /// #     rpc_response::{Response, RpcResponseContext},
@@ -449,7 +449,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use std::net::SocketAddr;
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// let addr = SocketAddr::from(([127, 0, 0, 1], 8899));
     /// let client = RpcClient::new_socket(addr);
     /// ```
@@ -468,7 +468,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use std::net::SocketAddr;
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// # use solomka_sdk::commitment_config::CommitmentConfig;
     /// let addr = SocketAddr::from(([127, 0, 0, 1], 8899));
     /// let commitment_config = CommitmentConfig::processed();
@@ -495,7 +495,7 @@ impl RpcClient {
     /// ```
     /// # use std::net::SocketAddr;
     /// # use std::time::Duration;
-    /// # use solomka_client::nonblocking::rpc_client::RpcClient;
+    /// # use solana_client::nonblocking::rpc_client::RpcClient;
     /// let addr = SocketAddr::from(([127, 0, 0, 1], 8899));
     /// let timeout = Duration::from_secs(1);
     /// let client = RpcClient::new_socket_with_timeout(addr, timeout);
@@ -634,7 +634,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -804,7 +804,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -895,7 +895,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     rpc_config::RpcSendTransactionConfig,
@@ -1023,7 +1023,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -1084,7 +1084,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -1268,7 +1268,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     rpc_response::RpcSimulateTransactionResult,
@@ -1348,7 +1348,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     rpc_config::RpcSimulateTransactionConfig,
@@ -1420,7 +1420,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1488,7 +1488,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1559,7 +1559,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1641,7 +1641,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1714,7 +1714,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1788,7 +1788,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1851,7 +1851,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1879,7 +1879,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1916,7 +1916,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1945,7 +1945,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -1982,7 +1982,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2030,7 +2030,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2056,7 +2056,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// #     rpc_config::RpcBlockProductionConfig,
@@ -2112,7 +2112,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// #     rpc_response::StakeActivationState,
@@ -2205,7 +2205,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2231,7 +2231,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2269,7 +2269,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// #     rpc_config::RpcLargestAccountsConfig,
@@ -2319,7 +2319,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2350,7 +2350,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use solomka_sdk::commitment_config::CommitmentConfig;
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2389,7 +2389,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// #     rpc_config::RpcGetVoteAccountsConfig,
@@ -2469,7 +2469,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2503,7 +2503,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2531,8 +2531,8 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_transaction_status::UiTransactionEncoding;
-    /// # use solomka_client::{
+    /// # use solana_transaction_status::UiTransactionEncoding;
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2571,11 +2571,11 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_transaction_status::{
+    /// # use solana_transaction_status::{
     /// #     TransactionDetails,
     /// #     UiTransactionEncoding,
     /// # };
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     rpc_config::RpcBlockConfig,
     /// #     client_error::ClientError,
@@ -2679,7 +2679,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2744,7 +2744,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use solomka_sdk::commitment_config::CommitmentConfig;
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2809,7 +2809,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2861,7 +2861,7 @@ impl RpcClient {
     ///
     /// ```
     /// # use solomka_sdk::commitment_config::CommitmentConfig;
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -2998,7 +2998,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3050,7 +3050,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     rpc_client::GetConfirmedSignaturesForAddress2Config,
@@ -3169,7 +3169,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3179,7 +3179,7 @@ impl RpcClient {
     /// #     signer::keypair::Keypair,
     /// #     system_transaction,
     /// # };
-    /// # use solomka_transaction_status::UiTransactionEncoding;
+    /// # use solana_transaction_status::UiTransactionEncoding;
     /// # futures::executor::block_on(async {
     /// #     let rpc_client = RpcClient::new_mock("succeeds".to_string());
     /// #     let alice = Keypair::new();
@@ -3230,7 +3230,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     rpc_config::RpcTransactionConfig,
@@ -3242,7 +3242,7 @@ impl RpcClient {
     /// #     system_transaction,
     /// #     commitment_config::CommitmentConfig,
     /// # };
-    /// # use solomka_transaction_status::UiTransactionEncoding;
+    /// # use solana_transaction_status::UiTransactionEncoding;
     /// # futures::executor::block_on(async {
     /// #     let rpc_client = RpcClient::new_mock("succeeds".to_string());
     /// #     let alice = Keypair::new();
@@ -3321,7 +3321,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3366,7 +3366,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3392,7 +3392,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3433,7 +3433,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3467,7 +3467,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3510,11 +3510,11 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
-    /// # use solomka_client::rpc_config::RpcLeaderScheduleConfig;
+    /// # use solana_client::rpc_config::RpcLeaderScheduleConfig;
     /// # use solomka_sdk::commitment_config::CommitmentConfig;
     /// # futures::executor::block_on(async {
     /// #     let rpc_client = RpcClient::new_mock("succeeds".to_string());
@@ -3552,7 +3552,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3581,7 +3581,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3619,7 +3619,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3659,7 +3659,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3698,7 +3698,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3725,7 +3725,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3755,7 +3755,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3809,7 +3809,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3843,7 +3843,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     client_error::ClientError,
     /// #     nonblocking::rpc_client::RpcClient,
     /// # };
@@ -3885,7 +3885,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::{self, RpcClient},
     /// #     client_error::ClientError,
     /// # };
@@ -3928,7 +3928,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::{self, RpcClient},
     /// #     client_error::ClientError,
     /// # };
@@ -3985,7 +3985,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::{self, RpcClient},
     /// #     rpc_config::RpcAccountInfoConfig,
     /// #     client_error::ClientError,
@@ -3996,7 +3996,7 @@ impl RpcClient {
     /// #     pubkey::Pubkey,
     /// #     commitment_config::CommitmentConfig,
     /// # };
-    /// # use solomka_account_decoder::UiAccountEncoding;
+    /// # use solana_account_decoder::UiAccountEncoding;
     /// # use std::str::FromStr;
     /// # futures::executor::block_on(async {
     /// #     let mocks = rpc_client::create_rpc_client_mocks();
@@ -4068,7 +4068,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4095,7 +4095,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4125,7 +4125,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4164,7 +4164,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4215,7 +4215,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     rpc_config::RpcAccountInfoConfig,
     /// #     client_error::ClientError,
@@ -4225,7 +4225,7 @@ impl RpcClient {
     /// #     signer::keypair::Keypair,
     /// #     commitment_config::CommitmentConfig,
     /// # };
-    /// # use solomka_account_decoder::UiAccountEncoding;
+    /// # use solana_account_decoder::UiAccountEncoding;
     /// # futures::executor::block_on(async {
     /// #     let rpc_client = RpcClient::new_mock("succeeds".to_string());
     /// #     let alice = Keypair::new();
@@ -4289,7 +4289,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::{self, RpcClient},
     /// #     client_error::ClientError,
     /// # };
@@ -4324,7 +4324,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4371,7 +4371,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4405,7 +4405,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4457,7 +4457,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4501,7 +4501,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// #     rpc_config::{RpcAccountInfoConfig, RpcProgramAccountsConfig},
@@ -4512,7 +4512,7 @@ impl RpcClient {
     /// #     signer::keypair::Keypair,
     /// #     commitment_config::CommitmentConfig,
     /// # };
-    /// # use solomka_account_decoder::{UiDataSliceConfig, UiAccountEncoding};
+    /// # use solana_account_decoder::{UiDataSliceConfig, UiAccountEncoding};
     /// # futures::executor::block_on(async {
     /// #     let rpc_client = RpcClient::new_mock("succeeds".to_string());
     /// #     let alice = Keypair::new();
@@ -4585,7 +4585,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };
@@ -4612,7 +4612,7 @@ impl RpcClient {
     /// # Examples
     ///
     /// ```
-    /// # use solomka_client::{
+    /// # use solana_client::{
     /// #     nonblocking::rpc_client::RpcClient,
     /// #     client_error::ClientError,
     /// # };

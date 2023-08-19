@@ -519,7 +519,7 @@ pub fn create_nonce_account_with_seed(
 /// This function produces a vector of [`Instruction`]s which must be submitted
 /// in a [`Transaction`] or [invoked] to take effect.
 ///
-/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solomka_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
 ///
 /// A [durable transaction nonce][dtn] is a special account that enables
@@ -581,8 +581,8 @@ pub fn create_nonce_account_with_seed(
 ///
 /// ```
 /// # use solomka_program::example_mocks::solomka_sdk;
-/// # use solomka_program::example_mocks::solomka_client;
-/// use solomka_client::rpc_client::RpcClient;
+/// # use solomka_program::example_mocks::solana_client;
+/// use solana_client::rpc_client::RpcClient;
 /// use solomka_sdk::{
 /// #   pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
@@ -655,7 +655,7 @@ pub fn create_nonce_account(
 /// This function produces an [`Instruction`] which must be submitted in a
 /// [`Transaction`] or [invoked] to take effect.
 ///
-/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solomka_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
 ///
 /// Every transaction that relies on a durable transaction nonce must contain a
@@ -671,7 +671,7 @@ pub fn create_nonce_account(
 /// setting it to a recent blockhash, the value of the nonce must be retreived
 /// and deserialized from the nonce account, and that value specified as the
 /// "recent blockhash". A nonce account can be deserialized with the
-/// [`solomka_client::nonce_utils::data_from_account`][dfa] function.
+/// [`solana_client::nonce_utils::data_from_account`][dfa] function.
 ///
 /// For further description of durable transaction nonces see
 /// [`create_nonce_account`].
@@ -691,8 +691,8 @@ pub fn create_nonce_account(
 ///
 /// ```
 /// # use solomka_program::example_mocks::solomka_sdk;
-/// # use solomka_program::example_mocks::solomka_client;
-/// use solomka_client::{
+/// # use solomka_program::example_mocks::solana_client;
+/// use solana_client::{
 ///     rpc_client::RpcClient,
 ///     nonce_utils,
 /// };
@@ -793,7 +793,7 @@ pub fn advance_nonce_account(nonce_pubkey: &Pubkey, authorized_pubkey: &Pubkey) 
 /// This function produces an [`Instruction`] which must be submitted in a
 /// [`Transaction`] or [invoked] to take effect.
 ///
-/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solomka_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
 ///
 /// Withdrawing the entire balance of a nonce account will cause the runtime to
@@ -817,8 +817,8 @@ pub fn advance_nonce_account(nonce_pubkey: &Pubkey, authorized_pubkey: &Pubkey) 
 ///
 /// ```
 /// # use solomka_program::example_mocks::solomka_sdk;
-/// # use solomka_program::example_mocks::solomka_client;
-/// use solomka_client::rpc_client::RpcClient;
+/// # use solomka_program::example_mocks::solana_client;
+/// use solana_client::rpc_client::RpcClient;
 /// use solomka_sdk::{
 ///     pubkey::Pubkey,
 ///     signature::{Keypair, Signer},
@@ -885,7 +885,7 @@ pub fn withdraw_nonce_account(
 /// This function produces an [`Instruction`] which must be submitted in a
 /// [`Transaction`] or [invoked] to take effect.
 ///
-/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solana_sdk/transaction/struct.Transaction.html
+/// [`Transaction`]: https://docs.rs/solana-sdk/latest/solomka_sdk/transaction/struct.Transaction.html
 /// [invoked]: crate::program::invoke
 ///
 /// This constructor creates a [`SystemInstruction::AuthorizeNonceAccount`]
@@ -899,8 +899,8 @@ pub fn withdraw_nonce_account(
 ///
 /// ```
 /// # use solomka_program::example_mocks::solomka_sdk;
-/// # use solomka_program::example_mocks::solomka_client;
-/// use solomka_client::rpc_client::RpcClient;
+/// # use solomka_program::example_mocks::solana_client;
+/// use solana_client::rpc_client::RpcClient;
 /// use solomka_sdk::{
 ///     pubkey::Pubkey,
 ///     signature::{Keypair, Signer},

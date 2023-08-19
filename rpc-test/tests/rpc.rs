@@ -5,8 +5,8 @@ use {
     log::*,
     reqwest::{self, header::CONTENT_TYPE},
     serde_json::{json, Value},
-    solomka_account_decoder::UiAccount,
-    solomka_client::{
+    solana_account_decoder::UiAccount,
+    solana_client::{
         client_error::{ClientErrorKind, Result as ClientResult},
         connection_cache::{ConnectionCache, DEFAULT_TPU_CONNECTION_POOL_SIZE},
         nonblocking::pubsub_client::PubsubClient,
@@ -27,7 +27,7 @@ use {
     },
     solana_streamer::socket::SocketAddrSpace,
     solana_test_validator::TestValidator,
-    solomka_transaction_status::TransactionStatus,
+    solana_transaction_status::TransactionStatus,
     std::{
         collections::HashSet,
         net::UdpSocket,
@@ -119,7 +119,7 @@ fn test_rpc_send_tx() {
     assert!(confirmed_tx);
 
     use {
-        solomka_account_decoder::UiAccountEncoding, solomka_client::rpc_config::RpcAccountInfoConfig,
+        solana_account_decoder::UiAccountEncoding, solana_client::rpc_config::RpcAccountInfoConfig,
     };
     let config = RpcAccountInfoConfig {
         encoding: Some(UiAccountEncoding::Base64),

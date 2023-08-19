@@ -38,7 +38,7 @@ A nonce account is created by first generating a new keypair, then create the ac
 - Command
 
 ```bash
-solomka-keygen new -o nonce-keypair.json
+solana-keygen new -o nonce-keypair.json
 solana create-nonce-account nonce-keypair.json 1
 ```
 
@@ -173,9 +173,9 @@ is the same for all subcommands supporting durable nonces
 First we need some accounts for Alice, Alice's nonce and Bob
 
 ```bash
-$ solomka-keygen new -o alice.json
-$ solomka-keygen new -o nonce.json
-$ solomka-keygen new -o bob.json
+$ solana-keygen new -o alice.json
+$ solana-keygen new -o nonce.json
+$ solana-keygen new -o bob.json
 ```
 
 #### - Fund Alice's account
@@ -206,7 +206,7 @@ expires and the transaction fails
 
 ```bash
 $ solana transfer -k alice.json --blockhash expiredDTaxfagttWjQweib42b6ZHADSx94Tw8gHx11 bob.json 0.01
-[2020-01-02T18:48:28.462911000Z ERROR solomka_cli::cli] Io(Custom { kind: Other, error: "Transaction \"33gQQaoPc9jWePMvDAeyJpcnSPiGUAdtVg8zREWv4GiKjkcGNufgpcbFyRKRrA25NkgjZySEeKue5rawyeH5TzsV\" failed: None" })
+[2020-01-02T18:48:28.462911000Z ERROR solana_cli::cli] Io(Custom { kind: Other, error: "Transaction \"33gQQaoPc9jWePMvDAeyJpcnSPiGUAdtVg8zREWv4GiKjkcGNufgpcbFyRKRrA25NkgjZySEeKue5rawyeH5TzsV\" failed: None" })
 Error: Io(Custom { kind: Other, error: "Transaction \"33gQQaoPc9jWePMvDAeyJpcnSPiGUAdtVg8zREWv4GiKjkcGNufgpcbFyRKRrA25NkgjZySEeKue5rawyeH5TzsV\" failed: None" })
 ```
 

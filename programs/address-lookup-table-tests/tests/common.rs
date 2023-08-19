@@ -5,7 +5,7 @@ use {
         processor::process_instruction,
         state::{AddressLookupTable, LookupTableMeta},
     },
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         account::AccountSharedData,
         clock::Slot,

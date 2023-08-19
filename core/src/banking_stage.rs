@@ -22,11 +22,9 @@ use {
     histogram::Histogram,
     itertools::Itertools,
     min_max_heap::MinMaxHeap,
-    solomka_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
+    solana_client::{connection_cache::ConnectionCache, tpu_connection::TpuConnection},
     solana_entry::entry::hash_transactions,
-    solana_gossip::{
-        cluster_info::ClusterInfo, legacy_contact_info::LegacyContactInfo as ContactInfo,
-    },
+    solana_gossip::{cluster_info::ClusterInfo, contact_info::ContactInfo},
     solana_ledger::{
         blockstore_processor::TransactionStatusSender, token_balances::collect_token_balances,
     },
@@ -38,7 +36,7 @@ use {
         perf_libs,
     },
     solana_poh::poh_recorder::{BankStart, PohRecorder, PohRecorderError, TransactionRecorder},
-    solana_program_runtime::timings::ExecuteTimings,
+    solomka_program_runtime::timings::ExecuteTimings,
     solana_runtime::{
         bank::{
             Bank, CommitTransactionCounts, LoadAndExecuteTransactionsOutput,
@@ -63,7 +61,7 @@ use {
         transport::TransportError,
     },
     solana_streamer::sendmmsg::batch_send,
-    solomka_transaction_status::token_balances::TransactionTokenBalancesSet,
+    solana_transaction_status::token_balances::TransactionTokenBalancesSet,
     std::{
         cmp,
         collections::{HashMap, HashSet},
@@ -2310,7 +2308,7 @@ mod tests {
         crossbeam_channel::{unbounded, Receiver},
         solana_address_lookup_table_program::state::{AddressLookupTable, LookupTableMeta},
         solana_entry::entry::{next_entry, next_versioned_entry, Entry, EntrySlice},
-        solana_gossip::cluster_info::Node,
+        solana_gossip::{cluster_info::Node, contact_info::ContactInfo},
         solana_ledger::{
             blockstore::{entries_to_test_shreds, Blockstore},
             genesis_utils::{create_genesis_config, GenesisConfigInfo},
@@ -2322,7 +2320,7 @@ mod tests {
             poh_recorder::{create_test_recorder, Record, WorkingBankEntry},
             poh_service::PohService,
         },
-        solana_program_runtime::timings::ProgramTiming,
+        solomka_program_runtime::timings::ProgramTiming,
         solana_rpc::transaction_status_service::TransactionStatusService,
         solana_runtime::bank_forks::BankForks,
         solomka_sdk::{
@@ -2339,7 +2337,7 @@ mod tests {
             transaction::{MessageHash, Transaction, TransactionError, VersionedTransaction},
         },
         solana_streamer::{recvmmsg::recv_mmsg, socket::SocketAddrSpace},
-        solomka_transaction_status::{TransactionStatusMeta, VersionedTransactionWithStatusMeta},
+        solana_transaction_status::{TransactionStatusMeta, VersionedTransactionWithStatusMeta},
         std::{
             borrow::Cow,
             path::Path,

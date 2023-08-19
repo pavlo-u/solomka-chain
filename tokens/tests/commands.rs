@@ -1,5 +1,5 @@
 use {
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solomka_sdk::signature::{Keypair, Signer},
     solana_streamer::socket::SocketAddrSpace,
     solana_test_validator::TestValidator,

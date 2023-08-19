@@ -2,7 +2,7 @@
 use {
     log::*,
     solomka_cli_output::CliAccount,
-    solomka_client::{
+    solana_client::{
         connection_cache::{
             DEFAULT_TPU_CONNECTION_POOL_SIZE, DEFAULT_TPU_ENABLE_UDP, DEFAULT_TPU_USE_QUIC,
         },
@@ -11,7 +11,6 @@ use {
         rpc_request::MAX_MULTIPLE_ACCOUNTS,
     },
     solana_core::{
-        admin_rpc_post_init::AdminRpcRequestMetadataPostInit,
         tower_storage::TowerStorage,
         validator::{Validator, ValidatorConfig, ValidatorStartProgress},
     },
@@ -25,7 +24,7 @@ use {
         create_new_tmp_ledger,
     },
     solana_net_utils::PortRange,
-    solana_program_runtime::compute_budget::ComputeBudget,
+    solomka_program_runtime::compute_budget::ComputeBudget,
     solana_rpc::{rpc::JsonRpcConfig, rpc_pubsub_service::PubSubConfig},
     solana_runtime::{
         accounts_db::AccountsDbConfig, accounts_index::AccountsIndexConfig, bank_forks::BankForks,
@@ -127,7 +126,6 @@ pub struct TestValidatorGenesis {
     compute_unit_limit: Option<u64>,
     pub log_messages_bytes_limit: Option<usize>,
     pub tpu_enable_udp: bool,
-    admin_rpc_service_post_init: Arc<RwLock<Option<AdminRpcRequestMetadataPostInit>>>,
 }
 
 impl Default for TestValidatorGenesis {
@@ -158,8 +156,6 @@ impl Default for TestValidatorGenesis {
             compute_unit_limit: Option::<u64>::default(),
             log_messages_bytes_limit: Option::<usize>::default(),
             tpu_enable_udp: DEFAULT_TPU_ENABLE_UDP,
-            admin_rpc_service_post_init:
-                Arc::<RwLock<Option<AdminRpcRequestMetadataPostInit>>>::default(),
         }
     }
 }
@@ -323,7 +319,7 @@ impl TestValidatorGenesis {
     pub fn add_accounts_from_json_files(&mut self, accounts: &[AccountInfo]) -> &mut Self {
         for account in accounts {
             let account_path =
-                solana_program_test::find_file(account.filename).unwrap_or_else(|| {
+                solomka_program_test::find_file(account.filename).unwrap_or_else(|| {
                     error!("Unable to locate {}", account.filename);
                     solana_core::validator::abort();
                 });
@@ -405,8 +401,8 @@ impl TestValidatorGenesis {
             address,
             AccountSharedData::from(Account {
                 lamports,
-                data: solana_program_test::read_file(
-                    solana_program_test::find_file(filename).unwrap_or_else(|| {
+                data: solomka_program_test::read_file(
+                    solomka_program_test::find_file(filename).unwrap_or_else(|| {
                         panic!("Unable to locate {}", filename);
                     }),
                 ),
@@ -444,7 +440,7 @@ impl TestValidatorGenesis {
     /// `program_name` will also used to locate the BPF shared object in the current or fixtures
     /// directory.
     pub fn add_program(&mut self, program_name: &str, program_id: Pubkey) -> &mut Self {
-        let program_path = solana_program_test::find_file(&format!("{}.so", program_name))
+        let program_path = solomka_program_test::find_file(&format!("{}.so", program_name))
             .unwrap_or_else(|| panic!("Unable to locate program {}", program_name));
 
         self.programs.push(ProgramInfo {
@@ -632,11 +628,11 @@ impl TestValidator {
         let mint_lamports = sol_to_lamports(500_000_000.);
 
         let mut accounts = config.accounts.clone();
-        for (address, account) in solana_program_test::programs::spl_programs(&config.rent) {
+        for (address, account) in solomka_program_test::programs::spl_programs(&config.rent) {
             accounts.entry(address).or_insert(account);
         }
         for program in &config.programs {
-            let data = solana_program_test::read_file(&program.program_path);
+            let data = solomka_program_test::read_file(&program.program_path);
             accounts.insert(
                 program.program_id,
                 AccountSharedData::from(Account {
@@ -848,7 +844,6 @@ impl TestValidator {
             DEFAULT_TPU_USE_QUIC,
             DEFAULT_TPU_CONNECTION_POOL_SIZE,
             config.tpu_enable_udp,
-            config.admin_rpc_service_post_init.clone(),
         ));
 
         // Needed to avoid panics in `solana-responder-gossip` in tests that create a number of

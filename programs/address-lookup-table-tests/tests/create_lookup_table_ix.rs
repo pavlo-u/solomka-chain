@@ -6,7 +6,7 @@ use {
         instruction::create_lookup_table,
         state::{AddressLookupTable, LOOKUP_TABLE_META_SIZE},
     },
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         clock::Slot, instruction::InstructionError, pubkey::Pubkey, rent::Rent, signature::Signer,
         signer::keypair::Keypair, transaction::Transaction,

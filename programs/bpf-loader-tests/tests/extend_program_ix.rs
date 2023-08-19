@@ -1,7 +1,7 @@
 use {
     assert_matches::assert_matches,
     common::{add_upgradeable_loader_account, assert_ix_error, setup_test_context},
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         account::{AccountSharedData, ReadableAccount},
         account_utils::StateMut,

@@ -2,7 +2,7 @@
 use solana_frozen_abi::abi_example::AbiExample;
 use {
     crate::system_instruction_processor,
-    solana_program_runtime::invoke_context::{InvokeContext, ProcessInstructionWithContext},
+    solomka_program_runtime::invoke_context::{InvokeContext, ProcessInstructionWithContext},
     solomka_sdk::{
         feature_set, instruction::InstructionError, pubkey::Pubkey, stake, system_program,
     },

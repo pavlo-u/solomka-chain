@@ -6,7 +6,7 @@ use {
             LOOKUP_TABLE_MAX_ADDRESSES, LOOKUP_TABLE_META_SIZE,
         },
     },
-    solana_program_runtime::{ic_msg, invoke_context::InvokeContext},
+    solomka_program_runtime::{ic_msg, invoke_context::InvokeContext},
     solomka_sdk::{
         clock::Slot,
         instruction::InstructionError,

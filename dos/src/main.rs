@@ -45,7 +45,7 @@ use {
     log::*,
     rand::{thread_rng, Rng},
     solana_bench_tps::{bench::generate_and_fund_keypairs, bench_tps_client::BenchTpsClient},
-    solomka_client::{
+    solana_client::{
         connection_cache::{ConnectionCache, DEFAULT_TPU_CONNECTION_POOL_SIZE},
         rpc_client::RpcClient,
         tpu_connection::TpuConnection,
@@ -53,8 +53,8 @@ use {
     solana_core::serve_repair::{RepairProtocol, RepairRequestHeader, ServeRepair},
     solana_dos::cli::*,
     solana_gossip::{
+        contact_info::ContactInfo,
         gossip_service::{discover, get_multi_client},
-        legacy_contact_info::LegacyContactInfo as ContactInfo,
     },
     solana_measure::measure::Measure,
     solomka_sdk::{
@@ -786,7 +786,7 @@ fn main() {
 pub mod test {
     use {
         super::*,
-        solomka_client::thin_client::ThinClient,
+        solana_client::thin_client::ThinClient,
         solana_core::validator::ValidatorConfig,
         solana_faucet::faucet::run_local_faucet,
         solana_local_cluster::{

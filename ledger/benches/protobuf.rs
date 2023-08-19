@@ -11,7 +11,7 @@ use {
     },
     solana_runtime::bank::RewardType,
     solomka_sdk::{clock::Slot, pubkey},
-    solomka_transaction_status::{Reward, Rewards},
+    solana_transaction_status::{Reward, Rewards},
     std::path::Path,
     test::Bencher,
 };

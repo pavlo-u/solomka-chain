@@ -2,7 +2,7 @@
 mod tests {
     use {
         crossbeam_channel::{unbounded, Receiver},
-        solomka_client::{
+        solana_client::{
             connection_cache::ConnectionCacheStats,
             nonblocking::quic_client::QuicLazyInitializedEndpoint,
         },
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn test_quic_client_multiple_writes() {
-        use solomka_client::{quic_client::QuicTpuConnection, tpu_connection::TpuConnection};
+        use solana_client::{quic_client::QuicTpuConnection, tpu_connection::TpuConnection};
         solana_logger::setup();
         let (sender, receiver) = unbounded();
         let staked_nodes = Arc::new(RwLock::new(StakedNodes::default()));
@@ -105,7 +105,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_nonblocking_quic_client_multiple_writes() {
-        use solomka_client::nonblocking::{
+        use solana_client::nonblocking::{
             quic_client::QuicTpuConnection, tpu_connection::TpuConnection,
         };
         solana_logger::setup();

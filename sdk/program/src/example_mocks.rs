@@ -13,7 +13,7 @@
 #![doc(hidden)]
 #![allow(clippy::new_without_default)]
 
-pub mod solomka_client {
+pub mod solana_client {
     pub mod client_error {
         #[derive(thiserror::Error, Debug)]
         #[error("mock-error")]
@@ -106,10 +106,10 @@ pub mod solomka_client {
     }
 }
 
-/// Re-exports and mocks of solana-program modules that mirror those from
-/// solana-program.
+/// Re-exports and mocks of solomka-program modules that mirror those from
+/// solomka-program.
 ///
-/// This lets examples in solana-program appear to be written as client
+/// This lets examples in solomka-program appear to be written as client
 /// programs.
 pub mod solomka_sdk {
     pub use crate::{

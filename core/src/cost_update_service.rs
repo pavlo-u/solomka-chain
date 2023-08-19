@@ -7,7 +7,7 @@ use {
     crossbeam_channel::Receiver,
     solana_ledger::blockstore::Blockstore,
     solana_measure::measure,
-    solana_program_runtime::timings::ExecuteTimings,
+    solomka_program_runtime::timings::ExecuteTimings,
     solana_runtime::{bank::Bank, cost_model::CostModel},
     solomka_sdk::timing::timestamp,
     std::{
@@ -139,7 +139,7 @@ impl CostUpdateService {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, solana_program_runtime::timings::ProgramTiming, solomka_sdk::pubkey::Pubkey};
+    use {super::*, solomka_program_runtime::timings::ProgramTiming, solomka_sdk::pubkey::Pubkey};
 
     #[test]
     fn test_update_cost_model_with_empty_execute_timings() {

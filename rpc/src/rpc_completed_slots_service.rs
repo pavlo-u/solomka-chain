@@ -1,7 +1,7 @@
 use {
     crate::rpc_subscriptions::RpcSubscriptions,
     crossbeam_channel::RecvTimeoutError,
-    solomka_client::rpc_response::SlotUpdate,
+    solana_client::rpc_response::SlotUpdate,
     solana_ledger::blockstore::CompletedSlotsReceiver,
     solomka_sdk::timing::timestamp,
     std::{

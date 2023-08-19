@@ -75,7 +75,7 @@ Major releases:
 - [`solana-sdk`](https://docs.rs/solana-sdk/) - Rust SDK for creating transactions and parsing account state
 - [`solana-program`](https://docs.rs/solana-program/) - Rust SDK for writing programs
 - [`solana-client`](https://docs.rs/solana-client/) - Rust client for connecting to RPC API
-- [`solomka-cli-config`](https://docs.rs/solomka-cli-config/) - Rust client for managing Solana CLI config files
+- [`solana-cli-config`](https://docs.rs/solana-cli-config/) - Rust client for managing Solana CLI config files
 - [`solana-geyser-plugin-interface`](https://docs.rs/solana-geyser-plugin-interface/) - Rust interface for developing Solana Geyser plugins.
 
 Patch releases:
@@ -149,9 +149,3 @@ software releases.
 
 If a new attack vector is discovered in existing code, the above processes may be
 circumvented in order to rapidly deploy a fix, depending on the severity of the issue.
-
-#### CLI Tooling Output
-
-CLI tooling json output (`output --json`) compatibility will be preserved; however, output directed
-for a human reader is subject to change. This includes output as well as potential help, warning, or
-error messages.

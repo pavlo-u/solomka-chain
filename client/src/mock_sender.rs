@@ -17,7 +17,7 @@ use {
     },
     async_trait::async_trait,
     serde_json::{json, Number, Value},
-    solomka_account_decoder::{UiAccount, UiAccountEncoding},
+    solana_account_decoder::{UiAccount, UiAccountEncoding},
     solomka_sdk::{
         account::Account,
         clock::{Slot, UnixTimestamp},
@@ -30,7 +30,7 @@ use {
         sysvar::epoch_schedule::EpochSchedule,
         transaction::{self, Transaction, TransactionError, TransactionVersion},
     },
-    solomka_transaction_status::{
+    solana_transaction_status::{
         option_serializer::OptionSerializer, EncodedConfirmedBlock,
         EncodedConfirmedTransactionWithStatusMeta, EncodedTransaction,
         EncodedTransactionWithStatusMeta, Rewards, TransactionBinaryEncoding,

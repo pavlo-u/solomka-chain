@@ -94,7 +94,7 @@ mod test {
     use spl_associated_token_account::create_associated_token_account as create_associated_token_account_deprecated;
     use {
         super::*,
-        solomka_account_decoder::parse_token::pubkey_from_spl_token,
+        solana_account_decoder::parse_token::pubkey_from_spl_token,
         spl_associated_token_account::{
             get_associated_token_address, get_associated_token_address_with_program_id,
             instruction::{

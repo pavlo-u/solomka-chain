@@ -7,7 +7,7 @@ use {
         },
     },
     log::*,
-    solana_program_runtime::{
+    solomka_program_runtime::{
         invoke_context::InvokeContext, sysvar_cache::get_sysvar_with_account_check,
     },
     solomka_sdk::{
@@ -490,7 +490,7 @@ mod tests {
         },
         assert_matches::assert_matches,
         bincode::serialize,
-        solana_program_runtime::{
+        solomka_program_runtime::{
             invoke_context::mock_process_instruction, sysvar_cache::SysvarCache,
         },
         solomka_sdk::{
@@ -4311,7 +4311,7 @@ mod tests {
     /// When a destination account already has funds, ensure the minimum split amount reduces
     /// accordingly.
     #[test_case(feature_set_old_behavior(), &[Ok(()), Ok(())]; "old_behavior")]
-    #[test_case(feature_set_new_behavior(), &[ Err(StakeError::InsufficientDelegation.into()), Err(StakeError::InsufficientDelegation.into()) ] ; "new_behavior")]
+    #[test_case(feature_set_new_behavior(), &[ Err(InstructionError::InsufficientFunds), Err(InstructionError::InsufficientFunds) ] ; "new_behavior")]
     fn test_staked_split_destination_minimum_balance(
         feature_set: FeatureSet,
         expected_results: &[Result<(), InstructionError>],
@@ -4961,7 +4961,7 @@ mod tests {
             &serialize(&StakeInstruction::Split(stake_lamports / 2)).unwrap(),
             transaction_accounts,
             instruction_accounts,
-            Err(StakeError::InsufficientDelegation.into()),
+            Err(StakeError::InsufficientStake.into()),
         );
     }
 

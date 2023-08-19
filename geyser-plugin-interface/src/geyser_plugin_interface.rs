@@ -4,7 +4,7 @@
 /// creates the implementation of the plugin.
 use {
     solomka_sdk::{clock::UnixTimestamp, signature::Signature, transaction::SanitizedTransaction},
-    solomka_transaction_status::{Reward, TransactionStatusMeta},
+    solana_transaction_status::{Reward, TransactionStatusMeta},
     std::{any::Any, error, io},
     thiserror::Error,
 };

@@ -1,11 +1,11 @@
 use {
     crate::rpc_filter::RpcFilterType,
-    solomka_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
+    solana_account_decoder::{UiAccountEncoding, UiDataSliceConfig},
     solomka_sdk::{
         clock::{Epoch, Slot},
         commitment_config::{CommitmentConfig, CommitmentLevel},
     },
-    solomka_transaction_status::{TransactionDetails, UiTransactionEncoding},
+    solana_transaction_status::{TransactionDetails, UiTransactionEncoding},
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

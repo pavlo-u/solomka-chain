@@ -21,7 +21,7 @@ node_readiness=false
 timeout=60
 while [[ $timeout -gt 0 ]]; do
   set +e
-  output=$($solana_cli "${args[@]}" transaction-count --commitment finalized)
+  output=$($solomka_cli "${args[@]}" transaction-count --commitment finalized)
   rc=$?
   set -e
   if [[ $rc -eq 0 && -n $output ]]; then
@@ -38,10 +38,10 @@ fi
 
 (
   set -x
-  $solana_cli "${args[@]}" address
-  $solana_cli "${args[@]}" balance
-  $solana_cli "${args[@]}" ping --count 5 --interval 0
-  $solana_cli "${args[@]}" balance
+  $solomka_cli "${args[@]}" address
+  $solomka_cli "${args[@]}" balance
+  $solomka_cli "${args[@]}" ping --count 5 --interval 0
+  $solomka_cli "${args[@]}" balance
 )
 
 echo PASS

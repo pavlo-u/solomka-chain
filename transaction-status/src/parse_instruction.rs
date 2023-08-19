@@ -11,7 +11,7 @@ use {
     },
     inflector::Inflector,
     serde_json::Value,
-    solomka_account_decoder::parse_token::spl_token_ids,
+    solana_account_decoder::parse_token::spl_token_ids,
     solomka_sdk::{
         instruction::CompiledInstruction, message::AccountKeys, pubkey::Pubkey, stake,
         system_program,
@@ -193,7 +193,7 @@ mod test {
             }
         );
 
-        let non_parsable_program_id = Pubkey::from([1; 32]);
+        let non_parsable_program_id = Pubkey::new(&[1; 32]);
         assert!(parse(&non_parsable_program_id, &memo_instruction, &no_keys).is_err());
     }
 

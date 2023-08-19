@@ -8,7 +8,7 @@ use {
     console::style,
     crossbeam_channel::unbounded,
     serde::{Deserialize, Serialize},
-    solomka_clap_utils::{
+    solana_clap_utils::{
         compute_unit_price::{compute_unit_price_arg, COMPUTE_UNIT_PRICE_ARG},
         input_parsers::*,
         input_validators::*,
@@ -23,7 +23,7 @@ use {
         },
         *,
     },
-    solomka_client::{
+    solana_client::{
         client_error::ClientErrorKind,
         pubsub_client::PubsubClient,
         rpc_client::{GetConfirmedSignaturesForAddress2Config, RpcClient},
@@ -36,7 +36,7 @@ use {
         rpc_request::DELINQUENT_VALIDATOR_SLOT_DISTANCE,
         rpc_response::SlotInfo,
     },
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::from_account,
         account_utils::StateMut,
@@ -62,7 +62,7 @@ use {
         timing,
         transaction::Transaction,
     },
-    solomka_transaction_status::UiTransactionEncoding,
+    solana_transaction_status::UiTransactionEncoding,
     solana_vote_program::vote_state::VoteState,
     std::{
         collections::{BTreeMap, HashMap, VecDeque},
@@ -1759,7 +1759,7 @@ pub fn process_show_stakes(
 
     let mut program_accounts_config = RpcProgramAccountsConfig {
         account_config: RpcAccountInfoConfig {
-            encoding: Some(solomka_account_decoder::UiAccountEncoding::Base64),
+            encoding: Some(solana_account_decoder::UiAccountEncoding::Base64),
             ..RpcAccountInfoConfig::default()
         },
         ..RpcProgramAccountsConfig::default()

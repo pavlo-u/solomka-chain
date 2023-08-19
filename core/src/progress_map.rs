@@ -6,7 +6,7 @@ use {
         replay_stage::SUPERMINORITY_THRESHOLD,
     },
     solana_ledger::blockstore_processor::{ConfirmationProgress, ConfirmationTiming},
-    solana_program_runtime::{report_execute_timings, timings::ExecuteTimingType},
+    solomka_program_runtime::{report_execute_timings, timings::ExecuteTimingType},
     solana_runtime::{bank::Bank, bank_forks::BankForks, vote_account::VoteAccountsHashMap},
     solomka_sdk::{clock::Slot, hash::Hash, pubkey::Pubkey},
     std::{
@@ -161,22 +161,26 @@ impl ValidatorStakeInfo {
 pub const RETRANSMIT_BASE_DELAY_MS: u64 = 5_000;
 pub const RETRANSMIT_BACKOFF_CAP: u32 = 6;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct RetransmitInfo {
-    pub(crate) retry_time: Instant,
-    pub(crate) retry_iteration: u32,
+    pub retry_time: Option<Instant>,
+    pub retry_iteration: u32,
 }
 
 impl RetransmitInfo {
     pub fn reached_retransmit_threshold(&self) -> bool {
         let backoff = std::cmp::min(self.retry_iteration, RETRANSMIT_BACKOFF_CAP);
         let backoff_duration_ms = (1_u64 << backoff) * RETRANSMIT_BASE_DELAY_MS;
-        self.retry_time.elapsed().as_millis() > u128::from(backoff_duration_ms)
+        self.retry_time
+            .map(|time| time.elapsed().as_millis() > backoff_duration_ms.into())
+            .unwrap_or(true)
     }
 
     pub fn increment_retry_iteration(&mut self) {
-        self.retry_iteration = self.retry_iteration.saturating_add(1);
-        self.retry_time = Instant::now();
+        if self.retry_time.is_some() {
+            self.retry_iteration += 1;
+        }
+        self.retry_time = Some(Instant::now());
     }
 }
 
@@ -244,10 +248,7 @@ impl ForkProgress {
                 total_epoch_stake,
                 ..PropagatedStats::default()
             },
-            retransmit_info: RetransmitInfo {
-                retry_time: Instant::now(),
-                retry_iteration: 0u32,
-            },
+            retransmit_info: RetransmitInfo::default(),
         }
     }
 

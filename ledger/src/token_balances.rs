@@ -1,5 +1,5 @@
 use {
-    solomka_account_decoder::parse_token::{
+    solana_account_decoder::parse_token::{
         is_known_spl_token_id, pubkey_from_spl_token, spl_token_native_mint,
         token_amount_to_ui_amount, UiTokenAmount,
     },
@@ -7,7 +7,7 @@ use {
     solana_metrics::datapoint_debug,
     solana_runtime::{bank::Bank, transaction_batch::TransactionBatch},
     solomka_sdk::{account::ReadableAccount, pubkey::Pubkey},
-    solomka_transaction_status::{
+    solana_transaction_status::{
         token_balances::TransactionTokenBalances, TransactionTokenBalance,
     },
     spl_token_2022::{
@@ -121,7 +121,7 @@ fn collect_token_balance_from_account(
 mod test {
     use {
         super::*,
-        solomka_account_decoder::parse_token::{pubkey_from_spl_token, spl_token_pubkey},
+        solana_account_decoder::parse_token::{pubkey_from_spl_token, spl_token_pubkey},
         solomka_sdk::{account::Account, genesis_config::create_genesis_config},
         spl_token_2022::{
             extension::{

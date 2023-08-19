@@ -4,7 +4,7 @@ use {
         EncodingConfig, RpcBlockConfig, RpcEncodingConfigWrapper, RpcTransactionConfig,
     },
     solomka_sdk::{clock::Slot, commitment_config::CommitmentConfig},
-    solomka_transaction_status::{TransactionDetails, UiTransactionEncoding},
+    solana_transaction_status::{TransactionDetails, UiTransactionEncoding},
 };
 
 #[deprecated(

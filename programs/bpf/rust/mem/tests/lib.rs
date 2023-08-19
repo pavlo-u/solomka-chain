@@ -1,6 +1,6 @@
 use {
     solana_bpf_rust_mem::entrypoint::process_instruction,
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         instruction::Instruction, pubkey::Pubkey, signature::Signer, transaction::Transaction,
     },

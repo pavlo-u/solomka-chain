@@ -4,7 +4,7 @@ use {
         inflation::*, nonce::*, program::*, stake::*, validator_info::*, vote::*, wallet::*,
     },
     clap::{App, AppSettings, Arg, ArgGroup, SubCommand},
-    solomka_clap_utils::{self, input_validators::*, keypair::*},
+    solana_clap_utils::{self, input_validators::*, keypair::*},
     solomka_cli_config::CONFIG_FILE,
 };
 

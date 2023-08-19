@@ -1,5 +1,5 @@
 use {
-    solana_program_runtime::compute_budget::ComputeBudget,
+    solomka_program_runtime::compute_budget::ComputeBudget,
     solomka_sdk::{
         instruction::CompiledInstruction,
         pubkey::Pubkey,
@@ -25,7 +25,6 @@ pub trait GetTransactionPriorityDetails {
                 instructions,
                 true, // use default units per instruction
                 true, // don't reject txs that use set compute unit price ix
-                true, // supports request heap frame instruction
             )
             .ok()?;
         Some(TransactionPriorityDetails {
@@ -81,7 +80,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: 0,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    solomka_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );
@@ -94,7 +93,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: 0,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    solomka_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );
@@ -157,7 +156,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: requested_price,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    solomka_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );
@@ -170,7 +169,7 @@ mod tests {
             Some(TransactionPriorityDetails {
                 priority: requested_price,
                 compute_unit_limit:
-                    solana_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
+                    solomka_program_runtime::compute_budget::DEFAULT_INSTRUCTION_COMPUTE_UNIT_LIMIT
                         as u64
             })
         );

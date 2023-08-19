@@ -5,7 +5,7 @@ use {
         bench::{do_bench_tps, generate_and_fund_keypairs},
         cli::Config,
     },
-    solomka_client::{
+    solana_client::{
         connection_cache::ConnectionCache,
         rpc_client::RpcClient,
         thin_client::ThinClient,

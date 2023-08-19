@@ -1,5 +1,5 @@
 use {
-    solana_program_runtime::invoke_context::InvokeContext,
+    solomka_program_runtime::invoke_context::InvokeContext,
     solomka_sdk::instruction::InstructionError,
 };
 

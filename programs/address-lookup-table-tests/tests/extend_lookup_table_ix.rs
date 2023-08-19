@@ -7,7 +7,7 @@ use {
         instruction::extend_lookup_table,
         state::{AddressLookupTable, LookupTableMeta},
     },
-    solana_program_test::*,
+    solomka_program_test::*,
     solomka_sdk::{
         account::{ReadableAccount, WritableAccount},
         clock::Clock,

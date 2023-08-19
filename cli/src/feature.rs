@@ -6,12 +6,12 @@ use {
     clap::{App, AppSettings, Arg, ArgMatches, SubCommand},
     console::style,
     serde::{Deserialize, Serialize},
-    solomka_clap_utils::{input_parsers::*, input_validators::*, keypair::*},
+    solana_clap_utils::{input_parsers::*, input_validators::*, keypair::*},
     solomka_cli_output::{cli_version::CliVersion, QuietDisplay, VerboseDisplay},
-    solomka_client::{
+    solana_client::{
         client_error::ClientError, rpc_client::RpcClient, rpc_request::MAX_MULTIPLE_ACCOUNTS,
     },
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::Account,
         clock::Slot,

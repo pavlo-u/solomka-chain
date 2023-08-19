@@ -2,14 +2,14 @@ use {
     clap::{crate_name, value_t, value_t_or_exit, values_t_or_exit, App, Arg},
     crossbeam_channel::unbounded,
     log::*,
-    solomka_clap_utils::{
+    solana_clap_utils::{
         input_parsers::{pubkey_of, pubkeys_of, value_of},
         input_validators::{
             is_parsable, is_pubkey, is_pubkey_or_keypair, is_slot, is_url_or_moniker,
             normalize_to_url_if_moniker,
         },
     },
-    solomka_client::rpc_client::RpcClient,
+    solana_client::rpc_client::RpcClient,
     solana_core::tower_storage::FileTowerStorage,
     solana_faucet::faucet::{run_local_faucet_with_port, FAUCET_PORT},
     solana_rpc::{
@@ -697,7 +697,7 @@ fn main() {
             start_time: std::time::SystemTime::now(),
             validator_exit: genesis.validator_exit.clone(),
             authorized_voter_keypairs: genesis.authorized_voter_keypairs.clone(),
-            post_init: admin_service_post_init,
+            post_init: admin_service_post_init.clone(),
             tower_storage: tower_storage.clone(),
         },
     );
@@ -823,6 +823,12 @@ fn main() {
 
     match genesis.start_with_mint_address(mint_address, socket_addr_space) {
         Ok(test_validator) => {
+            *admin_service_post_init.write().unwrap() =
+                Some(admin_rpc_service::AdminRpcRequestMetadataPostInit {
+                    bank_forks: test_validator.bank_forks(),
+                    cluster_info: test_validator.cluster_info(),
+                    vote_account: test_validator.vote_account_address(),
+                });
             if let Some(dashboard) = dashboard {
                 dashboard.run(Duration::from_millis(250));
             }

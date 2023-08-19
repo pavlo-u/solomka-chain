@@ -6,7 +6,7 @@ use {
     gag::BufferRedirect,
     log::*,
     serial_test::serial,
-    solomka_client::{
+    solana_client::{
         pubsub_client::PubsubClient,
         rpc_client::RpcClient,
         rpc_config::{RpcProgramAccountsConfig, RpcSignatureSubscribeConfig},

@@ -8,7 +8,7 @@ use {
         keypairs::get_keypairs,
         send_batch::generate_keypairs,
     },
-    solomka_client::{
+    solana_client::{
         connection_cache::ConnectionCache,
         rpc_client::RpcClient,
         thin_client::ThinClient,

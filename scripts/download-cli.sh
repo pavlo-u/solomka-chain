@@ -1,78 +1,174 @@
 #!/usr/bin/env bash
+#
+# |cargo install| of the top-level crate will not install binaries for
+# other workspace crates or native program crates.
+here="$(dirname "$0")"
+readlink_cmd="readlink"
+if [[ $OSTYPE != linux-gnu ]]; then
+  echo "OSTYPE IS: $OSTYPE"
+  echo "This script is intended to run on Linux only."
+  exit 1
+fi
+
+cargo="$("${readlink_cmd}" -f "${here}/../cargo")"
 
 set -e
 
-# Checking the operating system and architecture
-if [[ "$(uname)" != "Linux" || "$(uname -m)" != "x86_64" ]]; then
-  echo "This script is only supported on Linux x86_64"
-  exit 1
-fi
+usage() {
+  exitcode=0
+  if [[ -n "$1" ]]; then
+    exitcode=1
+    echo "Error: $*"
+  fi
+  cat <<EOF
+usage: $0 [+<cargo version>] [--debug] [--validator-only] <install directory>
+EOF
+  exit $exitcode
+}
 
-# Checking installed dependencies
-if ! command -v curl &> /dev/null; then
-  echo "curl is required but not installed. Please install curl"
-  exit 1
-fi
+maybeRustVersion=
+installDir=
+buildVariant=release
+maybeReleaseFlag=--release
+validatorOnly=
 
-# Archive name
-archName="solomka-cli-x86_64-unknown-linux-gnu.tar.bz2"
-
-# Creating a temporary directory
-tempDir="$(mktemp -d)"
-echo $temp_dir
-cd "$tempDir"
-
-# Downloading the Solomka CLI Binary Archive
-# As long as the repository is private, you need to pass 
-# a token to download files from the repository
-if [ $# -eq 1 ]; then
-# Get token
-  token="$1"
-# Custom link to download the Solomka CLI binary archive
-  solomkaURL="https://$token@raw.githubusercontent.com/convowork1/solomka-mainnet/main/bin/$archName"
-  
-# Downloading the Solomka CLI Binary
-  curl -LJO $solomkaURL
-else
-  echo "Invalid number of arguments. Please provide either a token"
-  exit 1
-fi
-
-# Unpacking the Solomka CLI Binary
-tar jxf solomka-cli-x86_64-unknown-linux-gnu.tar.bz2
-
-# Defining the installation directory
-installDir="$HOME/bin/solomka"  
-
-# Copying the Solomka CLI binary to the installation directory
-mkdir -p "$installDir"
-cp -R ./* "$installDir"
-rm $installDir/$archName
-
-# Check for the presence of .bash_profile
-if [ -f "$HOME/.bash_profile" ]; then
-    # Add the bin path to .bash_profile
-    if ! grep -q "$installDir" "$HOME/.bash_profile"; then
-        echo "export PATH=\"$installDir:\$PATH\"" >> "$HOME/.bash_profile"
-        echo "Bin path successfully added to .bash_profile"
+while [[ -n $1 ]]; do
+  if [[ ${1:0:1} = - ]]; then
+    if [[ $1 = --debug ]]; then
+      maybeReleaseFlag=
+      buildVariant=debug
+      shift
+    elif [[ $1 = --validator-only ]]; then
+      validatorOnly=true
+      shift
     else
-        echo "Bin path already exists in .bash_profile"
+      usage "Unknown option: $1"
     fi
-# Check for the presence of .profile
-elif [ -f "$HOME/.profile" ]; then
-    # Add the bin path to .profile
-    if ! grep -q "$installDir" "$HOME/.profile"; then
-        echo "export PATH=\"$installDir:\$PATH\"" >> "$HOME/.profile"
-        echo "Bin path successfully added to .profile"
-    else
-        echo "Bin path already exists in .profile"
-    fi
-else
-    echo "Neither .profile nor .bash_profile found"
-    # Exporting a path to use the Solomka CLI
-    echo "Please update your PATH environment variable to include the solana programs:"
-    echo "Use "export PATH="$installDir:\$PATH"""
+  elif [[ ${1:0:1} = \+ ]]; then
+    maybeRustVersion=$1
+    shift
+  else
+    installDir=$1
+    shift
+  fi
+done
+
+if [[ -z "$installDir" ]]; then
+  usage "Install directory not specified"
+  exit 1
 fi
 
-echo "Solomka CLI has been installed successfully"
-echo "You can now use 'solomka' command in your terminal after restart"
+installDir="$(mkdir -p "$installDir"; cd "$installDir"; pwd)"
+mkdir -p "$installDir/bin/deps"
+
+echo "Install location: $installDir ($buildVariant)"
+
+cd "$(dirname "$0")"/..
+
+SECONDS=0
+
+if [[ $CI_OS_NAME = windows ]]; then
+  # Limit windows to end-user command-line tools.  Full validator support is not
+  # yet available on windows
+  BINS=(
+    cargo-build-bpf
+    cargo-build-sbf
+    cargo-test-bpf
+    cargo-test-sbf
+    solomka
+    solana-install
+    solana-install-init
+    solomka-keygen
+    solana-stake-accounts
+    solana-test-validator
+    solana-tokens
+  )
+else
+  ./fetch-perf-libs.sh
+
+  BINS=(
+    solomka
+    solana-bench-tps
+    solana-faucet
+    solana-gossip
+    solana-install
+    solomka-keygen
+    solana-ledger-tool
+    solana-log-analyzer
+    solana-net-shaper
+    solana-validator
+    rbpf-cli
+  )
+
+  # Speed up net.sh deploys by excluding unused binaries
+  if [[ -z "$validatorOnly" ]]; then
+    BINS+=(
+      cargo-build-bpf
+      cargo-build-sbf
+      cargo-test-bpf
+      cargo-test-sbf
+      solana-dos
+      solana-install-init
+      solana-stake-accounts
+      solana-test-validator
+      solana-tokens
+      solana-watchtower
+    )
+  fi
+
+  #XXX: Ensure `solana-genesis` is built LAST!
+  # See https://github.com/solana-labs/solana/issues/5826
+  BINS+=(solana-genesis)
+fi
+
+binArgs=()
+for bin in "${BINS[@]}"; do
+  binArgs+=(--bin "$bin")
+done
+
+mkdir -p "$installDir/bin"
+
+(
+  set -x
+  # shellcheck disable=SC2086 # Don't want to double quote $rust_version
+  "$cargo" $maybeRustVersion build $maybeReleaseFlag "${binArgs[@]}"
+
+  # Exclude `spl-token` binary for net.sh builds
+  if [[ -z "$validatorOnly" ]]; then
+    # shellcheck disable=SC2086 # Don't want to double quote $rust_version
+    "$cargo" $maybeRustVersion install --locked spl-token-cli --root "$installDir"
+  fi
+)
+
+for bin in "${BINS[@]}"; do
+  cp -fv "target/$buildVariant/$bin" "$installDir"/bin
+done
+
+if [[ -d target/perf-libs ]]; then
+  cp -a target/perf-libs "$installDir"/bin/perf-libs
+fi
+
+if [[ -z "$validatorOnly" ]]; then
+  # shellcheck disable=SC2086 # Don't want to double quote $rust_version
+  "$cargo" $maybeRustVersion build --manifest-path programs/bpf_loader/gen-syscall-list/Cargo.toml
+  # shellcheck disable=SC2086 # Don't want to double quote $rust_version
+  "$cargo" $maybeRustVersion run --bin gen-headers
+  mkdir -p "$installDir"/bin/sdk/sbf
+  cp -a sdk/sbf/* "$installDir"/bin/sdk/sbf
+fi
+
+(
+  set -x
+  # deps dir can be empty
+  shopt -s nullglob
+  for dep in target/"$buildVariant"/deps/libsolana*program.*; do
+    cp -fv "$dep" "$installDir/bin/deps"
+  done
+)
+
+tar -cjf "$installDir/bin/solomka-cli-x86_64-unknown-linux-gnu.tar.bz2" -C "$installDir/bin/" "solomka" "solomka-keygen" > /dev/null 2>&1
+
+echo "Done after $SECONDS seconds"
+echo
+echo "To use these binaries:"
+echo "  export PATH=\"$installDir\"/bin:\"\$PATH\""

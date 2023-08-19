@@ -417,9 +417,9 @@
 //! The client program:
 //!
 //! ```no_run
-//! # use solomka_sdk::example_mocks::solomka_client;
+//! # use solomka_sdk::example_mocks::solana_client;
 //! use anyhow::Result;
-//! use solomka_client::rpc_client::RpcClient;
+//! use solana_client::rpc_client::RpcClient;
 //! use solomka_sdk::{
 //!     instruction::{AccountMeta, Instruction},
 //!     secp256k1_instruction,
@@ -633,9 +633,9 @@
 //! The client program:
 //!
 //! ```no_run
-//! # use solomka_sdk::example_mocks::solomka_client;
+//! # use solomka_sdk::example_mocks::solana_client;
 //! use anyhow::Result;
-//! use solomka_client::rpc_client::RpcClient;
+//! use solana_client::rpc_client::RpcClient;
 //! use solomka_sdk::{
 //!     instruction::{AccountMeta, Instruction},
 //!     keccak,

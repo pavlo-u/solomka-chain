@@ -1,6 +1,6 @@
 use {
     solana_banks_client::BanksClient,
-    solana_program_test::{processor, ProgramTest},
+    solomka_program_test::{processor, ProgramTest},
     solomka_sdk::{
         account_info::AccountInfo,
         entrypoint::ProgramResult,

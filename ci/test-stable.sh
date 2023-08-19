@@ -110,18 +110,18 @@ test-stable-bpf)
   done |& tee cargo.log
   # Save the output of cargo building the bpf tests so we can analyze
   # the number of redundant rebuilds of dependency crates. The
-  # expected number of solana-program crate compilations is 4. There
-  # should be 3 builds of solana-program while 128bit crate is
+  # expected number of solomka-program crate compilations is 4. There
+  # should be 3 builds of solomka-program while 128bit crate is
   # built. These compilations are not redundant because the crate is
   # built for different target each time. An additional compilation of
-  # solana-program is performed when simulation crate is built. This
-  # last compiled solana-program is of different version, normally the
+  # solomka-program is performed when simulation crate is built. This
+  # last compiled solomka-program is of different version, normally the
   # latest mainbeta release version.
-  solana_program_count=$(grep -c 'solana-program v' cargo.log)
+  solana_program_count=$(grep -c 'solomka-program v' cargo.log)
   rm -f cargo.log
   if ((solana_program_count > 10)); then
       echo "Regression of build redundancy ${solana_program_count}."
-      echo "Review dependency features that trigger redundant rebuilds of solana-program."
+      echo "Review dependency features that trigger redundant rebuilds of solomka-program."
       exit 1
   fi
 

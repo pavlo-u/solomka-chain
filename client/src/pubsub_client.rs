@@ -19,7 +19,7 @@ use {
         value::Value::{Number, Object},
         Map, Value,
     },
-    solomka_account_decoder::UiAccount,
+    solana_account_decoder::UiAccount,
     solomka_sdk::{clock::Slot, pubkey::Pubkey, signature::Signature},
     std::{
         marker::PhantomData,

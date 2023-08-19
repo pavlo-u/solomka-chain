@@ -1,5 +1,5 @@
 use {
-    solomka_client::{
+    solana_client::{
         nonblocking::tpu_client::{LeaderTpuService, TpuClient},
         tpu_client::TpuClientConfig,
     },

@@ -4,9 +4,9 @@ use {
     log::*,
     rand::{thread_rng, Rng},
     rayon::prelude::*,
-    solomka_clap_utils::input_parsers::pubkey_of,
+    solana_clap_utils::input_parsers::pubkey_of,
     solomka_cli::{cli::CliConfig, program::process_deploy},
-    solomka_client::{rpc_client::RpcClient, transaction_executor::TransactionExecutor},
+    solana_client::{rpc_client::RpcClient, transaction_executor::TransactionExecutor},
     solana_faucet::faucet::{request_airdrop_transaction, FAUCET_PORT},
     solana_gossip::gossip_service::discover,
     solomka_sdk::{

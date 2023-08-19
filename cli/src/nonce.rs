@@ -11,7 +11,7 @@ use {
         spend_utils::{resolve_spend_tx_and_check_account_balance, SpendAmount},
     },
     clap::{App, Arg, ArgMatches, SubCommand},
-    solomka_clap_utils::{
+    solana_clap_utils::{
         compute_unit_price::{compute_unit_price_arg, COMPUTE_UNIT_PRICE_ARG},
         input_parsers::*,
         input_validators::*,
@@ -20,8 +20,8 @@ use {
         nonce::*,
     },
     solomka_cli_output::CliNonceAccount,
-    solomka_client::{nonce_utils::*, rpc_client::RpcClient},
-    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
+    solana_client::{nonce_utils::*, rpc_client::RpcClient},
+    solana_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::Account,
         feature_set::merge_nonce_error_into_system_error,
@@ -1083,7 +1083,7 @@ mod tests {
         let valid = Account::new_data(1, &data, &system_program::ID);
         assert!(check_nonce_account(&valid.unwrap(), &nonce_pubkey, &blockhash).is_ok());
 
-        let invalid_owner = Account::new_data(1, &data, &Pubkey::from([1u8; 32]));
+        let invalid_owner = Account::new_data(1, &data, &Pubkey::new(&[1u8; 32]));
         if let CliError::InvalidNonce(err) =
             check_nonce_account(&invalid_owner.unwrap(), &nonce_pubkey, &blockhash).unwrap_err()
         {
@@ -1155,7 +1155,7 @@ mod tests {
             Err(Error::UnexpectedDataSize),
         );
 
-        let other_program = Pubkey::from([1u8; 32]);
+        let other_program = Pubkey::new(&[1u8; 32]);
         let other_account_no_data = Account::new(1, 0, &other_program);
         assert_eq!(
             account_identity_ok(&other_account_no_data),
@@ -1169,7 +1169,7 @@ mod tests {
         assert_eq!(state_from_account(&nonce_account), Ok(State::Uninitialized));
 
         let durable_nonce = DurableNonce::from_blockhash(&Hash::new(&[42u8; 32]));
-        let data = nonce::state::Data::new(Pubkey::from([1u8; 32]), durable_nonce, 42);
+        let data = nonce::state::Data::new(Pubkey::new(&[1u8; 32]), durable_nonce, 42);
         nonce_account
             .set_state(&Versions::new(State::Initialized(data.clone())))
             .unwrap();
@@ -1199,7 +1199,7 @@ mod tests {
         );
 
         let durable_nonce = DurableNonce::from_blockhash(&Hash::new(&[42u8; 32]));
-        let data = nonce::state::Data::new(Pubkey::from([1u8; 32]), durable_nonce, 42);
+        let data = nonce::state::Data::new(Pubkey::new(&[1u8; 32]), durable_nonce, 42);
         nonce_account
             .set_state(&Versions::new(State::Initialized(data.clone())))
             .unwrap();

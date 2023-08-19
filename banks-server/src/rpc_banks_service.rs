@@ -3,7 +3,7 @@
 use {
     crate::banks_server::start_tcp_server,
     futures::{future::FutureExt, pin_mut, prelude::stream::StreamExt, select},
-    solomka_client::connection_cache::ConnectionCache,
+    solana_client::connection_cache::ConnectionCache,
     solana_runtime::{bank_forks::BankForks, commitment::BlockCommitmentCache},
     std::{
         net::SocketAddr,
@@ -39,7 +39,6 @@ async fn start_abortable_tcp_server(
         bank_forks.clone(),
         block_commitment_cache.clone(),
         connection_cache,
-        exit.clone(),
     )
     .fuse();
     let interval = IntervalStream::new(time::interval(Duration::from_millis(100))).fuse();

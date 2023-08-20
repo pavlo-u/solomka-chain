@@ -31,7 +31,7 @@ use {
         verifier::RequisiteVerifier,
         vm::{Config, VerifiedExecutable},
     },
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::Account,
         account_utils::StateMut,

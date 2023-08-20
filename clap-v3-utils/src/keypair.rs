@@ -18,7 +18,7 @@ use {
     bip39::{Language, Mnemonic, Seed},
     clap::ArgMatches,
     rpassword::prompt_password,
-    solana_remote_wallet::{
+    solomka_remote_wallet::{
         locator::{Locator as RemoteWalletLocator, LocatorError as RemoteWalletLocatorError},
         remote_keypair::generate_remote_keypair,
         remote_wallet::{maybe_wallet_manager, RemoteWalletError, RemoteWalletManager},
@@ -1127,7 +1127,7 @@ mod tests {
         super::*,
         crate::offline::OfflineArgs,
         clap::{Arg, Command},
-        solana_remote_wallet::{locator::Manufacturer, remote_wallet::initialize_wallet_manager},
+        solomka_remote_wallet::{locator::Manufacturer, remote_wallet::initialize_wallet_manager},
         solomka_sdk::{signer::keypair::write_keypair_file, system_instruction},
         tempfile::{NamedTempFile, TempDir},
     };

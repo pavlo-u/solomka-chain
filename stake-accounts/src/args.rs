@@ -1,7 +1,7 @@
 use {
     clap::ArgMatches,
     solomka_clap_utils::keypair::{pubkey_from_path, signer_from_path},
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         clock::{Epoch, UnixTimestamp},
         pubkey::Pubkey,

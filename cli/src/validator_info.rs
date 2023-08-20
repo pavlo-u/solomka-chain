@@ -18,7 +18,7 @@ use {
     solomka_cli_output::{CliValidatorInfo, CliValidatorInfoVec},
     solana_client::rpc_client::RpcClient,
     solana_config_program::{config_instruction, get_config_data, ConfigKeys, ConfigState},
-    solana_remote_wallet::remote_wallet::RemoteWalletManager,
+    solomka_remote_wallet::remote_wallet::RemoteWalletManager,
     solomka_sdk::{
         account::Account,
         message::Message,

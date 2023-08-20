@@ -5639,24 +5639,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-remote-wallet"
-version = "1.14.12"
-dependencies = [
- "console",
- "dialoguer",
- "hidapi",
- "log",
- "num-derive",
- "num-traits",
- "parking_lot 0.12.1",
- "qstring",
- "semver 1.0.10",
- "solomka-sdk",
- "thiserror",
- "uriparse",
-]
-
-[[package]]
 name = "solana-rpc"
 version = "1.14.12"
 dependencies = [
@@ -5882,11 +5864,11 @@ version = "1.14.12"
 dependencies = [
  "clap 2.33.3",
  "solana-client",
- "solana-remote-wallet",
  "solana-runtime",
  "solana-stake-program",
  "solomka-clap-utils",
  "solomka-cli-config",
+ "solomka-remote-wallet",
  "solomka-sdk",
 ]
 
@@ -6058,13 +6040,13 @@ dependencies = [
  "solana-account-decoder",
  "solana-client",
  "solana-logger 1.14.12",
- "solana-remote-wallet",
  "solana-streamer",
  "solana-test-validator",
  "solana-transaction-status",
  "solana-version",
  "solomka-clap-utils",
  "solomka-cli-config",
+ "solomka-remote-wallet",
  "solomka-sdk",
  "spl-associated-token-account",
  "spl-token",
@@ -6338,7 +6320,7 @@ dependencies = [
  "clap 2.33.3",
  "rpassword",
  "solana-perf",
- "solana-remote-wallet",
+ "solomka-remote-wallet",
  "solomka-sdk",
  "tempfile",
  "thiserror",
@@ -6355,7 +6337,7 @@ dependencies = [
  "clap 3.1.8",
  "rpassword",
  "solana-perf",
- "solana-remote-wallet",
+ "solomka-remote-wallet",
  "solomka-sdk",
  "tempfile",
  "thiserror",
@@ -6392,7 +6374,6 @@ dependencies = [
  "solana-config-program",
  "solana-faucet",
  "solana-logger 1.14.12",
- "solana-remote-wallet",
  "solana-streamer",
  "solana-test-validator",
  "solana-transaction-status",
@@ -6403,6 +6384,7 @@ dependencies = [
  "solomka-cli-config",
  "solomka-cli-output",
  "solomka-program-runtime",
+ "solomka-remote-wallet",
  "solomka-sdk",
  "spl-memo",
  "tempfile",
@@ -6459,10 +6441,10 @@ dependencies = [
  "clap 3.1.8",
  "dirs-next",
  "num_cpus",
- "solana-remote-wallet",
  "solana-version",
  "solomka-clap-v3-utils",
  "solomka-cli-config",
+ "solomka-remote-wallet",
  "solomka-sdk",
  "tiny-bip39",
 ]
@@ -6565,6 +6547,24 @@ dependencies = [
  "solomka-sdk",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "solomka-remote-wallet"
+version = "1.14.12"
+dependencies = [
+ "console",
+ "dialoguer",
+ "hidapi",
+ "log",
+ "num-derive",
+ "num-traits",
+ "parking_lot 0.12.1",
+ "qstring",
+ "semver 1.0.10",
+ "solomka-sdk",
+ "thiserror",
+ "uriparse",
 ]
 
 [[package]]

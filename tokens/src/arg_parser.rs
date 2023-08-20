@@ -12,7 +12,7 @@ use {
         keypair::{pubkey_from_path, signer_from_path},
     },
     solomka_cli_config::CONFIG_FILE,
-    solana_remote_wallet::remote_wallet::maybe_wallet_manager,
+    solomka_remote_wallet::remote_wallet::maybe_wallet_manager,
     solomka_sdk::native_token::sol_to_lamports,
     std::{error::Error, ffi::OsString, process::exit},
 };

@@ -37,7 +37,7 @@ solana-config-program = { path = "../programs/config", version = "=1.14.12" }
 solana-faucet = { path = "../faucet", version = "=1.14.12" }
 solana-logger = { path = "../logger", version = "=1.14.12" }
 solomka-program-runtime = { path = "../program-runtime", version = "=1.14.12" }
-solana-remote-wallet = { path = "../remote-wallet", version = "=1.14.12" }
+solomka-remote-wallet = { path = "../remote-wallet", version = "=1.14.12" }
 solomka-sdk = { path = "../sdk", version = "=1.14.12" }
 solana-transaction-status = { path = "../transaction-status", version = "=1.14.12" }
 solana-version = { path = "../version", version = "=1.14.12" }

@@ -158,7 +158,7 @@ impl RemoteWalletManager {
     #[cfg(not(feature = "hidapi"))]
     pub fn update_devices(&self) -> Result<usize, RemoteWalletError> {
         Err(RemoteWalletError::Hid(
-            "hidapi crate compilation disabled in solana-remote-wallet.".to_string(),
+            "hidapi crate compilation disabled in solomka-remote-wallet.".to_string(),
         ))
     }
 
@@ -305,7 +305,7 @@ pub fn initialize_wallet_manager() -> Result<Arc<RemoteWalletManager>, RemoteWal
 #[cfg(not(feature = "hidapi"))]
 pub fn initialize_wallet_manager() -> Result<Arc<RemoteWalletManager>, RemoteWalletError> {
     Err(RemoteWalletError::Hid(
-        "hidapi crate compilation disabled in solana-remote-wallet.".to_string(),
+        "hidapi crate compilation disabled in solomka-remote-wallet.".to_string(),
     ))
 }
 

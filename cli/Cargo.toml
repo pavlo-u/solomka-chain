@@ -29,7 +29,7 @@ serde_json = "1.0.81"
 solana-account-decoder = { path = "../account-decoder", version = "=1.14.12" }
 solana-address-lookup-table-program = { path = "../programs/address-lookup-table", version = "=1.14.12" }
 solana-bpf-loader-program = { path = "../programs/bpf_loader", version = "=1.14.12" }
-solana-clap-utils = { path = "../clap-utils", version = "=1.14.12" }
+solomka-clap-utils = { path = "../clap-utils", version = "=1.14.12" }
 solomka-cli-config = { path = "../cli-config", version = "=1.14.12" }
 solomka-cli-output = { path = "../cli-output", version = "=1.14.12" }
 solana-client = { path = "../client", version = "=1.14.12" }

@@ -4511,7 +4511,6 @@ dependencies = [
  "rand 0.7.3",
  "rayon",
  "solana-account-decoder",
- "solana-clap-utils",
  "solana-client",
  "solana-core",
  "solana-faucet",
@@ -4525,6 +4524,7 @@ dependencies = [
  "solana-test-validator",
  "solana-transaction-status",
  "solana-version",
+ "solomka-clap-utils",
  "solomka-sdk",
  "spl-token",
 ]
@@ -4648,7 +4648,6 @@ dependencies = [
  "serde_json",
  "serde_yaml",
  "serial_test",
- "solana-clap-utils",
  "solana-client",
  "solana-core",
  "solana-faucet",
@@ -4664,6 +4663,7 @@ dependencies = [
  "solana-streamer",
  "solana-test-validator",
  "solana-version",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-sdk",
  "thiserror",
@@ -4774,40 +4774,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-clap-utils"
-version = "1.14.12"
-dependencies = [
- "chrono",
- "clap 2.33.3",
- "rpassword",
- "solana-perf",
- "solana-remote-wallet",
- "solomka-sdk",
- "tempfile",
- "thiserror",
- "tiny-bip39",
- "uriparse",
- "url 2.2.2",
-]
-
-[[package]]
-name = "solana-clap-v3-utils"
-version = "1.14.12"
-dependencies = [
- "chrono",
- "clap 3.1.8",
- "rpassword",
- "solana-perf",
- "solana-remote-wallet",
- "solomka-sdk",
- "tempfile",
- "thiserror",
- "tiny-bip39",
- "uriparse",
- "url 2.2.2",
-]
-
-[[package]]
 name = "solana-client"
 version = "1.14.12"
 dependencies = [
@@ -4843,7 +4809,6 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "solana-account-decoder",
- "solana-clap-utils",
  "solana-faucet",
  "solana-logger 1.14.12",
  "solana-measure",
@@ -4854,6 +4819,7 @@ dependencies = [
  "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
+ "solomka-clap-utils",
  "solomka-sdk",
  "spl-token-2022",
  "thiserror",
@@ -5064,10 +5030,10 @@ dependencies = [
  "log",
  "serde",
  "serde_derive",
- "solana-clap-utils",
  "solana-logger 1.14.12",
  "solana-metrics",
  "solana-version",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-sdk",
  "spl-memo",
@@ -5173,7 +5139,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
- "solana-clap-utils",
  "solana-entry",
  "solana-ledger",
  "solana-logger 1.14.12",
@@ -5181,6 +5146,7 @@ dependencies = [
  "solana-stake-program",
  "solana-version",
  "solana-vote-program",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-sdk",
  "tempfile",
@@ -5251,7 +5217,6 @@ dependencies = [
  "serde_derive",
  "serial_test",
  "solana-bloom",
- "solana-clap-utils",
  "solana-client",
  "solana-entry",
  "solana-frozen-abi 1.14.12",
@@ -5267,6 +5232,7 @@ dependencies = [
  "solana-streamer",
  "solana-version",
  "solana-vote-program",
+ "solomka-clap-utils",
  "solomka-sdk",
  "thiserror",
 ]
@@ -5291,11 +5257,11 @@ dependencies = [
  "semver 1.0.10",
  "serde",
  "serde_yaml",
- "solana-clap-utils",
  "solana-client",
  "solana-config-program",
  "solana-logger 1.14.12",
  "solana-version",
+ "solomka-clap-utils",
  "solomka-sdk",
  "tar",
  "tempfile",
@@ -5385,7 +5351,6 @@ dependencies = [
  "serde",
  "serde_json",
  "signal-hook",
- "solana-clap-utils",
  "solana-core",
  "solana-entry",
  "solana-ledger",
@@ -5397,6 +5362,7 @@ dependencies = [
  "solana-transaction-status",
  "solana-version",
  "solana-vote-program",
+ "solomka-clap-utils",
  "solomka-cli-output",
  "solomka-sdk",
  "tikv-jemallocator",
@@ -5915,11 +5881,11 @@ name = "solana-stake-accounts"
 version = "1.14.12"
 dependencies = [
  "clap 2.33.3",
- "solana-clap-utils",
  "solana-client",
  "solana-remote-wallet",
  "solana-runtime",
  "solana-stake-program",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-sdk",
 ]
@@ -6090,7 +6056,6 @@ dependencies = [
  "pickledb",
  "serde",
  "solana-account-decoder",
- "solana-clap-utils",
  "solana-client",
  "solana-logger 1.14.12",
  "solana-remote-wallet",
@@ -6098,6 +6063,7 @@ dependencies = [
  "solana-test-validator",
  "solana-transaction-status",
  "solana-version",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-sdk",
  "spl-associated-token-account",
@@ -6115,7 +6081,6 @@ dependencies = [
  "log",
  "rand 0.7.3",
  "rayon",
- "solana-clap-utils",
  "solana-client",
  "solana-core",
  "solana-faucet",
@@ -6128,6 +6093,7 @@ dependencies = [
  "solana-streamer",
  "solana-transaction-status",
  "solana-version",
+ "solomka-clap-utils",
  "solomka-cli",
  "solomka-sdk",
 ]
@@ -6190,7 +6156,6 @@ dependencies = [
  "serde",
  "serde_json",
  "signal-hook",
- "solana-clap-utils",
  "solana-client",
  "solana-core",
  "solana-download-utils",
@@ -6212,6 +6177,7 @@ dependencies = [
  "solana-test-validator",
  "solana-version",
  "solana-vote-program",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-sdk",
  "symlink",
@@ -6262,12 +6228,12 @@ dependencies = [
  "clap 2.33.3",
  "humantime",
  "log",
- "solana-clap-utils",
  "solana-client",
  "solana-logger 1.14.12",
  "solana-metrics",
  "solana-notifier",
  "solana-version",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-cli-output",
  "solomka-sdk",
@@ -6365,6 +6331,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "solomka-clap-utils"
+version = "1.14.12"
+dependencies = [
+ "chrono",
+ "clap 2.33.3",
+ "rpassword",
+ "solana-perf",
+ "solana-remote-wallet",
+ "solomka-sdk",
+ "tempfile",
+ "thiserror",
+ "tiny-bip39",
+ "uriparse",
+ "url 2.2.2",
+]
+
+[[package]]
+name = "solomka-clap-v3-utils"
+version = "1.14.12"
+dependencies = [
+ "chrono",
+ "clap 3.1.8",
+ "rpassword",
+ "solana-perf",
+ "solana-remote-wallet",
+ "solomka-sdk",
+ "tempfile",
+ "thiserror",
+ "tiny-bip39",
+ "uriparse",
+ "url 2.2.2",
+]
+
+[[package]]
 name = "solomka-cli"
 version = "1.14.12"
 dependencies = [
@@ -6388,7 +6388,6 @@ dependencies = [
  "solana-account-decoder",
  "solana-address-lookup-table-program",
  "solana-bpf-loader-program",
- "solana-clap-utils",
  "solana-client",
  "solana-config-program",
  "solana-faucet",
@@ -6400,6 +6399,7 @@ dependencies = [
  "solana-version",
  "solana-vote-program",
  "solana_rbpf",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-cli-output",
  "solomka-program-runtime",
@@ -6420,7 +6420,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_yaml",
- "solana-clap-utils",
+ "solomka-clap-utils",
  "solomka-sdk",
  "url 2.2.2",
 ]
@@ -6442,10 +6442,10 @@ dependencies = [
  "serde",
  "serde_json",
  "solana-account-decoder",
- "solana-clap-utils",
  "solana-client",
  "solana-transaction-status",
  "solana-vote-program",
+ "solomka-clap-utils",
  "solomka-cli-config",
  "solomka-sdk",
  "spl-memo",
@@ -6459,9 +6459,9 @@ dependencies = [
  "clap 3.1.8",
  "dirs-next",
  "num_cpus",
- "solana-clap-v3-utils",
  "solana-remote-wallet",
  "solana-version",
+ "solomka-clap-v3-utils",
  "solomka-cli-config",
  "solomka-sdk",
  "tiny-bip39",

@@ -4,7 +4,7 @@ use {
         cli::CliError,
     },
     clap::ArgMatches,
-    solana_clap_utils::{input_parsers::lamports_of_sol, offline::SIGN_ONLY_ARG},
+    solomka_clap_utils::{input_parsers::lamports_of_sol, offline::SIGN_ONLY_ARG},
     solana_client::rpc_client::RpcClient,
     solomka_sdk::{
         commitment_config::CommitmentConfig, hash::Hash, message::Message,
